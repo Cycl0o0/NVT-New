@@ -93,4 +93,5 @@ Typical flow:
 
 ## License
 
-This project is presented under the `GNU Affero General Public License v3.0 (AGPL-3.0)`.
+This project is licensed under the `GNU Affero General Public License v3.0 (AGPL-3.0)`.
+See `LICENSE` for the official full text.

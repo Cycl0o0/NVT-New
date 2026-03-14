@@ -1,1 +1,0 @@
-curl -H 'Accept: */*' -H 'Accept-Language: fr-FR,fr;q=0.9' -H 'Connection: keep-alive' --compressed -H 'User-Agent: OuEstMonBus/183 CFNetwork/3860.200.71 Darwin/25.1.0' 'https://data.bordeaux-metropole.fr/geojson?key=0234ABEFGH&typename=sv_messa_a'
