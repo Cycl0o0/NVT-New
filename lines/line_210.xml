@@ -1,0 +1,3298 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PublicationDelivery xmlns="http://www.netex.org.uk/netex" xmlns:ns2="http://www.opengis.net/gml/3.2" xmlns:ns3="http://www.siri.org.uk/siri">
+    <PublicationTimestamp>2026-03-10T03:53:31.904Z</PublicationTimestamp>
+    <ParticipantRef>Mecatran</ParticipantRef>
+    <dataObjects>
+        <ResourceFrame version="any" id="TBM:ResourceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_COMMUN:"/>
+            <FrameDefaults>
+                <DefaultLocationSystem>EPSG:4326</DefaultLocationSystem>
+                <DefaultSystemOfUnits>SiMetres</DefaultSystemOfUnits>
+                <DefaultCurrency>EUR</DefaultCurrency>
+            </FrameDefaults>
+            <typesOfValue>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:0">
+                    <Name>GTFS stop type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:1">
+                    <Name>GTFS station type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:0">
+                    <Name>GTFS stop type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:1">
+                    <Name>GTFS station type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:0">
+                    <Name>GTFS transfer type for recommended transfer (0)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:1">
+                    <Name>GTFS transfer type for guaranteed transfer (1)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:2">
+                    <Name>GTFS transfer type for timed transfer (2)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:3">
+                    <Name>GTFS transfer type for no transfer (3)</Name>
+                </TypeOfTransfer>
+            </typesOfValue>
+        </ResourceFrame>
+        <ServiceFrame version="any" id="TBM:ServiceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+            <directions>
+                <Direction version="any" id="gtfs:Direction:0">
+                    <Name>Direction 0</Name>
+                    <Description>GTFS direction ID 0</Description>
+                    <DirectionType>outbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:1" version="any"/>
+                </Direction>
+                <Direction version="any" id="gtfs:Direction:1">
+                    <Name>Direction 1</Name>
+                    <Description>GTFS direction ID 1</Description>
+                    <DirectionType>inbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:0" version="any"/>
+                </Direction>
+            </directions>
+            <routes>
+                <Route version="any" id="TBM:Route:210@0">
+                    <LineRef ref="TBM:Line:210"/>
+                    <DirectionType>outbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                </Route>
+                <Route version="any" id="TBM:Route:210@1">
+                    <LineRef ref="TBM:Line:210"/>
+                    <DirectionType>inbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                </Route>
+            </routes>
+            <lines>
+                <Line version="any" id="TBM:Line:210">
+                    <Name>Navette Tram 210</Name>
+                    <ShortName>210</ShortName>
+                    <TransportMode>bus</TransportMode>
+                    <PublicCode>210</PublicCode>
+                    <AuthorityRef ref="TBM:Authority:1"/>
+                    <Presentation>
+                        <Colour>FFFFFF</Colour>
+                        <TextColour>000000</TextColour>
+                    </Presentation>
+                </Line>
+            </lines>
+            <scheduledStopPoints>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2349">
+                    <Name>Barrière de Toulouse</Name>
+                    <Location>
+                        <Longitude>-0.572451</Longitude>
+                        <Latitude>44.815429</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BTOU9R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:715">
+                    <Name>Bertrand de Goth</Name>
+                    <Location>
+                        <Longitude>-0.5764083950484662</Longitude>
+                        <Latitude>44.819122919263776</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>BGOT9A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2348">
+                    <Name>Boulevard Roosevelt</Name>
+                    <Location>
+                        <Longitude>-0.574713</Longitude>
+                        <Latitude>44.815969</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>ROO09R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1606">
+                    <Name>Bourse du Travail</Name>
+                    <Location>
+                        <Longitude>-0.578558</Longitude>
+                        <Latitude>44.832185</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BOU16A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:823">
+                    <Name>Bourse du Travail</Name>
+                    <Location>
+                        <Longitude>-0.578321</Longitude>
+                        <Latitude>44.832057</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BOU16R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15087">
+                    <Name>Bre St Genès</Name>
+                    <Location>
+                        <Longitude>-0.5826702372794781</Longitude>
+                        <Latitude>44.82120992508037</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBGENR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1288">
+                    <Name>Brun</Name>
+                    <Location>
+                        <Longitude>-0.572213</Longitude>
+                        <Latitude>44.817663</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BRU09R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15016">
+                    <Name>CAPC Musée</Name>
+                    <Location>
+                        <Longitude>-0.570154752453804</Longitude>
+                        <Latitude>44.84922796082318</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBCAPA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15017">
+                    <Name>CAPC Musée</Name>
+                    <Location>
+                        <Longitude>-0.5704243848071252</Longitude>
+                        <Latitude>44.84888581805798</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBCAPR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2324">
+                    <Name>Carros</Name>
+                    <Location>
+                        <Longitude>-0.5804118184830925</Longitude>
+                        <Latitude>44.81975075291179</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>CAR09A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:4110">
+                    <Name>Centre-Forum</Name>
+                    <Location>
+                        <Longitude>-0.591244806358115</Longitude>
+                        <Latitude>44.811135863562214</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>FOR19A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15014">
+                    <Name>Chartrons</Name>
+                    <Location>
+                        <Longitude>-0.5672317261095249</Longitude>
+                        <Latitude>44.852872940019125</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBCHAA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15015">
+                    <Name>Chartrons</Name>
+                    <Location>
+                        <Longitude>-0.5677071314032559</Longitude>
+                        <Latitude>44.85257826263151</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBCHAR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1594">
+                    <Name>Cité Cairon</Name>
+                    <Location>
+                        <Longitude>-0.578973</Longitude>
+                        <Latitude>44.818833</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>CAIR9A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15012">
+                    <Name>Cours du Médoc</Name>
+                    <Location>
+                        <Longitude>-0.5628624581121666</Longitude>
+                        <Latitude>44.85589736297539</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBMEDA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15013">
+                    <Name>Cours du Médoc</Name>
+                    <Location>
+                        <Longitude>-0.5633694830465024</Longitude>
+                        <Latitude>44.85570082777949</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBMEDR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2164">
+                    <Name>Fonfrède</Name>
+                    <Location>
+                        <Longitude>-0.572645</Longitude>
+                        <Latitude>44.825057</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>FON20A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2403">
+                    <Name>Fonfrède</Name>
+                    <Location>
+                        <Longitude>-0.5725463157703871</Longitude>
+                        <Latitude>44.825493085655225</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>FON20R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3216">
+                    <Name>Galerie des Beaux Arts</Name>
+                    <Location>
+                        <Longitude>-0.581715</Longitude>
+                        <Latitude>44.838788</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>GBA04R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:5621">
+                    <Name>Galerie des Beaux Arts</Name>
+                    <Location>
+                        <Longitude>-0.581709</Longitude>
+                        <Latitude>44.839104</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>GBA04A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2444">
+                    <Name>Gambetta</Name>
+                    <Location>
+                        <Longitude>-0.580947</Longitude>
+                        <Latitude>44.840859</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>GAM04A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:6447">
+                    <Name>Gambetta</Name>
+                    <Location>
+                        <Longitude>-0.579713</Longitude>
+                        <Latitude>44.842169</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>GAM04R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2398">
+                    <Name>Kergomard</Name>
+                    <Location>
+                        <Longitude>-0.572617</Longitude>
+                        <Latitude>44.823418</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>KER20A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:412">
+                    <Name>Kergomard</Name>
+                    <Location>
+                        <Longitude>-0.5725623148438951</Longitude>
+                        <Latitude>44.82355488556007</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>KER20R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15010">
+                    <Name>La Cité du Vin</Name>
+                    <Location>
+                        <Longitude>-0.5530391652922534</Longitude>
+                        <Latitude>44.86064655047745</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBBAFA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:6835">
+                    <Name>La Cité du Vin</Name>
+                    <Location>
+                        <Longitude>-0.555591</Longitude>
+                        <Latitude>44.85933</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BFL45R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:6837">
+                    <Name>Les Hangars</Name>
+                    <Location>
+                        <Longitude>-0.559386</Longitude>
+                        <Latitude>44.857622</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>HAN45R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:6838">
+                    <Name>Les Hangars</Name>
+                    <Location>
+                        <Longitude>-0.559357</Longitude>
+                        <Latitude>44.85756</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>HAN45A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:456">
+                    <Name>Nansouty</Name>
+                    <Location>
+                        <Longitude>-0.5720984593988615</Longitude>
+                        <Latitude>44.820244226883645</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>NANSTY</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:850">
+                    <Name>Nansouty</Name>
+                    <Location>
+                        <Longitude>-0.5728700793150144</Longitude>
+                        <Latitude>44.819435278096606</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>NANS9A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3858">
+                    <Name>Palais de Justice</Name>
+                    <Location>
+                        <Longitude>-0.5810603060320719</Longitude>
+                        <Latitude>44.83687166281525</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>PJU16A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:4031">
+                    <Name>Palais de Justice</Name>
+                    <Location>
+                        <Longitude>-0.581107</Longitude>
+                        <Latitude>44.836618</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PJUS16</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3551">
+                    <Name>Peixotto (côté Mairie)</Name>
+                    <Location>
+                        <Longitude>-0.591357</Longitude>
+                        <Latitude>44.808338</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33522" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PEI19R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:4112">
+                    <Name>Peixotto (côté Université)</Name>
+                    <Location>
+                        <Longitude>-0.591496</Longitude>
+                        <Latitude>44.808334</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33522" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PEI19A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3819">
+                    <Name>Peixotto (Tram B)</Name>
+                    <Location>
+                        <Longitude>-0.592989</Longitude>
+                        <Latitude>44.806934</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33522" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PEI42A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2347">
+                    <Name>Pont de Cauderès</Name>
+                    <Location>
+                        <Longitude>-0.5776429669455913</Longitude>
+                        <Latitude>44.81783035005841</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>PCAU9R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3647">
+                    <Name>Quinconces</Name>
+                    <Location>
+                        <Longitude>-0.573903</Longitude>
+                        <Latitude>44.844628</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>MUN51R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3547">
+                    <Name>République</Name>
+                    <Location>
+                        <Longitude>-0.5801344267484964</Longitude>
+                        <Latitude>44.83407161284593</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>REP16A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3548">
+                    <Name>République</Name>
+                    <Location>
+                        <Longitude>-0.5801855832569633</Longitude>
+                        <Latitude>44.83388069767187</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>REP16R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15085">
+                    <Name>Roustaing</Name>
+                    <Location>
+                        <Longitude>-0.5856400236404425</Longitude>
+                        <Latitude>44.816950127109344</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBROUA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15088">
+                    <Name>Roustaing</Name>
+                    <Location>
+                        <Longitude>-0.5858450752536678</Longitude>
+                        <Latitude>44.81679028184301</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBROUR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2397">
+                    <Name>Saint-Nicolas</Name>
+                    <Location>
+                        <Longitude>-0.572545</Longitude>
+                        <Latitude>44.826665</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SNI20A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2404">
+                    <Name>Saint-Nicolas</Name>
+                    <Location>
+                        <Longitude>-0.5723947247386705</Longitude>
+                        <Latitude>44.82748973046099</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SNI20R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:15086">
+                    <Name>St Genès</Name>
+                    <Location>
+                        <Longitude>-0.5841149626459623</Longitude>
+                        <Latitude>44.819441836881204</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>SBGENA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1637">
+                    <Name>Talence Centre-Forum (côté Esplanade)</Name>
+                    <Location>
+                        <Longitude>-0.591056</Longitude>
+                        <Latitude>44.811358</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33522" version="any"/>
+                    </tariffZones>
+                    <PublicCode>FOR19R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1014">
+                    <Name>Tillet</Name>
+                    <Location>
+                        <Longitude>-0.572528</Longitude>
+                        <Latitude>44.821826</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>TIL20A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:185">
+                    <Name>Tillet</Name>
+                    <Location>
+                        <Longitude>-0.5724105960719847</Longitude>
+                        <Latitude>44.82156801598708</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>TIL20R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3560">
+                    <Name>Tourny</Name>
+                    <Location>
+                        <Longitude>-0.5778023494446746</Longitude>
+                        <Latitude>44.84497997153397</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>TOUR51</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3549">
+                    <Name>Victoire</Name>
+                    <Location>
+                        <Longitude>-0.573816</Longitude>
+                        <Latitude>44.831121</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>VIC16A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3801">
+                    <Name>Victoire</Name>
+                    <Location>
+                        <Longitude>-0.573786</Longitude>
+                        <Latitude>44.831041</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>VIC16R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3501">
+                    <Name>Victoire (Somme)</Name>
+                    <Location>
+                        <Longitude>-0.5723159942539906</Longitude>
+                        <Latitude>44.8298355163131</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <PublicCode>VIC20R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:3546">
+                    <Name>Victoire (Somme)</Name>
+                    <Location>
+                        <Longitude>-0.572372</Longitude>
+                        <Latitude>44.829717</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33063" version="any"/>
+                    </tariffZones>
+                    <PublicCode>VIC20A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+            </scheduledStopPoints>
+            <stopAssignments>
+                <PassengerStopAssignment order="1" version="any" id="TBM:PassengerStopAssignment:2349">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2349" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2349" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="2" version="any" id="TBM:PassengerStopAssignment:715">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:715" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:715" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="3" version="any" id="TBM:PassengerStopAssignment:2348">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2348" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2348" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="4" version="any" id="TBM:PassengerStopAssignment:1606">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1606" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1606" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="5" version="any" id="TBM:PassengerStopAssignment:823">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:823" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:823" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="6" version="any" id="TBM:PassengerStopAssignment:15087">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15087" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15087" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="7" version="any" id="TBM:PassengerStopAssignment:1288">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1288" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1288" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="8" version="any" id="TBM:PassengerStopAssignment:15016">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15016" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15016" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="9" version="any" id="TBM:PassengerStopAssignment:15017">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15017" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15017" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="10" version="any" id="TBM:PassengerStopAssignment:2324">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2324" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2324" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="11" version="any" id="TBM:PassengerStopAssignment:4110">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4110" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:4110" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="12" version="any" id="TBM:PassengerStopAssignment:15014">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15014" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15014" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="13" version="any" id="TBM:PassengerStopAssignment:15015">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15015" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15015" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="14" version="any" id="TBM:PassengerStopAssignment:1594">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1594" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1594" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="15" version="any" id="TBM:PassengerStopAssignment:15012">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15012" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15012" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="16" version="any" id="TBM:PassengerStopAssignment:15013">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15013" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15013" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="17" version="any" id="TBM:PassengerStopAssignment:2164">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2164" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2164" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="18" version="any" id="TBM:PassengerStopAssignment:2403">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2403" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2403" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="19" version="any" id="TBM:PassengerStopAssignment:3216">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3216" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3216" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="20" version="any" id="TBM:PassengerStopAssignment:5621">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:5621" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:5621" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="21" version="any" id="TBM:PassengerStopAssignment:2444">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2444" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2444" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="22" version="any" id="TBM:PassengerStopAssignment:6447">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6447" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:6447" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="23" version="any" id="TBM:PassengerStopAssignment:2398">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2398" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2398" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="24" version="any" id="TBM:PassengerStopAssignment:412">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:412" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:412" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="25" version="any" id="TBM:PassengerStopAssignment:15010">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15010" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15010" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="26" version="any" id="TBM:PassengerStopAssignment:6835">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6835" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:6835" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="27" version="any" id="TBM:PassengerStopAssignment:6837">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6837" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:6837" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="28" version="any" id="TBM:PassengerStopAssignment:6838">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6838" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:6838" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="29" version="any" id="TBM:PassengerStopAssignment:456">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:456" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:456" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="30" version="any" id="TBM:PassengerStopAssignment:850">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:850" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:850" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="31" version="any" id="TBM:PassengerStopAssignment:3858">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3858" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3858" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="32" version="any" id="TBM:PassengerStopAssignment:4031">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4031" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:4031" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="33" version="any" id="TBM:PassengerStopAssignment:3551">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3551" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3551" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="34" version="any" id="TBM:PassengerStopAssignment:4112">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4112" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:4112" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="35" version="any" id="TBM:PassengerStopAssignment:3819">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3819" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3819" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="36" version="any" id="TBM:PassengerStopAssignment:2347">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2347" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2347" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="37" version="any" id="TBM:PassengerStopAssignment:3647">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3647" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3647" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="38" version="any" id="TBM:PassengerStopAssignment:3547">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3547" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3547" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="39" version="any" id="TBM:PassengerStopAssignment:3548">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3548" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3548" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="40" version="any" id="TBM:PassengerStopAssignment:15085">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15085" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15085" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="41" version="any" id="TBM:PassengerStopAssignment:15088">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15088" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15088" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="42" version="any" id="TBM:PassengerStopAssignment:2397">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2397" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2397" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="43" version="any" id="TBM:PassengerStopAssignment:2404">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2404" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2404" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="44" version="any" id="TBM:PassengerStopAssignment:15086">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15086" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:15086" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="45" version="any" id="TBM:PassengerStopAssignment:1637">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1637" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1637" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="46" version="any" id="TBM:PassengerStopAssignment:1014">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1014" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1014" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="47" version="any" id="TBM:PassengerStopAssignment:185">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:185" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:185" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="48" version="any" id="TBM:PassengerStopAssignment:3560">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3560" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3560" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="49" version="any" id="TBM:PassengerStopAssignment:3549">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3549" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3549" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="50" version="any" id="TBM:PassengerStopAssignment:3801">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3801" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3801" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="51" version="any" id="TBM:PassengerStopAssignment:3501">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3501" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3501" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="52" version="any" id="TBM:PassengerStopAssignment:3546">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3546" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:3546" version="any"/>
+                </PassengerStopAssignment>
+            </stopAssignments>
+            <journeyPatterns>
+                <ServiceJourneyPattern version="any" id="TBM:JourneyPattern:210@0:LOC">
+                    <RouteRef ref="TBM:Route:210@1"/>
+                    <DirectionType>inbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    <pointsInSequence>
+                        <StopPointInJourneyPattern order="1" version="any" id="TBM:JourneyPattern:210@0@1:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6835" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="2" version="any" id="TBM:JourneyPattern:210@0@2:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6837" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="3" version="any" id="TBM:JourneyPattern:210@0@3:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15013" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="4" version="any" id="TBM:JourneyPattern:210@0@4:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15015" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="5" version="any" id="TBM:JourneyPattern:210@0@5:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15017" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="6" version="any" id="TBM:JourneyPattern:210@0@6:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3647" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="7" version="any" id="TBM:JourneyPattern:210@0@7:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2444" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="8" version="any" id="TBM:JourneyPattern:210@0@8:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:5621" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="9" version="any" id="TBM:JourneyPattern:210@0@9:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4031" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="10" version="any" id="TBM:JourneyPattern:210@0@10:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3548" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="11" version="any" id="TBM:JourneyPattern:210@0@11:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:823" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="12" version="any" id="TBM:JourneyPattern:210@0@12:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3801" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="13" version="any" id="TBM:JourneyPattern:210@0@13:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3546" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="14" version="any" id="TBM:JourneyPattern:210@0@14:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2397" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="15" version="any" id="TBM:JourneyPattern:210@0@15:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2164" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="16" version="any" id="TBM:JourneyPattern:210@0@16:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2398" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="17" version="any" id="TBM:JourneyPattern:210@0@17:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1014" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="18" version="any" id="TBM:JourneyPattern:210@0@18:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:850" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="19" version="any" id="TBM:JourneyPattern:210@0@19:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:715" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="20" version="any" id="TBM:JourneyPattern:210@0@20:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1594" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="21" version="any" id="TBM:JourneyPattern:210@0@21:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2324" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="22" version="any" id="TBM:JourneyPattern:210@0@22:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15087" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="23" version="any" id="TBM:JourneyPattern:210@0@23:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15088" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="24" version="any" id="TBM:JourneyPattern:210@0@24:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4110" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="25" version="any" id="TBM:JourneyPattern:210@0@25:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4112" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="26" version="any" id="TBM:JourneyPattern:210@0@26:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3819" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                    </pointsInSequence>
+                </ServiceJourneyPattern>
+                <ServiceJourneyPattern version="any" id="TBM:JourneyPattern:210@1:LOC">
+                    <RouteRef ref="TBM:Route:210@0"/>
+                    <DirectionType>outbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                    <pointsInSequence>
+                        <StopPointInJourneyPattern order="1" version="any" id="TBM:JourneyPattern:210@1@1:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3819" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="2" version="any" id="TBM:JourneyPattern:210@1@2:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3551" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="3" version="any" id="TBM:JourneyPattern:210@1@3:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1637" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="4" version="any" id="TBM:JourneyPattern:210@1@4:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15085" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="5" version="any" id="TBM:JourneyPattern:210@1@5:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15086" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="6" version="any" id="TBM:JourneyPattern:210@1@6:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2347" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="7" version="any" id="TBM:JourneyPattern:210@1@7:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2348" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="8" version="any" id="TBM:JourneyPattern:210@1@8:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2349" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="9" version="any" id="TBM:JourneyPattern:210@1@9:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1288" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="10" version="any" id="TBM:JourneyPattern:210@1@10:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:456" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="11" version="any" id="TBM:JourneyPattern:210@1@11:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:185" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="12" version="any" id="TBM:JourneyPattern:210@1@12:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:412" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="13" version="any" id="TBM:JourneyPattern:210@1@13:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2403" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="14" version="any" id="TBM:JourneyPattern:210@1@14:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2404" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="15" version="any" id="TBM:JourneyPattern:210@1@15:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3501" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="16" version="any" id="TBM:JourneyPattern:210@1@16:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3549" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="17" version="any" id="TBM:JourneyPattern:210@1@17:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1606" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="18" version="any" id="TBM:JourneyPattern:210@1@18:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3547" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="19" version="any" id="TBM:JourneyPattern:210@1@19:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3858" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="20" version="any" id="TBM:JourneyPattern:210@1@20:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3216" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="21" version="any" id="TBM:JourneyPattern:210@1@21:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6447" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="22" version="any" id="TBM:JourneyPattern:210@1@22:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3560" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="23" version="any" id="TBM:JourneyPattern:210@1@23:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3647" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="24" version="any" id="TBM:JourneyPattern:210@1@24:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15016" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="25" version="any" id="TBM:JourneyPattern:210@1@25:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15014" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="26" version="any" id="TBM:JourneyPattern:210@1@26:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15012" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="27" version="any" id="TBM:JourneyPattern:210@1@27:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:6838" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="28" version="any" id="TBM:JourneyPattern:210@1@28:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15010" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                    </pointsInSequence>
+                </ServiceJourneyPattern>
+                <ServiceJourneyPattern version="any" id="TBM:JourneyPattern:210@2:LOC">
+                    <RouteRef ref="TBM:Route:210@1"/>
+                    <DirectionType>inbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    <pointsInSequence>
+                        <StopPointInJourneyPattern order="1" version="any" id="TBM:JourneyPattern:210@2@1:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3647" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="2" version="any" id="TBM:JourneyPattern:210@2@2:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2444" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="3" version="any" id="TBM:JourneyPattern:210@2@3:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:5621" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="4" version="any" id="TBM:JourneyPattern:210@2@4:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4031" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="5" version="any" id="TBM:JourneyPattern:210@2@5:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3548" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="6" version="any" id="TBM:JourneyPattern:210@2@6:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:823" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="7" version="any" id="TBM:JourneyPattern:210@2@7:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3801" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="8" version="any" id="TBM:JourneyPattern:210@2@8:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3546" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="9" version="any" id="TBM:JourneyPattern:210@2@9:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2397" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="10" version="any" id="TBM:JourneyPattern:210@2@10:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2164" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="11" version="any" id="TBM:JourneyPattern:210@2@11:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2398" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="12" version="any" id="TBM:JourneyPattern:210@2@12:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1014" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="13" version="any" id="TBM:JourneyPattern:210@2@13:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:850" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="14" version="any" id="TBM:JourneyPattern:210@2@14:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:715" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="15" version="any" id="TBM:JourneyPattern:210@2@15:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1594" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="16" version="any" id="TBM:JourneyPattern:210@2@16:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2324" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="17" version="any" id="TBM:JourneyPattern:210@2@17:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15087" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="18" version="any" id="TBM:JourneyPattern:210@2@18:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:15088" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="19" version="any" id="TBM:JourneyPattern:210@2@19:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4110" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="20" version="any" id="TBM:JourneyPattern:210@2@20:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:4112" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="21" version="any" id="TBM:JourneyPattern:210@2@21:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:3819" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                    </pointsInSequence>
+                </ServiceJourneyPattern>
+            </journeyPatterns>
+        </ServiceFrame>
+        <SiteFrame version="any" id="TBM:SiteFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_ARRET:"/>
+            <groupsOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBTOUL2">
+                    <Name>Barrière de Toulouse</Name>
+                    <PublicCode>BBTOUL2</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2349"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572451</Longitude>
+                            <Latitude>44.815429</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BROOSEV">
+                    <Name>Boulevard Roosevelt</Name>
+                    <PublicCode>BROOSEV</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2348"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.574369</Longitude>
+                            <Latitude>44.815822</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBTRAVA">
+                    <Name>Bourse du Travail</Name>
+                    <PublicCode>BBTRAVA</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1606"/>
+                        <StopPlaceRef ref="TBM:StopPlace:823"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.57844</Longitude>
+                            <Latitude>44.832121</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBRUN">
+                    <Name>Brun</Name>
+                    <PublicCode>BBRUN</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1288"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572245</Longitude>
+                            <Latitude>44.817477</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BCAIRON">
+                    <Name>Cité Cairon</Name>
+                    <PublicCode>BCAIRON</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1594"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.579015</Longitude>
+                            <Latitude>44.818791</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BFONFR">
+                    <Name>Fonfrède</Name>
+                    <PublicCode>BFONFR</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2164"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572596</Longitude>
+                            <Latitude>44.825275</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BGBARTS">
+                    <Name>Galerie des Beaux Arts</Name>
+                    <PublicCode>BGBARTS</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3216"/>
+                        <StopPlaceRef ref="TBM:StopPlace:5621"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.581712</Longitude>
+                            <Latitude>44.838946</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BGAMBT1">
+                    <Name>Gambetta</Name>
+                    <PublicCode>BGAMBT1</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:6447"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.579916</Longitude>
+                            <Latitude>44.841771</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BGAMBT2">
+                    <Name>Gambetta</Name>
+                    <PublicCode>BGAMBT2</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2444"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.580947</Longitude>
+                            <Latitude>44.840859</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BKERGO">
+                    <Name>Kergomard</Name>
+                    <PublicCode>BKERGO</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2398"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572583</Longitude>
+                            <Latitude>44.823487</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBFLO45">
+                    <Name>La Cité du Vin</Name>
+                    <PublicCode>BBFLO45</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:6835"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.555527</Longitude>
+                            <Latitude>44.859314</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BHANGAR">
+                    <Name>Les Hangars</Name>
+                    <PublicCode>BHANGAR</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:6837"/>
+                        <StopPlaceRef ref="TBM:StopPlace:6838"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.559371</Longitude>
+                            <Latitude>44.857591</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BPJUST">
+                    <Name>Palais de Justice</Name>
+                    <PublicCode>BPJUST</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:4031"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.581682</Longitude>
+                            <Latitude>44.836356</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BUNIVER">
+                    <Name>Peixotto (côté Mairie)</Name>
+                    <PublicCode>BUNIVER</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3551"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591357</Longitude>
+                            <Latitude>44.808338</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BUNIVE1">
+                    <Name>Peixotto (côté Université)</Name>
+                    <PublicCode>BUNIVE1</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:4112"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591496</Longitude>
+                            <Latitude>44.808334</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BTPEIXO">
+                    <Name>Peixotto (Tram B)</Name>
+                    <PublicCode>BTPEIXO</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3819"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.593117</Longitude>
+                            <Latitude>44.806848</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BMUNIC">
+                    <Name>Quinconces</Name>
+                    <PublicCode>BMUNIC</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3647"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.573903</Longitude>
+                            <Latitude>44.844628</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BNICOLA">
+                    <Name>Saint-Nicolas</Name>
+                    <PublicCode>BNICOLA</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2397"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.57247</Longitude>
+                            <Latitude>44.827077</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BFORUM">
+                    <Name>Talence Centre-Forum</Name>
+                    <PublicCode>BFORUM</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1637"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.590976</Longitude>
+                            <Latitude>44.810987</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BTILLE">
+                    <Name>Tillet</Name>
+                    <PublicCode>BTILLE</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1014"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572469</Longitude>
+                            <Latitude>44.821697</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BPVICTO">
+                    <Name>Victoire</Name>
+                    <PublicCode>BPVICTO</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3549"/>
+                        <StopPlaceRef ref="TBM:StopPlace:3801"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.573827</Longitude>
+                            <Latitude>44.831091</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BVICTOS">
+                    <Name>Victoire (Somme)</Name>
+                    <PublicCode>BVICTOS</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:3546"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572344</Longitude>
+                            <Latitude>44.829776</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+            </groupsOfStopPlaces>
+            <stopPlaces>
+                <StopPlace version="any" id="TBM:StopPlace:2349">
+                    <Name>Barrière de Toulouse</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572451</Longitude>
+                            <Latitude>44.815429</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2349">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BTOU9R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:715">
+                    <Name>Bertrand de Goth</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5764083950484662</Longitude>
+                            <Latitude>44.819122919263776</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>BGOT9A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2348">
+                    <Name>Boulevard Roosevelt</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.574713</Longitude>
+                            <Latitude>44.815969</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2348">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>ROO09R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1606">
+                    <Name>Bourse du Travail</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.578558</Longitude>
+                            <Latitude>44.832185</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1606">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BOU16A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:823">
+                    <Name>Bourse du Travail</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.578321</Longitude>
+                            <Latitude>44.832057</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:823">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BOU16R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15087">
+                    <Name>Bre St Genès</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5826702372794781</Longitude>
+                            <Latitude>44.82120992508037</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBGENR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1288">
+                    <Name>Brun</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572213</Longitude>
+                            <Latitude>44.817663</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1288">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BRU09R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15016">
+                    <Name>CAPC Musée</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.570154752453804</Longitude>
+                            <Latitude>44.84922796082318</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBCAPA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15017">
+                    <Name>CAPC Musée</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5704243848071252</Longitude>
+                            <Latitude>44.84888581805798</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBCAPR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2324">
+                    <Name>Carros</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5804118184830925</Longitude>
+                            <Latitude>44.81975075291179</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>CAR09A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:4110">
+                    <Name>Centre-Forum</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591244806358115</Longitude>
+                            <Latitude>44.811135863562214</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>FOR19A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15014">
+                    <Name>Chartrons</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5672317261095249</Longitude>
+                            <Latitude>44.852872940019125</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBCHAA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15015">
+                    <Name>Chartrons</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5677071314032559</Longitude>
+                            <Latitude>44.85257826263151</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBCHAR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1594">
+                    <Name>Cité Cairon</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.578973</Longitude>
+                            <Latitude>44.818833</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1594">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>CAIR9A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15012">
+                    <Name>Cours du Médoc</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5628624581121666</Longitude>
+                            <Latitude>44.85589736297539</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBMEDA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15013">
+                    <Name>Cours du Médoc</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5633694830465024</Longitude>
+                            <Latitude>44.85570082777949</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBMEDR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2164">
+                    <Name>Fonfrède</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572645</Longitude>
+                            <Latitude>44.825057</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>FON20A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2403">
+                    <Name>Fonfrède</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5725463157703871</Longitude>
+                            <Latitude>44.825493085655225</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>FON20R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3216">
+                    <Name>Galerie des Beaux Arts</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.581715</Longitude>
+                            <Latitude>44.838788</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3216">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>GBA04R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:5621">
+                    <Name>Galerie des Beaux Arts</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.581709</Longitude>
+                            <Latitude>44.839104</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:5621">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>GBA04A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2444">
+                    <Name>Gambetta</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.580947</Longitude>
+                            <Latitude>44.840859</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2444">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>GAM04A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:6447">
+                    <Name>Gambetta</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.579713</Longitude>
+                            <Latitude>44.842169</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:6447">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>GAM04R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2398">
+                    <Name>Kergomard</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572617</Longitude>
+                            <Latitude>44.823418</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2398">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>KER20A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:412">
+                    <Name>Kergomard</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5725623148438951</Longitude>
+                            <Latitude>44.82355488556007</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>KER20R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15010">
+                    <Name>La Cité du Vin</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5530391652922534</Longitude>
+                            <Latitude>44.86064655047745</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBBAFA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:6835">
+                    <Name>La Cité du Vin</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.555591</Longitude>
+                            <Latitude>44.85933</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:6835">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BFL45R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:6837">
+                    <Name>Les Hangars</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.559386</Longitude>
+                            <Latitude>44.857622</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:6837">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>HAN45R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:6838">
+                    <Name>Les Hangars</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.559357</Longitude>
+                            <Latitude>44.85756</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>HAN45A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:456">
+                    <Name>Nansouty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5720984593988615</Longitude>
+                            <Latitude>44.820244226883645</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>NANSTY</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:850">
+                    <Name>Nansouty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5728700793150144</Longitude>
+                            <Latitude>44.819435278096606</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>NANS9A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3858">
+                    <Name>Palais de Justice</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5810603060320719</Longitude>
+                            <Latitude>44.83687166281525</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>PJU16A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:4031">
+                    <Name>Palais de Justice</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.581107</Longitude>
+                            <Latitude>44.836618</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:4031">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>PJUS16</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3551">
+                    <Name>Peixotto (côté Mairie)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591357</Longitude>
+                            <Latitude>44.808338</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3551">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>PEI19R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:4112">
+                    <Name>Peixotto (côté Université)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591496</Longitude>
+                            <Latitude>44.808334</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:4112">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>PEI19A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3819">
+                    <Name>Peixotto (Tram B)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.592989</Longitude>
+                            <Latitude>44.806934</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3819">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>PEI42A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2347">
+                    <Name>Pont de Cauderès</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5776429669455913</Longitude>
+                            <Latitude>44.81783035005841</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>PCAU9R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3647">
+                    <Name>Quinconces</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.573903</Longitude>
+                            <Latitude>44.844628</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3647">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>MUN51R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3547">
+                    <Name>République</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5801344267484964</Longitude>
+                            <Latitude>44.83407161284593</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>REP16A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3548">
+                    <Name>République</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5801855832569633</Longitude>
+                            <Latitude>44.83388069767187</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>REP16R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15085">
+                    <Name>Roustaing</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5856400236404425</Longitude>
+                            <Latitude>44.816950127109344</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBROUA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15088">
+                    <Name>Roustaing</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5858450752536678</Longitude>
+                            <Latitude>44.81679028184301</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBROUR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2397">
+                    <Name>Saint-Nicolas</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572545</Longitude>
+                            <Latitude>44.826665</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2397">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>SNI20A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2404">
+                    <Name>Saint-Nicolas</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5723947247386705</Longitude>
+                            <Latitude>44.82748973046099</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SNI20R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:15086">
+                    <Name>St Genès</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5841149626459623</Longitude>
+                            <Latitude>44.819441836881204</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SBGENA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1637">
+                    <Name>Talence Centre-Forum (côté Esplanade)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.591056</Longitude>
+                            <Latitude>44.811358</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1637">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>FOR19R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1014">
+                    <Name>Tillet</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572528</Longitude>
+                            <Latitude>44.821826</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1014">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>TIL20A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:185">
+                    <Name>Tillet</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5724105960719847</Longitude>
+                            <Latitude>44.82156801598708</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>TIL20R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3560">
+                    <Name>Tourny</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5778023494446746</Longitude>
+                            <Latitude>44.84497997153397</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>TOUR51</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3549">
+                    <Name>Victoire</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.573816</Longitude>
+                            <Latitude>44.831121</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3549">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>VIC16A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3801">
+                    <Name>Victoire</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.573786</Longitude>
+                            <Latitude>44.831041</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3801">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>VIC16R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3501">
+                    <Name>Victoire (Somme)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.5723159942539906</Longitude>
+                            <Latitude>44.8298355163131</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>VIC20R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:3546">
+                    <Name>Victoire (Somme)</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.572372</Longitude>
+                            <Latitude>44.829717</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:3546">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>VIC20A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+            </stopPlaces>
+            <tariffZones>
+                <TariffZone version="any" id="TBM:TariffZone:33063"/>
+                <TariffZone version="any" id="TBM:TariffZone:33522"/>
+            </tariffZones>
+        </SiteFrame>
+        <TimetableFrame version="any" id="TBM:TimetableFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+            <vehicleJourneys>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:b_268442104_10">
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:ineobus:10" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:210@0:LOC"/>
+                    <LineRef ref="TBM:Line:210" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                        <DestinationDisplayView>
+                            <Name>PESSAC CENTRE</Name>
+                        </DestinationDisplayView>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@1:LOC"/>
+                            <ArrivalTime>07:33:56</ArrivalTime>
+                            <DepartureTime>07:33:56</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@2:LOC"/>
+                            <ArrivalTime>07:35:42</ArrivalTime>
+                            <DepartureTime>07:35:42</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@3:LOC"/>
+                            <ArrivalTime>07:37:35</ArrivalTime>
+                            <DepartureTime>07:37:35</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@4:LOC"/>
+                            <ArrivalTime>07:40:04</ArrivalTime>
+                            <DepartureTime>07:40:04</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@5:LOC"/>
+                            <ArrivalTime>07:42:26</ArrivalTime>
+                            <DepartureTime>07:42:26</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@6:LOC"/>
+                            <ArrivalTime>07:47:09</ArrivalTime>
+                            <DepartureTime>07:47:09</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@7:LOC"/>
+                            <ArrivalTime>07:54:57</ArrivalTime>
+                            <DepartureTime>07:54:57</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@8:LOC"/>
+                            <ArrivalTime>07:56:00</ArrivalTime>
+                            <DepartureTime>07:56:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@9:LOC"/>
+                            <ArrivalTime>07:57:25</ArrivalTime>
+                            <DepartureTime>07:57:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@10:LOC"/>
+                            <ArrivalTime>07:59:02</ArrivalTime>
+                            <DepartureTime>07:59:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@11:LOC"/>
+                            <ArrivalTime>08:00:27</ArrivalTime>
+                            <DepartureTime>08:00:27</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@12:LOC"/>
+                            <ArrivalTime>08:02:20</ArrivalTime>
+                            <DepartureTime>08:02:20</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@13:LOC"/>
+                            <ArrivalTime>08:03:32</ArrivalTime>
+                            <DepartureTime>08:03:32</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@14:LOC"/>
+                            <ArrivalTime>08:05:14</ArrivalTime>
+                            <DepartureTime>08:05:14</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@15:LOC"/>
+                            <ArrivalTime>08:06:07</ArrivalTime>
+                            <DepartureTime>08:06:07</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@16:LOC"/>
+                            <ArrivalTime>08:07:02</ArrivalTime>
+                            <DepartureTime>08:07:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@17:LOC"/>
+                            <ArrivalTime>08:07:56</ArrivalTime>
+                            <DepartureTime>08:07:56</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@18:LOC"/>
+                            <ArrivalTime>08:10:10</ArrivalTime>
+                            <DepartureTime>08:10:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@19:LOC"/>
+                            <ArrivalTime>08:11:35</ArrivalTime>
+                            <DepartureTime>08:11:35</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@20:LOC"/>
+                            <ArrivalTime>08:12:51</ArrivalTime>
+                            <DepartureTime>08:12:51</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@21:LOC"/>
+                            <ArrivalTime>08:13:37</ArrivalTime>
+                            <DepartureTime>08:13:37</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@22:LOC"/>
+                            <ArrivalTime>08:14:51</ArrivalTime>
+                            <DepartureTime>08:14:51</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@23:LOC"/>
+                            <ArrivalTime>08:18:04</ArrivalTime>
+                            <DepartureTime>08:18:04</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@24:LOC"/>
+                            <ArrivalTime>08:22:13</ArrivalTime>
+                            <DepartureTime>08:22:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@25:LOC"/>
+                            <ArrivalTime>08:23:46</ArrivalTime>
+                            <DepartureTime>08:23:46</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@0@26:LOC"/>
+                            <ArrivalTime>08:25:14</ArrivalTime>
+                            <DepartureTime>08:25:14</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:b_268442106_10">
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:ineobus:10" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:210@1:LOC"/>
+                    <LineRef ref="TBM:Line:210" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>outbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                        <DestinationDisplayView>
+                            <Name>BERGES DE GARONNE</Name>
+                        </DestinationDisplayView>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@1:LOC"/>
+                            <ArrivalTime>05:04:00</ArrivalTime>
+                            <DepartureTime>05:04:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@2:LOC"/>
+                            <ArrivalTime>05:05:36</ArrivalTime>
+                            <DepartureTime>05:05:36</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@3:LOC"/>
+                            <ArrivalTime>05:07:19</ArrivalTime>
+                            <DepartureTime>05:07:19</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@4:LOC"/>
+                            <ArrivalTime>05:11:10</ArrivalTime>
+                            <DepartureTime>05:11:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@5:LOC"/>
+                            <ArrivalTime>05:12:49</ArrivalTime>
+                            <DepartureTime>05:12:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@6:LOC"/>
+                            <ArrivalTime>05:15:44</ArrivalTime>
+                            <DepartureTime>05:15:44</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@7:LOC"/>
+                            <ArrivalTime>05:17:20</ArrivalTime>
+                            <DepartureTime>05:17:20</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@8:LOC"/>
+                            <ArrivalTime>05:18:44</ArrivalTime>
+                            <DepartureTime>05:18:44</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@9:LOC"/>
+                            <ArrivalTime>05:19:58</ArrivalTime>
+                            <DepartureTime>05:19:58</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@10:LOC"/>
+                            <ArrivalTime>05:21:25</ArrivalTime>
+                            <DepartureTime>05:21:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@11:LOC"/>
+                            <ArrivalTime>05:22:13</ArrivalTime>
+                            <DepartureTime>05:22:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@12:LOC"/>
+                            <ArrivalTime>05:23:19</ArrivalTime>
+                            <DepartureTime>05:23:19</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@13:LOC"/>
+                            <ArrivalTime>05:24:24</ArrivalTime>
+                            <DepartureTime>05:24:24</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@14:LOC"/>
+                            <ArrivalTime>05:25:30</ArrivalTime>
+                            <DepartureTime>05:25:30</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@15:LOC"/>
+                            <ArrivalTime>05:26:49</ArrivalTime>
+                            <DepartureTime>05:26:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@16:LOC"/>
+                            <ArrivalTime>05:27:52</ArrivalTime>
+                            <DepartureTime>05:27:52</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@17:LOC"/>
+                            <ArrivalTime>05:29:49</ArrivalTime>
+                            <DepartureTime>05:29:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@18:LOC"/>
+                            <ArrivalTime>05:31:13</ArrivalTime>
+                            <DepartureTime>05:31:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@19:LOC"/>
+                            <ArrivalTime>05:32:49</ArrivalTime>
+                            <DepartureTime>05:32:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@20:LOC"/>
+                            <ArrivalTime>05:33:54</ArrivalTime>
+                            <DepartureTime>05:33:54</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@21:LOC"/>
+                            <ArrivalTime>05:36:11</ArrivalTime>
+                            <DepartureTime>05:36:11</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@22:LOC"/>
+                            <ArrivalTime>05:38:37</ArrivalTime>
+                            <DepartureTime>05:38:37</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@23:LOC"/>
+                            <ArrivalTime>05:40:21</ArrivalTime>
+                            <DepartureTime>05:40:21</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@24:LOC"/>
+                            <ArrivalTime>05:44:01</ArrivalTime>
+                            <DepartureTime>05:44:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@25:LOC"/>
+                            <ArrivalTime>05:46:21</ArrivalTime>
+                            <DepartureTime>05:46:21</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@26:LOC"/>
+                            <ArrivalTime>05:48:48</ArrivalTime>
+                            <DepartureTime>05:48:48</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@27:LOC"/>
+                            <ArrivalTime>05:50:34</ArrivalTime>
+                            <DepartureTime>05:50:34</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@28:LOC"/>
+                            <ArrivalTime>05:53:38</ArrivalTime>
+                            <DepartureTime>05:53:38</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:b_268442103_10">
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:ineobus:10" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:210@1:LOC"/>
+                    <LineRef ref="TBM:Line:210" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>outbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                        <DestinationDisplayView>
+                            <Name>BERGES DE GARONNE</Name>
+                        </DestinationDisplayView>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@1:LOC"/>
+                            <ArrivalTime>05:54:36</ArrivalTime>
+                            <DepartureTime>05:54:36</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@2:LOC"/>
+                            <ArrivalTime>05:56:12</ArrivalTime>
+                            <DepartureTime>05:56:12</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@3:LOC"/>
+                            <ArrivalTime>05:57:55</ArrivalTime>
+                            <DepartureTime>05:57:55</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@4:LOC"/>
+                            <ArrivalTime>06:01:46</ArrivalTime>
+                            <DepartureTime>06:01:46</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@5:LOC"/>
+                            <ArrivalTime>06:03:25</ArrivalTime>
+                            <DepartureTime>06:03:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@6:LOC"/>
+                            <ArrivalTime>06:06:20</ArrivalTime>
+                            <DepartureTime>06:06:20</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@7:LOC"/>
+                            <ArrivalTime>06:07:56</ArrivalTime>
+                            <DepartureTime>06:07:56</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@8:LOC"/>
+                            <ArrivalTime>06:09:20</ArrivalTime>
+                            <DepartureTime>06:09:20</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@9:LOC"/>
+                            <ArrivalTime>06:10:34</ArrivalTime>
+                            <DepartureTime>06:10:34</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@10:LOC"/>
+                            <ArrivalTime>06:12:01</ArrivalTime>
+                            <DepartureTime>06:12:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@11:LOC"/>
+                            <ArrivalTime>06:12:49</ArrivalTime>
+                            <DepartureTime>06:12:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@12:LOC"/>
+                            <ArrivalTime>06:13:55</ArrivalTime>
+                            <DepartureTime>06:13:55</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@13:LOC"/>
+                            <ArrivalTime>06:15:00</ArrivalTime>
+                            <DepartureTime>06:15:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@14:LOC"/>
+                            <ArrivalTime>06:16:06</ArrivalTime>
+                            <DepartureTime>06:16:06</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@15:LOC"/>
+                            <ArrivalTime>06:17:25</ArrivalTime>
+                            <DepartureTime>06:17:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@16:LOC"/>
+                            <ArrivalTime>06:18:28</ArrivalTime>
+                            <DepartureTime>06:18:28</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@17:LOC"/>
+                            <ArrivalTime>06:20:25</ArrivalTime>
+                            <DepartureTime>06:20:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@18:LOC"/>
+                            <ArrivalTime>06:21:49</ArrivalTime>
+                            <DepartureTime>06:21:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@19:LOC"/>
+                            <ArrivalTime>06:23:25</ArrivalTime>
+                            <DepartureTime>06:23:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@20:LOC"/>
+                            <ArrivalTime>06:24:30</ArrivalTime>
+                            <DepartureTime>06:24:30</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@21:LOC"/>
+                            <ArrivalTime>06:26:47</ArrivalTime>
+                            <DepartureTime>06:26:47</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@22:LOC"/>
+                            <ArrivalTime>06:29:13</ArrivalTime>
+                            <DepartureTime>06:29:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@23:LOC"/>
+                            <ArrivalTime>06:30:57</ArrivalTime>
+                            <DepartureTime>06:30:57</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@24:LOC"/>
+                            <ArrivalTime>06:34:37</ArrivalTime>
+                            <DepartureTime>06:34:37</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@25:LOC"/>
+                            <ArrivalTime>06:36:57</ArrivalTime>
+                            <DepartureTime>06:36:57</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@26:LOC"/>
+                            <ArrivalTime>06:39:24</ArrivalTime>
+                            <DepartureTime>06:39:24</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@27:LOC"/>
+                            <ArrivalTime>06:41:10</ArrivalTime>
+                            <DepartureTime>06:41:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@1@28:LOC"/>
+                            <ArrivalTime>06:44:14</ArrivalTime>
+                            <DepartureTime>06:44:14</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:b_268442102_10">
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:ineobus:10" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:210@2:LOC"/>
+                    <LineRef ref="TBM:Line:210" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                        <DestinationDisplayView>
+                            <Name>BUS RELAIS ALOUETTE</Name>
+                        </DestinationDisplayView>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@1:LOC"/>
+                            <ArrivalTime>04:26:00</ArrivalTime>
+                            <DepartureTime>04:26:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@2:LOC"/>
+                            <ArrivalTime>04:33:48</ArrivalTime>
+                            <DepartureTime>04:33:48</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@3:LOC"/>
+                            <ArrivalTime>04:34:51</ArrivalTime>
+                            <DepartureTime>04:34:51</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@4:LOC"/>
+                            <ArrivalTime>04:36:16</ArrivalTime>
+                            <DepartureTime>04:36:16</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@5:LOC"/>
+                            <ArrivalTime>04:37:53</ArrivalTime>
+                            <DepartureTime>04:37:53</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@6:LOC"/>
+                            <ArrivalTime>04:39:18</ArrivalTime>
+                            <DepartureTime>04:39:18</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@7:LOC"/>
+                            <ArrivalTime>04:41:11</ArrivalTime>
+                            <DepartureTime>04:41:11</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@8:LOC"/>
+                            <ArrivalTime>04:42:23</ArrivalTime>
+                            <DepartureTime>04:42:23</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@9:LOC"/>
+                            <ArrivalTime>04:44:05</ArrivalTime>
+                            <DepartureTime>04:44:05</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@10:LOC"/>
+                            <ArrivalTime>04:44:58</ArrivalTime>
+                            <DepartureTime>04:44:58</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@11:LOC"/>
+                            <ArrivalTime>04:45:53</ArrivalTime>
+                            <DepartureTime>04:45:53</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@12:LOC"/>
+                            <ArrivalTime>04:46:47</ArrivalTime>
+                            <DepartureTime>04:46:47</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@13:LOC"/>
+                            <ArrivalTime>04:49:01</ArrivalTime>
+                            <DepartureTime>04:49:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@14:LOC"/>
+                            <ArrivalTime>04:50:26</ArrivalTime>
+                            <DepartureTime>04:50:26</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@15:LOC"/>
+                            <ArrivalTime>04:51:42</ArrivalTime>
+                            <DepartureTime>04:51:42</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@16:LOC"/>
+                            <ArrivalTime>04:52:28</ArrivalTime>
+                            <DepartureTime>04:52:28</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@17:LOC"/>
+                            <ArrivalTime>04:53:42</ArrivalTime>
+                            <DepartureTime>04:53:42</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@18:LOC"/>
+                            <ArrivalTime>04:56:55</ArrivalTime>
+                            <DepartureTime>04:56:55</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@19:LOC"/>
+                            <ArrivalTime>05:01:04</ArrivalTime>
+                            <DepartureTime>05:01:04</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@20:LOC"/>
+                            <ArrivalTime>05:02:37</ArrivalTime>
+                            <DepartureTime>05:02:37</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@21:LOC"/>
+                            <ArrivalTime>05:04:05</ArrivalTime>
+                            <DepartureTime>05:04:05</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:b_268442101_10">
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:ineobus:10" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:210@2:LOC"/>
+                    <LineRef ref="TBM:Line:210" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                        <DestinationDisplayView>
+                            <Name>BUS RELAIS ALOUETTE</Name>
+                        </DestinationDisplayView>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@1:LOC"/>
+                            <ArrivalTime>04:48:09</ArrivalTime>
+                            <DepartureTime>04:48:09</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@2:LOC"/>
+                            <ArrivalTime>04:55:57</ArrivalTime>
+                            <DepartureTime>04:55:57</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@3:LOC"/>
+                            <ArrivalTime>04:57:00</ArrivalTime>
+                            <DepartureTime>04:57:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@4:LOC"/>
+                            <ArrivalTime>04:58:25</ArrivalTime>
+                            <DepartureTime>04:58:25</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@5:LOC"/>
+                            <ArrivalTime>05:00:02</ArrivalTime>
+                            <DepartureTime>05:00:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@6:LOC"/>
+                            <ArrivalTime>05:01:27</ArrivalTime>
+                            <DepartureTime>05:01:27</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@7:LOC"/>
+                            <ArrivalTime>05:03:20</ArrivalTime>
+                            <DepartureTime>05:03:20</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@8:LOC"/>
+                            <ArrivalTime>05:04:32</ArrivalTime>
+                            <DepartureTime>05:04:32</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@9:LOC"/>
+                            <ArrivalTime>05:06:14</ArrivalTime>
+                            <DepartureTime>05:06:14</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@10:LOC"/>
+                            <ArrivalTime>05:07:07</ArrivalTime>
+                            <DepartureTime>05:07:07</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@11:LOC"/>
+                            <ArrivalTime>05:08:02</ArrivalTime>
+                            <DepartureTime>05:08:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@12:LOC"/>
+                            <ArrivalTime>05:08:56</ArrivalTime>
+                            <DepartureTime>05:08:56</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@13:LOC"/>
+                            <ArrivalTime>05:11:10</ArrivalTime>
+                            <DepartureTime>05:11:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@14:LOC"/>
+                            <ArrivalTime>05:12:35</ArrivalTime>
+                            <DepartureTime>05:12:35</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@15:LOC"/>
+                            <ArrivalTime>05:13:51</ArrivalTime>
+                            <DepartureTime>05:13:51</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@16:LOC"/>
+                            <ArrivalTime>05:14:37</ArrivalTime>
+                            <DepartureTime>05:14:37</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@17:LOC"/>
+                            <ArrivalTime>05:15:51</ArrivalTime>
+                            <DepartureTime>05:15:51</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@18:LOC"/>
+                            <ArrivalTime>05:19:04</ArrivalTime>
+                            <DepartureTime>05:19:04</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@19:LOC"/>
+                            <ArrivalTime>05:23:13</ArrivalTime>
+                            <DepartureTime>05:23:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@20:LOC"/>
+                            <ArrivalTime>05:24:46</ArrivalTime>
+                            <DepartureTime>05:24:46</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:210@2@21:LOC"/>
+                            <ArrivalTime>05:26:14</ArrivalTime>
+                            <DepartureTime>05:26:14</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+            </vehicleJourneys>
+        </TimetableFrame>
+        <ServiceCalendarFrame version="any" id="TBM:ServiceCalendarFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_CALENDRIER:"/>
+            <dayTypes>
+                <DayType version="any" id="TBM:DayType:ineobus:10">
+                    <ValidBetween>
+                        <FromDate>2026-03-10T00:00:00</FromDate>
+                        <ToDate>2026-03-10T00:00:00</ToDate>
+                    </ValidBetween>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Tuesday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+            </dayTypes>
+        </ServiceCalendarFrame>
+        <VehicleScheduleFrame version="any" id="TBM:VehicleScheduleFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+        </VehicleScheduleFrame>
+        <GeneralFrame version="any" id="TBM:GeneralFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+        </GeneralFrame>
+    </dataObjects>
+</PublicationDelivery>

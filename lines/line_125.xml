@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PublicationDelivery xmlns="http://www.netex.org.uk/netex" xmlns:ns2="http://www.opengis.net/gml/3.2" xmlns:ns3="http://www.siri.org.uk/siri">
+    <PublicationTimestamp>2026-03-10T03:53:31.893Z</PublicationTimestamp>
+    <ParticipantRef>Mecatran</ParticipantRef>
+    <dataObjects>
+        <ResourceFrame version="any" id="TBM:ResourceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_COMMUN:"/>
+            <FrameDefaults>
+                <DefaultLocationSystem>EPSG:4326</DefaultLocationSystem>
+                <DefaultSystemOfUnits>SiMetres</DefaultSystemOfUnits>
+                <DefaultCurrency>EUR</DefaultCurrency>
+            </FrameDefaults>
+            <typesOfValue>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:0">
+                    <Name>GTFS stop type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:1">
+                    <Name>GTFS station type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:0">
+                    <Name>GTFS stop type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:1">
+                    <Name>GTFS station type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:0">
+                    <Name>GTFS transfer type for recommended transfer (0)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:1">
+                    <Name>GTFS transfer type for guaranteed transfer (1)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:2">
+                    <Name>GTFS transfer type for timed transfer (2)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:3">
+                    <Name>GTFS transfer type for no transfer (3)</Name>
+                </TypeOfTransfer>
+            </typesOfValue>
+        </ResourceFrame>
+        <ServiceFrame version="any" id="TBM:ServiceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+            <directions>
+                <Direction version="any" id="gtfs:Direction:0">
+                    <Name>Direction 0</Name>
+                    <Description>GTFS direction ID 0</Description>
+                    <DirectionType>outbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:1" version="any"/>
+                </Direction>
+                <Direction version="any" id="gtfs:Direction:1">
+                    <Name>Direction 1</Name>
+                    <Description>GTFS direction ID 1</Description>
+                    <DirectionType>inbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:0" version="any"/>
+                </Direction>
+            </directions>
+            <lines>
+                <Line version="any" id="TBM:Line:125">
+                    <Name>Navette Tram 125</Name>
+                    <ShortName>125</ShortName>
+                    <TransportMode>bus</TransportMode>
+                    <PublicCode>125</PublicCode>
+                    <AuthorityRef ref="TBM:Authority:1"/>
+                    <Presentation>
+                        <Colour>FFFFFF</Colour>
+                        <TextColour>000000</TextColour>
+                    </Presentation>
+                </Line>
+            </lines>
+        </ServiceFrame>
+        <SiteFrame version="any" id="TBM:SiteFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_ARRET:"/>
+        </SiteFrame>
+        <TimetableFrame version="any" id="TBM:TimetableFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+        </TimetableFrame>
+        <ServiceCalendarFrame version="any" id="TBM:ServiceCalendarFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_CALENDRIER:"/>
+        </ServiceCalendarFrame>
+        <VehicleScheduleFrame version="any" id="TBM:VehicleScheduleFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+        </VehicleScheduleFrame>
+        <GeneralFrame version="any" id="TBM:GeneralFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+        </GeneralFrame>
+    </dataObjects>
+</PublicationDelivery>

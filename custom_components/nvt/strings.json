@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect NVT to the API",
+        "description": "Enter the API URL, then choose which network this NVT monitor should use.",
+        "data": {
+          "url": "API URL",
+          "network": "Network",
+          "name": "Display name"
+        }
+      },
+      "stop": {
+        "title": "Select stop",
+        "description": "Choose the stop first. NVT will then only show lines currently served by that stop.",
+        "data": {
+          "stop_group_key": "Stop group",
+          "threshold_minutes": "Threshold minutes",
+          "scan_interval": "Refresh interval (seconds)"
+        }
+      },
+      "line": {
+        "title": "Select line",
+        "description": "Only lines currently served by the selected stop are shown here, with their type and colors when available.",
+        "data": {
+          "line_id": "Line"
+        }
+      },
+      "direction": {
+        "title": "Select direction",
+        "description": "Choose the direction or terminus to monitor for the selected line.",
+        "data": {
+          "direction_name": "Direction"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the API.",
+      "invalid_response": "The API returned an unexpected response.",
+      "no_lines": "No lines were returned by the API.",
+      "no_lines_at_stop": "No lines are currently available for the selected stop.",
+      "no_stop_groups": "No stop groups were returned by the API."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update monitor settings",
+        "data": {
+          "direction_name": "Direction",
+          "threshold_minutes": "Threshold minutes",
+          "scan_interval": "Refresh interval (seconds)"
+        }
+      }
+    }
+  }
+}

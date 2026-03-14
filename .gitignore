@@ -1,0 +1,28 @@
+# Binaries
+/nvt
+/nvt-backend
+/*.o
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Home Assistant local test data
+/.ha-test/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# API docs & endpoints
+/apispecific/

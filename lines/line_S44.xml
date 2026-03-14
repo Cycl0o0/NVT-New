@@ -1,0 +1,2675 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PublicationDelivery xmlns="http://www.netex.org.uk/netex" xmlns:ns2="http://www.opengis.net/gml/3.2" xmlns:ns3="http://www.siri.org.uk/siri">
+    <PublicationTimestamp>2026-03-10T03:53:40.899Z</PublicationTimestamp>
+    <ParticipantRef>Mecatran</ParticipantRef>
+    <dataObjects>
+        <ResourceFrame version="any" id="TBM:ResourceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_COMMUN:"/>
+            <FrameDefaults>
+                <DefaultLocationSystem>EPSG:4326</DefaultLocationSystem>
+                <DefaultSystemOfUnits>SiMetres</DefaultSystemOfUnits>
+                <DefaultCurrency>EUR</DefaultCurrency>
+            </FrameDefaults>
+            <typesOfValue>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:0">
+                    <Name>GTFS stop type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPlace version="any" id="gtfs:TypeOfPlace:1">
+                    <Name>GTFS station type for StopPlace</Name>
+                </TypeOfPlace>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:0">
+                    <Name>GTFS stop type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfPoint version="any" id="gtfs:TypeOfPoint:1">
+                    <Name>GTFS station type for ScheduledStopPoint</Name>
+                </TypeOfPoint>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:0">
+                    <Name>GTFS transfer type for recommended transfer (0)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:1">
+                    <Name>GTFS transfer type for guaranteed transfer (1)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:2">
+                    <Name>GTFS transfer type for timed transfer (2)</Name>
+                </TypeOfTransfer>
+                <TypeOfTransfer version="any" id="gtfs:TypeOfTransfer:3">
+                    <Name>GTFS transfer type for no transfer (3)</Name>
+                </TypeOfTransfer>
+            </typesOfValue>
+        </ResourceFrame>
+        <ServiceFrame version="any" id="TBM:ServiceFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+            <directions>
+                <Direction version="any" id="gtfs:Direction:0">
+                    <Name>Direction 0</Name>
+                    <Description>GTFS direction ID 0</Description>
+                    <DirectionType>outbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:1" version="any"/>
+                </Direction>
+                <Direction version="any" id="gtfs:Direction:1">
+                    <Name>Direction 1</Name>
+                    <Description>GTFS direction ID 1</Description>
+                    <DirectionType>inbound</DirectionType>
+                    <OppositeDirectionRef ref="gtfs:Direction:0" version="any"/>
+                </Direction>
+            </directions>
+            <routes>
+                <Route version="any" id="TBM:Route:844@0">
+                    <LineRef ref="TBM:Line:844"/>
+                    <DirectionType>outbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                </Route>
+                <Route version="any" id="TBM:Route:844@1">
+                    <LineRef ref="TBM:Line:844"/>
+                    <DirectionType>inbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                </Route>
+            </routes>
+            <lines>
+                <Line version="any" id="TBM:Line:844">
+                    <Name>SCODI S44</Name>
+                    <ShortName>S44</ShortName>
+                    <TransportMode>bus</TransportMode>
+                    <PublicCode>S44</PublicCode>
+                    <AuthorityRef ref="TBM:Authority:1"/>
+                    <Presentation>
+                        <Colour>164194</Colour>
+                        <TextColour>FFFFFF</TextColour>
+                    </Presentation>
+                </Line>
+            </lines>
+            <scheduledStopPoints>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9437">
+                    <Name>Bois de Princesse</Name>
+                    <Location>
+                        <Longitude>-0.710919</Longitude>
+                        <Latitude>44.77855</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOPRI</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9699">
+                    <Name>Bois de Princesse</Name>
+                    <Location>
+                        <Longitude>-0.710898</Longitude>
+                        <Latitude>44.778605</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOPRR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9446">
+                    <Name>Cèpes</Name>
+                    <Location>
+                        <Longitude>-0.696924</Longitude>
+                        <Latitude>44.795287</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOCEPA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9447">
+                    <Name>Cèpes</Name>
+                    <Location>
+                        <Longitude>-0.696978</Longitude>
+                        <Latitude>44.795339</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOCEPR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9467">
+                    <Name>Collège Alouette</Name>
+                    <Location>
+                        <Longitude>-0.668337</Longitude>
+                        <Latitude>44.801807</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOALOA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:108">
+                    <Name>Combelongue</Name>
+                    <Location>
+                        <Longitude>-0.70125</Longitude>
+                        <Latitude>44.776801</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33122" version="any"/>
+                    </tariffZones>
+                    <PublicCode>COM46R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1301">
+                    <Name>Combelongue</Name>
+                    <Location>
+                        <Longitude>-0.701195</Longitude>
+                        <Latitude>44.77692</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>COM46A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1006">
+                    <Name>Forêt du Bourgailh</Name>
+                    <Location>
+                        <Longitude>-0.684509</Longitude>
+                        <Latitude>44.801126</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BEA46R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:670">
+                    <Name>Forêt du Bourgailh</Name>
+                    <Location>
+                        <Longitude>-0.686439</Longitude>
+                        <Latitude>44.799665</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BEA47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2759">
+                    <Name>Les Bois de l'Alouette</Name>
+                    <Location>
+                        <Longitude>-0.688876</Longitude>
+                        <Latitude>44.797457</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BAL47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2879">
+                    <Name>Les Bois de l'Alouette</Name>
+                    <Location>
+                        <Longitude>-0.688929</Longitude>
+                        <Latitude>44.797293</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>BAL47R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:184">
+                    <Name>Les Chênes</Name>
+                    <Location>
+                        <Longitude>-0.697353</Longitude>
+                        <Latitude>44.778535</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>CHE46A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:650">
+                    <Name>Les Chênes</Name>
+                    <Location>
+                        <Longitude>-0.697189</Longitude>
+                        <Latitude>44.778541</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33122" version="any"/>
+                    </tariffZones>
+                    <PublicCode>CHE46R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1181">
+                    <Name>Magonty</Name>
+                    <Location>
+                        <Longitude>-0.702319</Longitude>
+                        <Latitude>44.7938</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>MAG47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2877">
+                    <Name>Magonty</Name>
+                    <Location>
+                        <Longitude>-0.705842</Longitude>
+                        <Latitude>44.792708</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>RES47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2883">
+                    <Name>Magonty</Name>
+                    <Location>
+                        <Longitude>-0.704623</Longitude>
+                        <Latitude>44.793038</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>RES47R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:816">
+                    <Name>Magonty</Name>
+                    <Location>
+                        <Longitude>-0.701647</Longitude>
+                        <Latitude>44.793966</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>MAG47R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1002">
+                    <Name>Petit Gazinet</Name>
+                    <Location>
+                        <Longitude>-0.694698</Longitude>
+                        <Latitude>44.779732</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PGA46A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:2778">
+                    <Name>Petit Gazinet</Name>
+                    <Location>
+                        <Longitude>-0.694508</Longitude>
+                        <Latitude>44.77973</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33122" version="any"/>
+                    </tariffZones>
+                    <PublicCode>PGA46R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9442">
+                    <Name>Romainville</Name>
+                    <Location>
+                        <Longitude>-0.713396</Longitude>
+                        <Latitude>44.790175</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOROMA</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:9443">
+                    <Name>Romainville</Name>
+                    <Location>
+                        <Longitude>-0.713412</Longitude>
+                        <Latitude>44.790229</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>SCOROMR</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:1142">
+                    <Name>Tartifume</Name>
+                    <Location>
+                        <Longitude>-0.709991</Longitude>
+                        <Latitude>44.791326</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>TAR47R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:283">
+                    <Name>Tartifume</Name>
+                    <Location>
+                        <Longitude>-0.709314</Longitude>
+                        <Latitude>44.79161</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>TAR47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:609">
+                    <Name>Zoo de Pessac</Name>
+                    <Location>
+                        <Longitude>-0.693533</Longitude>
+                        <Latitude>44.796274</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>MER47R</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+                <ScheduledStopPoint version="any" id="TBM:ScheduledStopPoint:925">
+                    <Name>Zoo de Pessac</Name>
+                    <Location>
+                        <Longitude>-0.694902</Longitude>
+                        <Latitude>44.795922</Latitude>
+                    </Location>
+                    <types>
+                        <TypeOfPointRef ref="gtfs:TypeOfPoint:0" version="any"/>
+                    </types>
+                    <tariffZones>
+                        <TariffZoneRef ref="TBM:TariffZone:33318" version="any"/>
+                    </tariffZones>
+                    <PublicCode>MER47A</PublicCode>
+                    <StopType>onstreetBus</StopType>
+                </ScheduledStopPoint>
+            </scheduledStopPoints>
+            <stopAssignments>
+                <PassengerStopAssignment order="1" version="any" id="TBM:PassengerStopAssignment:9437">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9437" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9437" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="2" version="any" id="TBM:PassengerStopAssignment:9699">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9699" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9699" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="3" version="any" id="TBM:PassengerStopAssignment:9446">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9446" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9446" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="4" version="any" id="TBM:PassengerStopAssignment:9447">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9447" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9447" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="5" version="any" id="TBM:PassengerStopAssignment:9467">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9467" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9467" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="6" version="any" id="TBM:PassengerStopAssignment:108">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:108" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:108" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="7" version="any" id="TBM:PassengerStopAssignment:1301">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1301" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1301" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="8" version="any" id="TBM:PassengerStopAssignment:1006">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1006" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1006" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="9" version="any" id="TBM:PassengerStopAssignment:670">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:670" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:670" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="10" version="any" id="TBM:PassengerStopAssignment:2759">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2759" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2759" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="11" version="any" id="TBM:PassengerStopAssignment:2879">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2879" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2879" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="12" version="any" id="TBM:PassengerStopAssignment:184">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:184" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:184" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="13" version="any" id="TBM:PassengerStopAssignment:650">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:650" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:650" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="14" version="any" id="TBM:PassengerStopAssignment:1181">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1181" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1181" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="15" version="any" id="TBM:PassengerStopAssignment:2877">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2877" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2877" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="16" version="any" id="TBM:PassengerStopAssignment:2883">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2883" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2883" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="17" version="any" id="TBM:PassengerStopAssignment:816">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:816" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:816" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="18" version="any" id="TBM:PassengerStopAssignment:1002">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1002" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1002" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="19" version="any" id="TBM:PassengerStopAssignment:2778">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2778" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:2778" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="20" version="any" id="TBM:PassengerStopAssignment:9442">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9442" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9442" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="21" version="any" id="TBM:PassengerStopAssignment:9443">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9443" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:9443" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="22" version="any" id="TBM:PassengerStopAssignment:1142">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1142" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:1142" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="23" version="any" id="TBM:PassengerStopAssignment:283">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:283" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:283" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="24" version="any" id="TBM:PassengerStopAssignment:609">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:609" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:609" version="any"/>
+                </PassengerStopAssignment>
+                <PassengerStopAssignment order="25" version="any" id="TBM:PassengerStopAssignment:925">
+                    <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:925" version="any"/>
+                    <StopPlaceRef ref="TBM:StopPlace:925" version="any"/>
+                </PassengerStopAssignment>
+            </stopAssignments>
+            <journeyPatterns>
+                <ServiceJourneyPattern version="any" id="TBM:JourneyPattern:844@0:LOC">
+                    <RouteRef ref="TBM:Route:844@0"/>
+                    <DirectionType>outbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                    <pointsInSequence>
+                        <StopPointInJourneyPattern order="1" version="any" id="TBM:JourneyPattern:844@0@1:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1002" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="2" version="any" id="TBM:JourneyPattern:844@0@2:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:184" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="3" version="any" id="TBM:JourneyPattern:844@0@3:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1301" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="4" version="any" id="TBM:JourneyPattern:844@0@4:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9699" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="5" version="any" id="TBM:JourneyPattern:844@0@5:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9442" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="6" version="any" id="TBM:JourneyPattern:844@0@6:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1142" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="7" version="any" id="TBM:JourneyPattern:844@0@7:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2883" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="8" version="any" id="TBM:JourneyPattern:844@0@8:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:816" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="9" version="any" id="TBM:JourneyPattern:844@0@9:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9446" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="10" version="any" id="TBM:JourneyPattern:844@0@10:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:609" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="11" version="any" id="TBM:JourneyPattern:844@0@11:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2879" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="12" version="any" id="TBM:JourneyPattern:844@0@12:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1006" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="13" version="any" id="TBM:JourneyPattern:844@0@13:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9467" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                    </pointsInSequence>
+                </ServiceJourneyPattern>
+                <ServiceJourneyPattern version="any" id="TBM:JourneyPattern:844@1:LOC">
+                    <RouteRef ref="TBM:Route:844@1"/>
+                    <DirectionType>inbound</DirectionType>
+                    <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    <pointsInSequence>
+                        <StopPointInJourneyPattern order="1" version="any" id="TBM:JourneyPattern:844@1@1:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9467" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="2" version="any" id="TBM:JourneyPattern:844@1@2:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:670" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="3" version="any" id="TBM:JourneyPattern:844@1@3:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2759" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="4" version="any" id="TBM:JourneyPattern:844@1@4:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:925" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="5" version="any" id="TBM:JourneyPattern:844@1@5:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9447" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="6" version="any" id="TBM:JourneyPattern:844@1@6:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:1181" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="7" version="any" id="TBM:JourneyPattern:844@1@7:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2877" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="8" version="any" id="TBM:JourneyPattern:844@1@8:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:283" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="9" version="any" id="TBM:JourneyPattern:844@1@9:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9443" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="10" version="any" id="TBM:JourneyPattern:844@1@10:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:9437" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="11" version="any" id="TBM:JourneyPattern:844@1@11:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:108" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="12" version="any" id="TBM:JourneyPattern:844@1@12:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:650" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                        <StopPointInJourneyPattern order="13" version="any" id="TBM:JourneyPattern:844@1@13:LOC">
+                            <ScheduledStopPointRef ref="TBM:ScheduledStopPoint:2778" version="any"/>
+                            <ForAlighting>true</ForAlighting>
+                            <ForBoarding>true</ForBoarding>
+                            <RequestMethod>noneRequired</RequestMethod>
+                        </StopPointInJourneyPattern>
+                    </pointsInSequence>
+                </ServiceJourneyPattern>
+            </journeyPatterns>
+        </ServiceFrame>
+        <SiteFrame version="any" id="TBM:SiteFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_ARRET:"/>
+            <groupsOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BSCOPRI">
+                    <Name>Bois de Princesse</Name>
+                    <PublicCode>BSCOPRI</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:9437"/>
+                        <StopPlaceRef ref="TBM:StopPlace:9699"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.710909</Longitude>
+                            <Latitude>44.778578</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BSCOCEP">
+                    <Name>Cèpes</Name>
+                    <PublicCode>BSCOCEP</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:9446"/>
+                        <StopPlaceRef ref="TBM:StopPlace:9447"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.696951</Longitude>
+                            <Latitude>44.795313</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BSCOALO">
+                    <Name>Collège Alouette</Name>
+                    <PublicCode>BSCOALO</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:9467"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.668337</Longitude>
+                            <Latitude>44.801807</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BCOMB46">
+                    <Name>Combelongue</Name>
+                    <PublicCode>BCOMB46</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:108"/>
+                        <StopPlaceRef ref="TBM:StopPlace:1301"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.701222</Longitude>
+                            <Latitude>44.77686</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBEAUSE">
+                    <Name>Forêt du Bourgailh</Name>
+                    <PublicCode>BBEAUSE</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1006"/>
+                        <StopPlaceRef ref="TBM:StopPlace:670"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.685312</Longitude>
+                            <Latitude>44.800174</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BBALOUE">
+                    <Name>Les Bois de l'Alouette</Name>
+                    <PublicCode>BBALOUE</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2759"/>
+                        <StopPlaceRef ref="TBM:StopPlace:2879"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.688903</Longitude>
+                            <Latitude>44.797375</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BCHENE1">
+                    <Name>Les Chênes</Name>
+                    <PublicCode>BCHENE1</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:650"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.697189</Longitude>
+                            <Latitude>44.778541</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BCHENE2">
+                    <Name>Les Chênes</Name>
+                    <PublicCode>BCHENE2</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:184"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.697353</Longitude>
+                            <Latitude>44.778535</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BMAGON">
+                    <Name>Magonty</Name>
+                    <PublicCode>BMAGON</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1181"/>
+                        <StopPlaceRef ref="TBM:StopPlace:816"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.701983</Longitude>
+                            <Latitude>44.793883</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BRESIST">
+                    <Name>Magonty</Name>
+                    <PublicCode>BRESIST</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:2877"/>
+                        <StopPlaceRef ref="TBM:StopPlace:2883"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.705106</Longitude>
+                            <Latitude>44.793193</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BPGAZIN">
+                    <Name>Petit Gazinet</Name>
+                    <PublicCode>BPGAZIN</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1002"/>
+                        <StopPlaceRef ref="TBM:StopPlace:2778"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.694603</Longitude>
+                            <Latitude>44.779731</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BSCOROM">
+                    <Name>Romainville</Name>
+                    <PublicCode>BSCOROM</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:9442"/>
+                        <StopPlaceRef ref="TBM:StopPlace:9443"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.713404</Longitude>
+                            <Latitude>44.790202</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BTARTIF">
+                    <Name>Tartifume</Name>
+                    <PublicCode>BTARTIF</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:1142"/>
+                        <StopPlaceRef ref="TBM:StopPlace:283"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.709372</Longitude>
+                            <Latitude>44.791659</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+                <GroupOfStopPlaces version="any" id="TBM:GroupOfStopPlace:BMERLE">
+                    <Name>Zoo de Pessac</Name>
+                    <PublicCode>BMERLE</PublicCode>
+                    <members>
+                        <StopPlaceRef ref="TBM:StopPlace:609"/>
+                        <StopPlaceRef ref="TBM:StopPlace:925"/>
+                    </members>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.694218</Longitude>
+                            <Latitude>44.796098</Latitude>
+                        </Location>
+                    </Centroid>
+                </GroupOfStopPlaces>
+            </groupsOfStopPlaces>
+            <stopPlaces>
+                <StopPlace version="any" id="TBM:StopPlace:9437">
+                    <Name>Bois de Princesse</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.710919</Longitude>
+                            <Latitude>44.77855</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOPRI</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9699">
+                    <Name>Bois de Princesse</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.710898</Longitude>
+                            <Latitude>44.778605</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOPRR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9446">
+                    <Name>Cèpes</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.696924</Longitude>
+                            <Latitude>44.795287</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOCEPA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9447">
+                    <Name>Cèpes</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.696978</Longitude>
+                            <Latitude>44.795339</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOCEPR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9467">
+                    <Name>Collège Alouette</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.668337</Longitude>
+                            <Latitude>44.801807</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOALOA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:108">
+                    <Name>Combelongue</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.70125</Longitude>
+                            <Latitude>44.776801</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>COM46R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1301">
+                    <Name>Combelongue</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.701195</Longitude>
+                            <Latitude>44.77692</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>COM46A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1006">
+                    <Name>Forêt du Bourgailh</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.684509</Longitude>
+                            <Latitude>44.801126</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1006">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BEA46R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:670">
+                    <Name>Forêt du Bourgailh</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.686439</Longitude>
+                            <Latitude>44.799665</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:670">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BEA47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2759">
+                    <Name>Les Bois de l'Alouette</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.688876</Longitude>
+                            <Latitude>44.797457</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2759">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>BAL47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2879">
+                    <Name>Les Bois de l'Alouette</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.688929</Longitude>
+                            <Latitude>44.797293</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>BAL47R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:184">
+                    <Name>Les Chênes</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.697353</Longitude>
+                            <Latitude>44.778535</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>CHE46A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:650">
+                    <Name>Les Chênes</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.697189</Longitude>
+                            <Latitude>44.778541</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>CHE46R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1181">
+                    <Name>Magonty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.702319</Longitude>
+                            <Latitude>44.7938</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1181">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>MAG47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2877">
+                    <Name>Magonty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.705842</Longitude>
+                            <Latitude>44.792708</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2877">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>RES47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2883">
+                    <Name>Magonty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.704623</Longitude>
+                            <Latitude>44.793038</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:2883">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>RES47R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:816">
+                    <Name>Magonty</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.701647</Longitude>
+                            <Latitude>44.793966</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:816">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>MAG47R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1002">
+                    <Name>Petit Gazinet</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.694698</Longitude>
+                            <Latitude>44.779732</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1002">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>PGA46A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:2778">
+                    <Name>Petit Gazinet</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.694508</Longitude>
+                            <Latitude>44.77973</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>PGA46R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9442">
+                    <Name>Romainville</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.713396</Longitude>
+                            <Latitude>44.790175</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOROMA</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:9443">
+                    <Name>Romainville</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.713412</Longitude>
+                            <Latitude>44.790229</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <PublicCode>SCOROMR</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:1142">
+                    <Name>Tartifume</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.709991</Longitude>
+                            <Latitude>44.791326</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:1142">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>TAR47R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:283">
+                    <Name>Tartifume</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.709314</Longitude>
+                            <Latitude>44.79161</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:283">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>TAR47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:609">
+                    <Name>Zoo de Pessac</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.693533</Longitude>
+                            <Latitude>44.796274</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:609">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>MER47R</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+                <StopPlace version="any" id="TBM:StopPlace:925">
+                    <Name>Zoo de Pessac</Name>
+                    <Centroid>
+                        <Location>
+                            <Longitude>-0.694902</Longitude>
+                            <Latitude>44.795922</Latitude>
+                        </Location>
+                    </Centroid>
+                    <placeTypes>
+                        <TypeOfPlaceRef ref="gtfs:TypeOfPlace:0" version="any"/>
+                    </placeTypes>
+                    <AccessibilityAssessment version="any" id="TBM:AccessibilityAssessment:925">
+                        <MobilityImpairedAccess>true</MobilityImpairedAccess>
+                    </AccessibilityAssessment>
+                    <PublicCode>MER47A</PublicCode>
+                    <StopPlaceType>onstreetBus</StopPlaceType>
+                </StopPlace>
+            </stopPlaces>
+            <tariffZones>
+                <TariffZone version="any" id="TBM:TariffZone:33122"/>
+                <TariffZone version="any" id="TBM:TariffZone:33318"/>
+            </tariffZones>
+        </SiteFrame>
+        <TimetableFrame version="any" id="TBM:TimetableFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+            <vehicleJourneys>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:50670396-2026_HIVER-SCO_A00-Semaine-19">
+                    <LinkSequenceProjectionRef ref="TBM:LinkSequenceProjection:302" version="any"/>
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-19" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:844@0:LOC"/>
+                    <BlockRef ref="TBM:Block:7676008" version="any"/>
+                    <LineRef ref="TBM:Line:844" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>outbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@1:LOC"/>
+                            <ArrivalTime>07:22:00</ArrivalTime>
+                            <DepartureTime>07:22:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@2:LOC"/>
+                            <ArrivalTime>07:22:43</ArrivalTime>
+                            <DepartureTime>07:22:43</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@3:LOC"/>
+                            <ArrivalTime>07:23:45</ArrivalTime>
+                            <DepartureTime>07:23:45</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@4:LOC"/>
+                            <ArrivalTime>07:27:10</ArrivalTime>
+                            <DepartureTime>07:27:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@5:LOC"/>
+                            <ArrivalTime>07:32:13</ArrivalTime>
+                            <DepartureTime>07:32:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@6:LOC"/>
+                            <ArrivalTime>07:33:05</ArrivalTime>
+                            <DepartureTime>07:33:05</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@7:LOC"/>
+                            <ArrivalTime>07:34:26</ArrivalTime>
+                            <DepartureTime>07:34:26</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@8:LOC"/>
+                            <ArrivalTime>07:35:13</ArrivalTime>
+                            <DepartureTime>07:35:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@9:LOC"/>
+                            <ArrivalTime>07:36:22</ArrivalTime>
+                            <DepartureTime>07:36:22</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@10:LOC"/>
+                            <ArrivalTime>07:37:13</ArrivalTime>
+                            <DepartureTime>07:37:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@11:LOC"/>
+                            <ArrivalTime>07:38:22</ArrivalTime>
+                            <DepartureTime>07:38:22</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@12:LOC"/>
+                            <ArrivalTime>07:39:59</ArrivalTime>
+                            <DepartureTime>07:39:59</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@13:LOC"/>
+                            <ArrivalTime>07:46:00</ArrivalTime>
+                            <DepartureTime>07:46:00</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:50746079-2026_HIVER-SCO_A00-Semaine-20">
+                    <LinkSequenceProjectionRef ref="TBM:LinkSequenceProjection:302" version="any"/>
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:844@0:LOC"/>
+                    <BlockRef ref="TBM:Block:7688576" version="any"/>
+                    <LineRef ref="TBM:Line:844" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>outbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:0" version="any"/>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@1:LOC"/>
+                            <ArrivalTime>07:22:00</ArrivalTime>
+                            <DepartureTime>07:22:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@2:LOC"/>
+                            <ArrivalTime>07:22:43</ArrivalTime>
+                            <DepartureTime>07:22:43</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@3:LOC"/>
+                            <ArrivalTime>07:23:45</ArrivalTime>
+                            <DepartureTime>07:23:45</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@4:LOC"/>
+                            <ArrivalTime>07:27:10</ArrivalTime>
+                            <DepartureTime>07:27:10</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@5:LOC"/>
+                            <ArrivalTime>07:32:13</ArrivalTime>
+                            <DepartureTime>07:32:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@6:LOC"/>
+                            <ArrivalTime>07:33:05</ArrivalTime>
+                            <DepartureTime>07:33:05</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@7:LOC"/>
+                            <ArrivalTime>07:34:26</ArrivalTime>
+                            <DepartureTime>07:34:26</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@8:LOC"/>
+                            <ArrivalTime>07:35:13</ArrivalTime>
+                            <DepartureTime>07:35:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@9:LOC"/>
+                            <ArrivalTime>07:36:22</ArrivalTime>
+                            <DepartureTime>07:36:22</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@10:LOC"/>
+                            <ArrivalTime>07:37:13</ArrivalTime>
+                            <DepartureTime>07:37:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@11:LOC"/>
+                            <ArrivalTime>07:38:22</ArrivalTime>
+                            <DepartureTime>07:38:22</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@12:LOC"/>
+                            <ArrivalTime>07:39:59</ArrivalTime>
+                            <DepartureTime>07:39:59</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@0@13:LOC"/>
+                            <ArrivalTime>07:46:00</ArrivalTime>
+                            <DepartureTime>07:46:00</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:50746080-2026_HIVER-SCO_A00-Semaine-20-0010000">
+                    <LinkSequenceProjectionRef ref="TBM:LinkSequenceProjection:303" version="any"/>
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-0010000" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:844@1:LOC"/>
+                    <BlockRef ref="TBM:Block:7689019" version="any"/>
+                    <LineRef ref="TBM:Line:844" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@1:LOC"/>
+                            <ArrivalTime>12:20:00</ArrivalTime>
+                            <DepartureTime>12:20:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@2:LOC"/>
+                            <ArrivalTime>12:26:01</ArrivalTime>
+                            <DepartureTime>12:26:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@3:LOC"/>
+                            <ArrivalTime>12:27:00</ArrivalTime>
+                            <DepartureTime>12:27:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@4:LOC"/>
+                            <ArrivalTime>12:28:40</ArrivalTime>
+                            <DepartureTime>12:28:40</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@5:LOC"/>
+                            <ArrivalTime>12:29:13</ArrivalTime>
+                            <DepartureTime>12:29:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@6:LOC"/>
+                            <ArrivalTime>12:30:39</ArrivalTime>
+                            <DepartureTime>12:30:39</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@7:LOC"/>
+                            <ArrivalTime>12:31:45</ArrivalTime>
+                            <DepartureTime>12:31:45</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@8:LOC"/>
+                            <ArrivalTime>12:32:41</ArrivalTime>
+                            <DepartureTime>12:32:41</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@9:LOC"/>
+                            <ArrivalTime>12:33:49</ArrivalTime>
+                            <DepartureTime>12:33:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@10:LOC"/>
+                            <ArrivalTime>12:39:15</ArrivalTime>
+                            <DepartureTime>12:39:15</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@11:LOC"/>
+                            <ArrivalTime>12:43:02</ArrivalTime>
+                            <DepartureTime>12:43:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@12:LOC"/>
+                            <ArrivalTime>12:44:13</ArrivalTime>
+                            <DepartureTime>12:44:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@13:LOC"/>
+                            <ArrivalTime>12:45:00</ArrivalTime>
+                            <DepartureTime>12:45:00</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:50670398-2026_HIVER-SCO_A00-Semaine-19-1101100">
+                    <LinkSequenceProjectionRef ref="TBM:LinkSequenceProjection:303" version="any"/>
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-19-1101100" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:844@1:LOC"/>
+                    <BlockRef ref="TBM:Block:7676024" version="any"/>
+                    <LineRef ref="TBM:Line:844" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@1:LOC"/>
+                            <ArrivalTime>16:47:00</ArrivalTime>
+                            <DepartureTime>16:47:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@2:LOC"/>
+                            <ArrivalTime>16:53:01</ArrivalTime>
+                            <DepartureTime>16:53:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@3:LOC"/>
+                            <ArrivalTime>16:54:00</ArrivalTime>
+                            <DepartureTime>16:54:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@4:LOC"/>
+                            <ArrivalTime>16:55:40</ArrivalTime>
+                            <DepartureTime>16:55:40</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@5:LOC"/>
+                            <ArrivalTime>16:56:13</ArrivalTime>
+                            <DepartureTime>16:56:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@6:LOC"/>
+                            <ArrivalTime>16:57:39</ArrivalTime>
+                            <DepartureTime>16:57:39</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@7:LOC"/>
+                            <ArrivalTime>16:58:45</ArrivalTime>
+                            <DepartureTime>16:58:45</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@8:LOC"/>
+                            <ArrivalTime>16:59:41</ArrivalTime>
+                            <DepartureTime>16:59:41</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@9:LOC"/>
+                            <ArrivalTime>17:00:49</ArrivalTime>
+                            <DepartureTime>17:00:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@10:LOC"/>
+                            <ArrivalTime>17:06:15</ArrivalTime>
+                            <DepartureTime>17:06:15</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@11:LOC"/>
+                            <ArrivalTime>17:10:02</ArrivalTime>
+                            <DepartureTime>17:10:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@12:LOC"/>
+                            <ArrivalTime>17:11:13</ArrivalTime>
+                            <DepartureTime>17:11:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@13:LOC"/>
+                            <ArrivalTime>17:12:00</ArrivalTime>
+                            <DepartureTime>17:12:00</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+                <ServiceJourney version="any" id="TBM:ServiceJourney:50746081-2026_HIVER-SCO_A00-Semaine-20-1101100">
+                    <LinkSequenceProjectionRef ref="TBM:LinkSequenceProjection:303" version="any"/>
+                    <dayTypes>
+                        <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    </dayTypes>
+                    <ServiceJourneyPatternRef ref="TBM:JourneyPattern:844@1:LOC"/>
+                    <BlockRef ref="TBM:Block:7688593" version="any"/>
+                    <LineRef ref="TBM:Line:844" version="any"/>
+                    <JourneyPatternView>
+                        <DirectionType>inbound</DirectionType>
+                        <DirectionRef ref="gtfs:Direction:1" version="any"/>
+                    </JourneyPatternView>
+                    <passingTimes>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@1:LOC"/>
+                            <ArrivalTime>16:47:00</ArrivalTime>
+                            <DepartureTime>16:47:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@2:LOC"/>
+                            <ArrivalTime>16:53:01</ArrivalTime>
+                            <DepartureTime>16:53:01</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@3:LOC"/>
+                            <ArrivalTime>16:54:00</ArrivalTime>
+                            <DepartureTime>16:54:00</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@4:LOC"/>
+                            <ArrivalTime>16:55:40</ArrivalTime>
+                            <DepartureTime>16:55:40</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@5:LOC"/>
+                            <ArrivalTime>16:56:13</ArrivalTime>
+                            <DepartureTime>16:56:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@6:LOC"/>
+                            <ArrivalTime>16:57:39</ArrivalTime>
+                            <DepartureTime>16:57:39</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@7:LOC"/>
+                            <ArrivalTime>16:58:45</ArrivalTime>
+                            <DepartureTime>16:58:45</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@8:LOC"/>
+                            <ArrivalTime>16:59:41</ArrivalTime>
+                            <DepartureTime>16:59:41</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@9:LOC"/>
+                            <ArrivalTime>17:00:49</ArrivalTime>
+                            <DepartureTime>17:00:49</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@10:LOC"/>
+                            <ArrivalTime>17:06:15</ArrivalTime>
+                            <DepartureTime>17:06:15</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@11:LOC"/>
+                            <ArrivalTime>17:10:02</ArrivalTime>
+                            <DepartureTime>17:10:02</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@12:LOC"/>
+                            <ArrivalTime>17:11:13</ArrivalTime>
+                            <DepartureTime>17:11:13</DepartureTime>
+                        </TimetabledPassingTime>
+                        <TimetabledPassingTime>
+                            <PointInJourneyPatternRef ref="TBM:JourneyPattern:844@1@13:LOC"/>
+                            <ArrivalTime>17:12:00</ArrivalTime>
+                            <DepartureTime>17:12:00</DepartureTime>
+                        </TimetabledPassingTime>
+                    </passingTimes>
+                </ServiceJourney>
+            </vehicleJourneys>
+        </TimetableFrame>
+        <ServiceCalendarFrame version="any" id="TBM:ServiceCalendarFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_CALENDRIER:"/>
+            <dayTypes>
+                <DayType version="any" id="TBM:DayType:2026_HIVER-SCO_A00-Semaine-19">
+                    <ValidBetween>
+                        <FromDate>2026-02-27T00:00:00</FromDate>
+                        <ToDate>2026-02-27T00:00:00</ToDate>
+                    </ValidBetween>
+                    <Name>2026-02-27 → 02-27 (ven)</Name>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Friday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+                <DayType version="any" id="TBM:DayType:2026_HIVER-SCO_A00-Semaine-19-1101100">
+                    <ValidBetween>
+                        <FromDate>2026-02-27T00:00:00</FromDate>
+                        <ToDate>2026-02-27T00:00:00</ToDate>
+                    </ValidBetween>
+                    <Name>2026-02-27 → 02-27 (ven)</Name>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Friday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+                <DayType version="any" id="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100">
+                    <ValidBetween>
+                        <FromDate>2026-03-02T00:00:00</FromDate>
+                        <ToDate>2026-07-03T00:00:00</ToDate>
+                    </ValidBetween>
+                    <Name>2026-03-02 → 07-03 (15 lun, 16 mar, 15 jeu, 13 ven)</Name>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Monday Tuesday Thursday Friday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+                <DayType version="any" id="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20">
+                    <ValidBetween>
+                        <FromDate>2026-03-02T00:00:00</FromDate>
+                        <ToDate>2026-07-03T00:00:00</ToDate>
+                    </ValidBetween>
+                    <Name>2026-03-02 → 07-03 (15 lun, 16 mar, 16 mer, 15 jeu, 13 ven)</Name>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Monday Tuesday Wednesday Thursday Friday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+                <DayType version="any" id="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-0010000">
+                    <ValidBetween>
+                        <FromDate>2026-03-04T00:00:00</FromDate>
+                        <ToDate>2026-07-01T00:00:00</ToDate>
+                    </ValidBetween>
+                    <Name>2026-03-04 → 07-01 (16 mer)</Name>
+                    <properties>
+                        <PropertyOfDay>
+                            <DaysOfWeek>Wednesday</DaysOfWeek>
+                        </PropertyOfDay>
+                    </properties>
+                </DayType>
+            </dayTypes>
+            <dayTypeAssignments>
+                <DayTypeAssignment order="1" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@1">
+                    <Date>2026-04-06</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="2" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@2">
+                    <Date>2026-04-07</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="3" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@3">
+                    <Date>2026-04-09</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="4" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@4">
+                    <Date>2026-04-10</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="5" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@5">
+                    <Date>2026-04-13</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="6" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@6">
+                    <Date>2026-04-14</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="7" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@7">
+                    <Date>2026-04-16</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="8" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@8">
+                    <Date>2026-04-17</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="9" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@9">
+                    <Date>2026-05-01</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="10" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@10">
+                    <Date>2026-05-08</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="11" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@11">
+                    <Date>2026-05-14</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="12" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@12">
+                    <Date>2026-05-15</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="13" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-1101100@13">
+                    <Date>2026-05-25</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-1101100" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="1" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@1">
+                    <Date>2026-04-06</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="2" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@2">
+                    <Date>2026-04-07</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="3" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@3">
+                    <Date>2026-04-08</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="4" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@4">
+                    <Date>2026-04-09</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="5" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@5">
+                    <Date>2026-04-10</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="6" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@6">
+                    <Date>2026-04-13</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="7" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@7">
+                    <Date>2026-04-14</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="8" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@8">
+                    <Date>2026-04-15</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="9" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@9">
+                    <Date>2026-04-16</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="10" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@10">
+                    <Date>2026-04-17</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="11" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@11">
+                    <Date>2026-05-01</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="12" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@12">
+                    <Date>2026-05-08</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="13" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@13">
+                    <Date>2026-05-14</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="14" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@14">
+                    <Date>2026-05-15</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="15" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20@15">
+                    <Date>2026-05-25</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="1" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-0010000@1">
+                    <Date>2026-04-08</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-0010000" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+                <DayTypeAssignment order="2" version="any" id="TBM:DayTypeAssignment:2026_HIVER-SCO_A00-Semaine-20-0010000@2">
+                    <Date>2026-04-15</Date>
+                    <DayTypeRef ref="TBM:DayType:2026_HIVER-SCO_A00-Semaine-20-0010000" version="any"/>
+                    <isAvailable>false</isAvailable>
+                </DayTypeAssignment>
+            </dayTypeAssignments>
+        </ServiceCalendarFrame>
+        <VehicleScheduleFrame version="any" id="TBM:VehicleScheduleFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_HORAIRE:"/>
+            <blocks>
+                <Block version="any" id="TBM:Block:7676008">
+                    <Name>7676008</Name>
+                </Block>
+                <Block version="any" id="TBM:Block:7676024">
+                    <Name>7676024</Name>
+                </Block>
+                <Block version="any" id="TBM:Block:7688576">
+                    <Name>7688576</Name>
+                </Block>
+                <Block version="any" id="TBM:Block:7688593">
+                    <Name>7688593</Name>
+                </Block>
+                <Block version="any" id="TBM:Block:7689019">
+                    <Name>7689019</Name>
+                </Block>
+            </blocks>
+        </VehicleScheduleFrame>
+        <GeneralFrame version="any" id="TBM:GeneralFrame:0:LOC">
+            <TypeOfFrameRef ref="FR:TypeOfFrame:NETEX_LIGNE_STRUCTURE:"/>
+            <members>
+                <LinkSequenceProjection version="any" id="TBM:LinkSequenceProjection:302">
+                    <ns2:LineString srsName="WGS84" ns2:id="LS302">
+                        <ns2:pos>44.77973175048828 -0.6946964263916016</ns2:pos>
+                        <ns2:pos>44.77972412109375 -0.6947045922279358</ns2:pos>
+                        <ns2:pos>44.77970886230469 -0.694717288017273</ns2:pos>
+                        <ns2:pos>44.779701232910156 -0.6947323083877563</ns2:pos>
+                        <ns2:pos>44.77959442138672 -0.694965124130249</ns2:pos>
+                        <ns2:pos>44.7793083190918 -0.6956077814102173</ns2:pos>
+                        <ns2:pos>44.7788200378418 -0.6966825723648071</ns2:pos>
+                        <ns2:pos>44.778656005859375 -0.6970553994178772</ns2:pos>
+                        <ns2:pos>44.778648376464844 -0.6970826983451843</ns2:pos>
+                        <ns2:pos>44.77864074707031 -0.6971244215965271</ns2:pos>
+                        <ns2:pos>44.77863311767578 -0.6971526741981506</ns2:pos>
+                        <ns2:pos>44.778541564941406 -0.6973515748977661</ns2:pos>
+                        <ns2:pos>44.778541564941406 -0.697356104850769</ns2:pos>
+                        <ns2:pos>44.778541564941406 -0.697356104850769</ns2:pos>
+                        <ns2:pos>44.77853012084961 -0.6973761320114136</ns2:pos>
+                        <ns2:pos>44.778507232666016 -0.697398841381073</ns2:pos>
+                        <ns2:pos>44.77848815917969 -0.6974241137504578</ns2:pos>
+                        <ns2:pos>44.778438568115234 -0.6975351572036743</ns2:pos>
+                        <ns2:pos>44.77780532836914 -0.6989438533782959</ns2:pos>
+                        <ns2:pos>44.77750778198242 -0.6996364593505859</ns2:pos>
+                        <ns2:pos>44.77707290649414 -0.7007771134376526</ns2:pos>
+                        <ns2:pos>44.77698516845703 -0.7009925842285156</ns2:pos>
+                        <ns2:pos>44.776981353759766 -0.7010164260864258</ns2:pos>
+                        <ns2:pos>44.776981353759766 -0.7010335922241211</ns2:pos>
+                        <ns2:pos>44.776973724365234 -0.7010527849197388</ns2:pos>
+                        <ns2:pos>44.776920318603516 -0.7011937499046326</ns2:pos>
+                        <ns2:pos>44.776920318603516 -0.7011951804161072</ns2:pos>
+                        <ns2:pos>44.776912689208984 -0.7012075781822205</ns2:pos>
+                        <ns2:pos>44.77689743041992 -0.7012245059013367</ns2:pos>
+                        <ns2:pos>44.776885986328125 -0.7012469172477722</ns2:pos>
+                        <ns2:pos>44.776737213134766 -0.7016067504882812</ns2:pos>
+                        <ns2:pos>44.77635955810547 -0.7025986313819885</ns2:pos>
+                        <ns2:pos>44.77582931518555 -0.7039617896080017</ns2:pos>
+                        <ns2:pos>44.775474548339844 -0.7050182223320007</ns2:pos>
+                        <ns2:pos>44.77540969848633 -0.7052866816520691</ns2:pos>
+                        <ns2:pos>44.7754020690918 -0.7053402662277222</ns2:pos>
+                        <ns2:pos>44.775390625 -0.7054144144058228</ns2:pos>
+                        <ns2:pos>44.775386810302734 -0.7054834365844727</ns2:pos>
+                        <ns2:pos>44.775390625 -0.705542266368866</ns2:pos>
+                        <ns2:pos>44.775413513183594 -0.705621063709259</ns2:pos>
+                        <ns2:pos>44.77544021606445 -0.705640435218811</ns2:pos>
+                        <ns2:pos>44.775447845458984 -0.7056450247764587</ns2:pos>
+                        <ns2:pos>44.775455474853516 -0.7056481838226318</ns2:pos>
+                        <ns2:pos>44.77546310424805 -0.7056497931480408</ns2:pos>
+                        <ns2:pos>44.77547073364258 -0.7056498527526855</ns2:pos>
+                        <ns2:pos>44.77550506591797 -0.7056569457054138</ns2:pos>
+                        <ns2:pos>44.77553939819336 -0.7056562900543213</ns2:pos>
+                        <ns2:pos>44.77557373046875 -0.705647885799408</ns2:pos>
+                        <ns2:pos>44.775604248046875 -0.7056319713592529</ns2:pos>
+                        <ns2:pos>44.775634765625 -0.7056089043617249</ns2:pos>
+                        <ns2:pos>44.77566146850586 -0.7055793404579163</ns2:pos>
+                        <ns2:pos>44.77568817138672 -0.7055440545082092</ns2:pos>
+                        <ns2:pos>44.77570724487305 -0.7055039405822754</ns2:pos>
+                        <ns2:pos>44.77592849731445 -0.7051917314529419</ns2:pos>
+                        <ns2:pos>44.775970458984375 -0.7051683664321899</ns2:pos>
+                        <ns2:pos>44.77601623535156 -0.7051536440849304</ns2:pos>
+                        <ns2:pos>44.776058197021484 -0.7051480412483215</ns2:pos>
+                        <ns2:pos>44.77610397338867 -0.7051515579223633</ns2:pos>
+                        <ns2:pos>44.776145935058594 -0.7051640748977661</ns2:pos>
+                        <ns2:pos>44.776187896728516 -0.7051854729652405</ns2:pos>
+                        <ns2:pos>44.77622985839844 -0.7052152156829834</ns2:pos>
+                        <ns2:pos>44.77626419067383 -0.7052526473999023</ns2:pos>
+                        <ns2:pos>44.77827835083008 -0.7074035406112671</ns2:pos>
+                        <ns2:pos>44.7786865234375 -0.7078125476837158</ns2:pos>
+                        <ns2:pos>44.77871322631836 -0.7078160643577576</ns2:pos>
+                        <ns2:pos>44.77873992919922 -0.7078140377998352</ns2:pos>
+                        <ns2:pos>44.77876663208008 -0.7078066468238831</ns2:pos>
+                        <ns2:pos>44.778785705566406 -0.707804799079895</ns2:pos>
+                        <ns2:pos>44.778804779052734 -0.7078072428703308</ns2:pos>
+                        <ns2:pos>44.7788200378418 -0.7078138589859009</ns2:pos>
+                        <ns2:pos>44.77883529663086 -0.7078244686126709</ns2:pos>
+                        <ns2:pos>44.77885055541992 -0.7078387141227722</ns2:pos>
+                        <ns2:pos>44.77886199951172 -0.7078562378883362</ns2:pos>
+                        <ns2:pos>44.778873443603516 -0.707876443862915</ns2:pos>
+                        <ns2:pos>44.77888107299805 -0.707898736000061</ns2:pos>
+                        <ns2:pos>44.77888488769531 -0.7079224586486816</ns2:pos>
+                        <ns2:pos>44.77888488769531 -0.7079468965530396</ns2:pos>
+                        <ns2:pos>44.77888488769531 -0.7079713344573975</ns2:pos>
+                        <ns2:pos>44.77887725830078 -0.7079949975013733</ns2:pos>
+                        <ns2:pos>44.77886962890625 -0.7080171704292297</ns2:pos>
+                        <ns2:pos>44.77886199951172 -0.7080371975898743</ns2:pos>
+                        <ns2:pos>44.77885055541992 -0.7080544829368591</ns2:pos>
+                        <ns2:pos>44.77883529663086 -0.7080685496330261</ns2:pos>
+                        <ns2:pos>44.7788200378418 -0.7080788612365723</ns2:pos>
+                        <ns2:pos>44.77880096435547 -0.7080852389335632</ns2:pos>
+                        <ns2:pos>44.778785705566406 -0.7080873847007751</ns2:pos>
+                        <ns2:pos>44.77875518798828 -0.7080972194671631</ns2:pos>
+                        <ns2:pos>44.778724670410156 -0.7081137895584106</ns2:pos>
+                        <ns2:pos>44.7786979675293 -0.7081366181373596</ns2:pos>
+                        <ns2:pos>44.7786750793457 -0.7081650495529175</ns2:pos>
+                        <ns2:pos>44.778656005859375 -0.7081983685493469</ns2:pos>
+                        <ns2:pos>44.77864074707031 -0.7082358002662659</ns2:pos>
+                        <ns2:pos>44.77790451049805 -0.70955491065979</ns2:pos>
+                        <ns2:pos>44.77788543701172 -0.7096171975135803</ns2:pos>
+                        <ns2:pos>44.777870178222656 -0.7096826434135437</ns2:pos>
+                        <ns2:pos>44.777862548828125 -0.7097501158714294</ns2:pos>
+                        <ns2:pos>44.77785873413086 -0.7098185420036316</ns2:pos>
+                        <ns2:pos>44.777862548828125 -0.709886908531189</ns2:pos>
+                        <ns2:pos>44.77787399291992 -0.7099539637565613</ns2:pos>
+                        <ns2:pos>44.777889251708984 -0.7100186944007874</ns2:pos>
+                        <ns2:pos>44.77791213989258 -0.7100800275802612</ns2:pos>
+                        <ns2:pos>44.77793884277344 -0.7101370096206665</ns2:pos>
+                        <ns2:pos>44.777992248535156 -0.7102174162864685</ns2:pos>
+                        <ns2:pos>44.77859878540039 -0.710888147354126</ns2:pos>
+                        <ns2:pos>44.77860641479492 -0.7108895778656006</ns2:pos>
+                        <ns2:pos>44.77861404418945 -0.7108907699584961</ns2:pos>
+                        <ns2:pos>44.77861785888672 -0.7109116315841675</ns2:pos>
+                        <ns2:pos>44.778709411621094 -0.7110033631324768</ns2:pos>
+                        <ns2:pos>44.778743743896484 -0.7109808325767517</ns2:pos>
+                        <ns2:pos>44.778778076171875 -0.710979163646698</ns2:pos>
+                        <ns2:pos>44.77880859375 -0.7109929323196411</ns2:pos>
+                        <ns2:pos>44.77882766723633 -0.7110198140144348</ns2:pos>
+                        <ns2:pos>44.77884292602539 -0.7110550403594971</ns2:pos>
+                        <ns2:pos>44.778846740722656 -0.7110983729362488</ns2:pos>
+                        <ns2:pos>44.77884292602539 -0.7111403942108154</ns2:pos>
+                        <ns2:pos>44.77882766723633 -0.711174488067627</ns2:pos>
+                        <ns2:pos>44.77880096435547 -0.7111990451812744</ns2:pos>
+                        <ns2:pos>44.77877426147461 -0.7112061381340027</ns2:pos>
+                        <ns2:pos>44.77873992919922 -0.7112025022506714</ns2:pos>
+                        <ns2:pos>44.778717041015625 -0.7112089395523071</ns2:pos>
+                        <ns2:pos>44.77869415283203 -0.7112352848052979</ns2:pos>
+                        <ns2:pos>44.7783203125 -0.7119255065917969</ns2:pos>
+                        <ns2:pos>44.77830123901367 -0.7119917273521423</ns2:pos>
+                        <ns2:pos>44.7783088684082 -0.7120344638824463</ns2:pos>
+                        <ns2:pos>44.778324127197266 -0.7120828032493591</ns2:pos>
+                        <ns2:pos>44.778358459472656 -0.7121238112449646</ns2:pos>
+                        <ns2:pos>44.78249740600586 -0.7166469693183899</ns2:pos>
+                        <ns2:pos>44.7839241027832 -0.7182097434997559</ns2:pos>
+                        <ns2:pos>44.7839469909668 -0.7182227969169617</ns2:pos>
+                        <ns2:pos>44.78397750854492 -0.7182309627532959</ns2:pos>
+                        <ns2:pos>44.78400421142578 -0.7182287573814392</ns2:pos>
+                        <ns2:pos>44.784034729003906 -0.7182101011276245</ns2:pos>
+                        <ns2:pos>44.7850456237793 -0.7174596786499023</ns2:pos>
+                        <ns2:pos>44.786441802978516 -0.7164204120635986</ns2:pos>
+                        <ns2:pos>44.78659439086914 -0.7163068056106567</ns2:pos>
+                        <ns2:pos>44.78669357299805 -0.7162483930587769</ns2:pos>
+                        <ns2:pos>44.78691482543945 -0.7161341905593872</ns2:pos>
+                        <ns2:pos>44.789573669433594 -0.7147928476333618</ns2:pos>
+                        <ns2:pos>44.789649963378906 -0.7147356271743774</ns2:pos>
+                        <ns2:pos>44.78968811035156 -0.7146973609924316</ns2:pos>
+                        <ns2:pos>44.789737701416016 -0.7146425247192383</ns2:pos>
+                        <ns2:pos>44.78977966308594 -0.7145662307739258</ns2:pos>
+                        <ns2:pos>44.78987121582031 -0.7143394947052002</ns2:pos>
+                        <ns2:pos>44.79017639160156 -0.7134318351745605</ns2:pos>
+                        <ns2:pos>44.7901725769043 -0.7133961319923401</ns2:pos>
+                        <ns2:pos>44.7901725769043 -0.7133961319923401</ns2:pos>
+                        <ns2:pos>44.79019546508789 -0.7133806347846985</ns2:pos>
+                        <ns2:pos>44.790225982666016 -0.7132898569107056</ns2:pos>
+                        <ns2:pos>44.79045104980469 -0.7126258015632629</ns2:pos>
+                        <ns2:pos>44.7907829284668 -0.711647093296051</ns2:pos>
+                        <ns2:pos>44.79133605957031 -0.7100065350532532</ns2:pos>
+                        <ns2:pos>44.79133224487305 -0.7099900245666504</ns2:pos>
+                        <ns2:pos>44.79133224487305 -0.7099839448928833</ns2:pos>
+                        <ns2:pos>44.79134750366211 -0.709975004196167</ns2:pos>
+                        <ns2:pos>44.7913703918457 -0.709913432598114</ns2:pos>
+                        <ns2:pos>44.79137420654297 -0.7098979949951172</ns2:pos>
+                        <ns2:pos>44.79145812988281 -0.7096741795539856</ns2:pos>
+                        <ns2:pos>44.791595458984375 -0.7092805504798889</ns2:pos>
+                        <ns2:pos>44.79181671142578 -0.7085209488868713</ns2:pos>
+                        <ns2:pos>44.792110443115234 -0.7075643539428711</ns2:pos>
+                        <ns2:pos>44.792236328125 -0.7071380615234375</ns2:pos>
+                        <ns2:pos>44.79241180419922 -0.7065539360046387</ns2:pos>
+                        <ns2:pos>44.79262924194336 -0.7059268355369568</ns2:pos>
+                        <ns2:pos>44.79286193847656 -0.7052518725395203</ns2:pos>
+                        <ns2:pos>44.7929573059082 -0.7049770951271057</ns2:pos>
+                        <ns2:pos>44.79301071166992 -0.70479816198349</ns2:pos>
+                        <ns2:pos>44.79303741455078 -0.7046228051185608</ns2:pos>
+                        <ns2:pos>44.79303741455078 -0.7046144604682922</ns2:pos>
+                        <ns2:pos>44.79314041137695 -0.7044869065284729</ns2:pos>
+                        <ns2:pos>44.793182373046875 -0.7044140100479126</ns2:pos>
+                        <ns2:pos>44.7932014465332 -0.7043810486793518</ns2:pos>
+                        <ns2:pos>44.793312072753906 -0.7041835784912109</ns2:pos>
+                        <ns2:pos>44.79340362548828 -0.704026460647583</ns2:pos>
+                        <ns2:pos>44.79341506958008 -0.7039757370948792</ns2:pos>
+                        <ns2:pos>44.793418884277344 -0.7039138674736023</ns2:pos>
+                        <ns2:pos>44.793392181396484 -0.7038079500198364</ns2:pos>
+                        <ns2:pos>44.793392181396484 -0.7036522626876831</ns2:pos>
+                        <ns2:pos>44.793418884277344 -0.7035278081893921</ns2:pos>
+                        <ns2:pos>44.79344940185547 -0.7034733891487122</ns2:pos>
+                        <ns2:pos>44.79349136352539 -0.7034239768981934</ns2:pos>
+                        <ns2:pos>44.79357147216797 -0.7033869624137878</ns2:pos>
+                        <ns2:pos>44.79359436035156 -0.7033627033233643</ns2:pos>
+                        <ns2:pos>44.79361343383789 -0.7033376097679138</ns2:pos>
+                        <ns2:pos>44.79362487792969 -0.703300416469574</ns2:pos>
+                        <ns2:pos>44.793636322021484 -0.7032408118247986</ns2:pos>
+                        <ns2:pos>44.79364013671875 -0.703157365322113</ns2:pos>
+                        <ns2:pos>44.79365158081055 -0.7029331922531128</ns2:pos>
+                        <ns2:pos>44.79366683959961 -0.7027699947357178</ns2:pos>
+                        <ns2:pos>44.79367446899414 -0.7027047276496887</ns2:pos>
+                        <ns2:pos>44.79368591308594 -0.7026270031929016</ns2:pos>
+                        <ns2:pos>44.793704986572266 -0.7025451064109802</ns2:pos>
+                        <ns2:pos>44.793731689453125 -0.7024382948875427</ns2:pos>
+                        <ns2:pos>44.79381561279297 -0.7021591067314148</ns2:pos>
+                        <ns2:pos>44.793907165527344 -0.7018632292747498</ns2:pos>
+                        <ns2:pos>44.793968200683594 -0.701647937297821</ns2:pos>
+                        <ns2:pos>44.793968200683594 -0.701647937297821</ns2:pos>
+                        <ns2:pos>44.79397201538086 -0.7016359567642212</ns2:pos>
+                        <ns2:pos>44.79410171508789 -0.7012092471122742</ns2:pos>
+                        <ns2:pos>44.79412078857422 -0.7011352777481079</ns2:pos>
+                        <ns2:pos>44.79414367675781 -0.7009971737861633</ns2:pos>
+                        <ns2:pos>44.79417419433594 -0.7008787989616394</ns2:pos>
+                        <ns2:pos>44.79433059692383 -0.7003484964370728</ns2:pos>
+                        <ns2:pos>44.79438781738281 -0.7002124786376953</ns2:pos>
+                        <ns2:pos>44.79449462890625 -0.6998448967933655</ns2:pos>
+                        <ns2:pos>44.79450607299805 -0.6997815370559692</ns2:pos>
+                        <ns2:pos>44.79451370239258 -0.6997061967849731</ns2:pos>
+                        <ns2:pos>44.79452896118164 -0.6996412873268127</ns2:pos>
+                        <ns2:pos>44.79472351074219 -0.6989668607711792</ns2:pos>
+                        <ns2:pos>44.7949104309082 -0.6983354091644287</ns2:pos>
+                        <ns2:pos>44.79499053955078 -0.6980268359184265</ns2:pos>
+                        <ns2:pos>44.7952995300293 -0.6969498991966248</ns2:pos>
+                        <ns2:pos>44.79529571533203 -0.6969225406646729</ns2:pos>
+                        <ns2:pos>44.79529571533203 -0.6969150304794312</ns2:pos>
+                        <ns2:pos>44.79531478881836 -0.6969032883644104</ns2:pos>
+                        <ns2:pos>44.795570373535156 -0.6960174441337585</ns2:pos>
+                        <ns2:pos>44.79603576660156 -0.6944425702095032</ns2:pos>
+                        <ns2:pos>44.796043395996094 -0.6944077610969543</ns2:pos>
+                        <ns2:pos>44.796051025390625 -0.6943633556365967</ns2:pos>
+                        <ns2:pos>44.796051025390625 -0.6943207383155823</ns2:pos>
+                        <ns2:pos>44.796051025390625 -0.6942852735519409</ns2:pos>
+                        <ns2:pos>44.796058654785156 -0.6942515969276428</ns2:pos>
+                        <ns2:pos>44.79606628417969 -0.6942272186279297</ns2:pos>
+                        <ns2:pos>44.796085357666016 -0.694202721118927</ns2:pos>
+                        <ns2:pos>44.79610061645508 -0.6941779255867004</ns2:pos>
+                        <ns2:pos>44.796112060546875 -0.694146990776062</ns2:pos>
+                        <ns2:pos>44.79612350463867 -0.6941117644309998</ns2:pos>
+                        <ns2:pos>44.79615783691406 -0.6939674615859985</ns2:pos>
+                        <ns2:pos>44.79627990722656 -0.6935341954231262</ns2:pos>
+                        <ns2:pos>44.79627990722656 -0.6935341954231262</ns2:pos>
+                        <ns2:pos>44.79627990722656 -0.6935303807258606</ns2:pos>
+                        <ns2:pos>44.796287536621094 -0.6934988498687744</ns2:pos>
+                        <ns2:pos>44.79642868041992 -0.6930082440376282</ns2:pos>
+                        <ns2:pos>44.79648971557617 -0.6927859783172607</ns2:pos>
+                        <ns2:pos>44.79652404785156 -0.6926416158676147</ns2:pos>
+                        <ns2:pos>44.79655075073242 -0.692511796951294</ns2:pos>
+                        <ns2:pos>44.79656982421875 -0.6923752427101135</ns2:pos>
+                        <ns2:pos>44.79658508300781 -0.6922534108161926</ns2:pos>
+                        <ns2:pos>44.796592712402344 -0.692084789276123</ns2:pos>
+                        <ns2:pos>44.79660415649414 -0.6917168498039246</ns2:pos>
+                        <ns2:pos>44.79661178588867 -0.6913050413131714</ns2:pos>
+                        <ns2:pos>44.79662322998047 -0.6905843615531921</ns2:pos>
+                        <ns2:pos>44.796634674072266 -0.6902939081192017</ns2:pos>
+                        <ns2:pos>44.79663848876953 -0.6902031898498535</ns2:pos>
+                        <ns2:pos>44.79664611816406 -0.6901049017906189</ns2:pos>
+                        <ns2:pos>44.79665756225586 -0.6900291442871094</ns2:pos>
+                        <ns2:pos>44.79667282104492 -0.6899559497833252</ns2:pos>
+                        <ns2:pos>44.79669189453125 -0.6898782253265381</ns2:pos>
+                        <ns2:pos>44.79671096801758 -0.6898019313812256</ns2:pos>
+                        <ns2:pos>44.79674530029297 -0.6897164583206177</ns2:pos>
+                        <ns2:pos>44.79677963256836 -0.6896361112594604</ns2:pos>
+                        <ns2:pos>44.79682540893555 -0.6895466446876526</ns2:pos>
+                        <ns2:pos>44.79685974121094 -0.6894884705543518</ns2:pos>
+                        <ns2:pos>44.796905517578125 -0.68941730260849</ns2:pos>
+                        <ns2:pos>44.79695129394531 -0.6893550157546997</ns2:pos>
+                        <ns2:pos>44.7971076965332 -0.6891637444496155</ns2:pos>
+                        <ns2:pos>44.79722595214844 -0.689017653465271</ns2:pos>
+                        <ns2:pos>44.79729461669922 -0.6889290809631348</ns2:pos>
+                        <ns2:pos>44.79729461669922 -0.6889290809631348</ns2:pos>
+                        <ns2:pos>44.797298431396484 -0.688923180103302</ns2:pos>
+                        <ns2:pos>44.79741287231445 -0.6887868642807007</ns2:pos>
+                        <ns2:pos>44.797908782958984 -0.6881745457649231</ns2:pos>
+                        <ns2:pos>44.79816818237305 -0.6878620982170105</ns2:pos>
+                        <ns2:pos>44.79840087890625 -0.687615156173706</ns2:pos>
+                        <ns2:pos>44.79853057861328 -0.6874796748161316</ns2:pos>
+                        <ns2:pos>44.79903030395508 -0.6869906187057495</ns2:pos>
+                        <ns2:pos>44.799774169921875 -0.6862658858299255</ns2:pos>
+                        <ns2:pos>44.800148010253906 -0.6858973503112793</ns2:pos>
+                        <ns2:pos>44.800479888916016 -0.6856738328933716</ns2:pos>
+                        <ns2:pos>44.800506591796875 -0.6856441497802734</ns2:pos>
+                        <ns2:pos>44.800533294677734 -0.685597836971283</ns2:pos>
+                        <ns2:pos>44.8005485534668 -0.6855592131614685</ns2:pos>
+                        <ns2:pos>44.80055618286133 -0.6855111122131348</ns2:pos>
+                        <ns2:pos>44.800559997558594 -0.6854501366615295</ns2:pos>
+                        <ns2:pos>44.80057144165039 -0.685382068157196</ns2:pos>
+                        <ns2:pos>44.80058670043945 -0.6853329539299011</ns2:pos>
+                        <ns2:pos>44.80061340332031 -0.6852763295173645</ns2:pos>
+                        <ns2:pos>44.800655364990234 -0.6852318048477173</ns2:pos>
+                        <ns2:pos>44.800697326660156 -0.6852047443389893</ns2:pos>
+                        <ns2:pos>44.800750732421875 -0.6851837635040283</ns2:pos>
+                        <ns2:pos>44.80078125 -0.6851785778999329</ns2:pos>
+                        <ns2:pos>44.80079650878906 -0.6851769685745239</ns2:pos>
+                        <ns2:pos>44.800804138183594 -0.6851707696914673</ns2:pos>
+                        <ns2:pos>44.80081558227539 -0.6851602792739868</ns2:pos>
+                        <ns2:pos>44.80082702636719 -0.6851411461830139</ns2:pos>
+                        <ns2:pos>44.80085372924805 -0.6851036548614502</ns2:pos>
+                        <ns2:pos>44.8008918762207 -0.6850292086601257</ns2:pos>
+                        <ns2:pos>44.801063537597656 -0.6846296191215515</ns2:pos>
+                        <ns2:pos>44.801124572753906 -0.6845080256462097</ns2:pos>
+                        <ns2:pos>44.801124572753906 -0.6845033764839172</ns2:pos>
+                        <ns2:pos>44.801185607910156 -0.6843838095664978</ns2:pos>
+                        <ns2:pos>44.80119705200195 -0.6843582987785339</ns2:pos>
+                        <ns2:pos>44.80126190185547 -0.6842147707939148</ns2:pos>
+                        <ns2:pos>44.80149459838867 -0.6836931109428406</ns2:pos>
+                        <ns2:pos>44.80153274536133 -0.6836009621620178</ns2:pos>
+                        <ns2:pos>44.80155944824219 -0.6835199594497681</ns2:pos>
+                        <ns2:pos>44.801578521728516 -0.6834592223167419</ns2:pos>
+                        <ns2:pos>44.801605224609375 -0.6833623051643372</ns2:pos>
+                        <ns2:pos>44.801631927490234 -0.6832555532455444</ns2:pos>
+                        <ns2:pos>44.80166244506836 -0.6831191778182983</ns2:pos>
+                        <ns2:pos>44.801692962646484 -0.6829689145088196</ns2:pos>
+                        <ns2:pos>44.801734924316406 -0.6827203631401062</ns2:pos>
+                        <ns2:pos>44.8017578125 -0.6825672388076782</ns2:pos>
+                        <ns2:pos>44.80179214477539 -0.6822737455368042</ns2:pos>
+                        <ns2:pos>44.80180358886719 -0.6820480227470398</ns2:pos>
+                        <ns2:pos>44.80180358886719 -0.6817517280578613</ns2:pos>
+                        <ns2:pos>44.80179214477539 -0.681427001953125</ns2:pos>
+                        <ns2:pos>44.80177688598633 -0.6807575225830078</ns2:pos>
+                        <ns2:pos>44.80176544189453 -0.6802129745483398</ns2:pos>
+                        <ns2:pos>44.80177307128906 -0.6795304417610168</ns2:pos>
+                        <ns2:pos>44.80177307128906 -0.6794284582138062</ns2:pos>
+                        <ns2:pos>44.8017692565918 -0.6793097257614136</ns2:pos>
+                        <ns2:pos>44.80176544189453 -0.6792498230934143</ns2:pos>
+                        <ns2:pos>44.8017578125 -0.679182767868042</ns2:pos>
+                        <ns2:pos>44.80175018310547 -0.6790975332260132</ns2:pos>
+                        <ns2:pos>44.801734924316406 -0.6790228486061096</ns2:pos>
+                        <ns2:pos>44.80171203613281 -0.6789092421531677</ns2:pos>
+                        <ns2:pos>44.801673889160156 -0.6787700057029724</ns2:pos>
+                        <ns2:pos>44.80128860473633 -0.67730313539505</ns2:pos>
+                        <ns2:pos>44.80094528198242 -0.6760172843933105</ns2:pos>
+                        <ns2:pos>44.80084228515625 -0.6756033301353455</ns2:pos>
+                        <ns2:pos>44.8007698059082 -0.6753350496292114</ns2:pos>
+                        <ns2:pos>44.80069351196289 -0.6750629544258118</ns2:pos>
+                        <ns2:pos>44.80046463012695 -0.6742217540740967</ns2:pos>
+                        <ns2:pos>44.80043029785156 -0.6740862727165222</ns2:pos>
+                        <ns2:pos>44.80020523071289 -0.6732236742973328</ns2:pos>
+                        <ns2:pos>44.80006408691406 -0.6727204322814941</ns2:pos>
+                        <ns2:pos>44.80002212524414 -0.6725848317146301</ns2:pos>
+                        <ns2:pos>44.800010681152344 -0.6725113987922668</ns2:pos>
+                        <ns2:pos>44.800010681152344 -0.6724544763565063</ns2:pos>
+                        <ns2:pos>44.800025939941406 -0.6724028587341309</ns2:pos>
+                        <ns2:pos>44.80005645751953 -0.6723570823669434</ns2:pos>
+                        <ns2:pos>44.80009078979492 -0.6723226308822632</ns2:pos>
+                        <ns2:pos>44.80010223388672 -0.6723160743713379</ns2:pos>
+                        <ns2:pos>44.800235748291016 -0.6722373962402344</ns2:pos>
+                        <ns2:pos>44.800331115722656 -0.6722093224525452</ns2:pos>
+                        <ns2:pos>44.80231475830078 -0.6719971895217896</ns2:pos>
+                        <ns2:pos>44.80241775512695 -0.6720004081726074</ns2:pos>
+                        <ns2:pos>44.803855895996094 -0.672278642654419</ns2:pos>
+                        <ns2:pos>44.80390167236328 -0.6722815036773682</ns2:pos>
+                        <ns2:pos>44.80393600463867 -0.6722571849822998</ns2:pos>
+                        <ns2:pos>44.8039665222168 -0.6721968650817871</ns2:pos>
+                        <ns2:pos>44.80398178100586 -0.6720897555351257</ns2:pos>
+                        <ns2:pos>44.80418014526367 -0.669239342212677</ns2:pos>
+                        <ns2:pos>44.80419921875 -0.669151246547699</ns2:pos>
+                        <ns2:pos>44.804237365722656 -0.6690959930419922</ns2:pos>
+                        <ns2:pos>44.8043327331543 -0.6690305471420288</ns2:pos>
+                        <ns2:pos>44.804359436035156 -0.6689915657043457</ns2:pos>
+                        <ns2:pos>44.80436706542969 -0.6689284443855286</ns2:pos>
+                        <ns2:pos>44.80436325073242 -0.6688742637634277</ns2:pos>
+                        <ns2:pos>44.80434036254883 -0.6687976121902466</ns2:pos>
+                        <ns2:pos>44.804195404052734 -0.6683898568153381</ns2:pos>
+                        <ns2:pos>44.804107666015625 -0.6681610345840454</ns2:pos>
+                        <ns2:pos>44.80386734008789 -0.66762375831604</ns2:pos>
+                        <ns2:pos>44.8038330078125 -0.6675756573677063</ns2:pos>
+                        <ns2:pos>44.80381393432617 -0.6675570011138916</ns2:pos>
+                        <ns2:pos>44.80379104614258 -0.6675507426261902</ns2:pos>
+                        <ns2:pos>44.803768157958984 -0.6675546169281006</ns2:pos>
+                        <ns2:pos>44.80373001098633 -0.6675741672515869</ns2:pos>
+                        <ns2:pos>44.80373001098633 -0.6675755977630615</ns2:pos>
+                        <ns2:pos>44.80332946777344 -0.6677978038787842</ns2:pos>
+                        <ns2:pos>44.803077697753906 -0.6679062843322754</ns2:pos>
+                        <ns2:pos>44.80236053466797 -0.6681493520736694</ns2:pos>
+                        <ns2:pos>44.80195617675781 -0.668274462223053</ns2:pos>
+                        <ns2:pos>44.801815032958984 -0.6683210730552673</ns2:pos>
+                        <ns2:pos>44.80181121826172 -0.6683291792869568</ns2:pos>
+                    </ns2:LineString>
+                </LinkSequenceProjection>
+                <LinkSequenceProjection version="any" id="TBM:LinkSequenceProjection:303">
+                    <ns2:LineString srsName="WGS84" ns2:id="LS303">
+                        <ns2:pos>44.80181121826172 -0.6683291792869568</ns2:pos>
+                        <ns2:pos>44.80180740356445 -0.6683239936828613</ns2:pos>
+                        <ns2:pos>44.80165100097656 -0.6683761477470398</ns2:pos>
+                        <ns2:pos>44.801025390625 -0.6685717701911926</ns2:pos>
+                        <ns2:pos>44.800594329833984 -0.6687113642692566</ns2:pos>
+                        <ns2:pos>44.800437927246094 -0.6687677502632141</ns2:pos>
+                        <ns2:pos>44.80034637451172 -0.6687964200973511</ns2:pos>
+                        <ns2:pos>44.80024337768555 -0.6688109636306763</ns2:pos>
+                        <ns2:pos>44.800148010253906 -0.6688119173049927</ns2:pos>
+                        <ns2:pos>44.800045013427734 -0.6688017845153809</ns2:pos>
+                        <ns2:pos>44.79995346069336 -0.6687878966331482</ns2:pos>
+                        <ns2:pos>44.799720764160156 -0.6687158942222595</ns2:pos>
+                        <ns2:pos>44.79969024658203 -0.6687081456184387</ns2:pos>
+                        <ns2:pos>44.79965591430664 -0.6687131524085999</ns2:pos>
+                        <ns2:pos>44.79964065551758 -0.668726921081543</ns2:pos>
+                        <ns2:pos>44.799625396728516 -0.6687543988227844</ns2:pos>
+                        <ns2:pos>44.79961395263672 -0.6687754392623901</ns2:pos>
+                        <ns2:pos>44.79960250854492 -0.6688112616539001</ns2:pos>
+                        <ns2:pos>44.79953384399414 -0.6691241264343262</ns2:pos>
+                        <ns2:pos>44.7994499206543 -0.6695296764373779</ns2:pos>
+                        <ns2:pos>44.799354553222656 -0.6699860095977783</ns2:pos>
+                        <ns2:pos>44.79932403564453 -0.6701463460922241</ns2:pos>
+                        <ns2:pos>44.79931640625 -0.6702715754508972</ns2:pos>
+                        <ns2:pos>44.79931640625 -0.6703603863716125</ns2:pos>
+                        <ns2:pos>44.7993278503418 -0.6704422235488892</ns2:pos>
+                        <ns2:pos>44.79934310913086 -0.670515775680542</ns2:pos>
+                        <ns2:pos>44.79937744140625 -0.6706362366676331</ns2:pos>
+                        <ns2:pos>44.79941940307617 -0.6707689166069031</ns2:pos>
+                        <ns2:pos>44.79970932006836 -0.6715199947357178</ns2:pos>
+                        <ns2:pos>44.7997932434082 -0.6717653870582581</ns2:pos>
+                        <ns2:pos>44.79997634887695 -0.6722532510757446</ns2:pos>
+                        <ns2:pos>44.800025939941406 -0.6724028587341309</ns2:pos>
+                        <ns2:pos>44.80006408691406 -0.6725227236747742</ns2:pos>
+                        <ns2:pos>44.800514221191406 -0.6741780638694763</ns2:pos>
+                        <ns2:pos>44.800567626953125 -0.6743840575218201</ns2:pos>
+                        <ns2:pos>44.80083465576172 -0.6753935813903809</ns2:pos>
+                        <ns2:pos>44.800899505615234 -0.6756430268287659</ns2:pos>
+                        <ns2:pos>44.800941467285156 -0.6758081316947937</ns2:pos>
+                        <ns2:pos>44.80130386352539 -0.6772174835205078</ns2:pos>
+                        <ns2:pos>44.80175018310547 -0.6789466142654419</ns2:pos>
+                        <ns2:pos>44.801788330078125 -0.6791619062423706</ns2:pos>
+                        <ns2:pos>44.80180358886719 -0.6793386340141296</ns2:pos>
+                        <ns2:pos>44.80180358886719 -0.6800679564476013</ns2:pos>
+                        <ns2:pos>44.80181121826172 -0.6802350282669067</ns2:pos>
+                        <ns2:pos>44.80183029174805 -0.6807350516319275</ns2:pos>
+                        <ns2:pos>44.80184555053711 -0.6811596155166626</ns2:pos>
+                        <ns2:pos>44.801849365234375 -0.6816859245300293</ns2:pos>
+                        <ns2:pos>44.80183410644531 -0.6821923851966858</ns2:pos>
+                        <ns2:pos>44.801734924316406 -0.6830447912216187</ns2:pos>
+                        <ns2:pos>44.80168151855469 -0.6832942962646484</ns2:pos>
+                        <ns2:pos>44.801605224609375 -0.6835384964942932</ns2:pos>
+                        <ns2:pos>44.801422119140625 -0.6839646697044373</ns2:pos>
+                        <ns2:pos>44.80113983154297 -0.6845444440841675</ns2:pos>
+                        <ns2:pos>44.80091857910156 -0.6850516200065613</ns2:pos>
+                        <ns2:pos>44.800907135009766 -0.6851048469543457</ns2:pos>
+                        <ns2:pos>44.800907135009766 -0.6851648688316345</ns2:pos>
+                        <ns2:pos>44.800907135009766 -0.6852195858955383</ns2:pos>
+                        <ns2:pos>44.8009147644043 -0.6852745413780212</ns2:pos>
+                        <ns2:pos>44.800941467285156 -0.685339093208313</ns2:pos>
+                        <ns2:pos>44.80095291137695 -0.6853780746459961</ns2:pos>
+                        <ns2:pos>44.800960540771484 -0.6854152679443359</ns2:pos>
+                        <ns2:pos>44.80096435546875 -0.6854677796363831</ns2:pos>
+                        <ns2:pos>44.80096435546875 -0.6855125427246094</ns2:pos>
+                        <ns2:pos>44.80095672607422 -0.6855558753013611</ns2:pos>
+                        <ns2:pos>44.80094909667969 -0.6855924725532532</ns2:pos>
+                        <ns2:pos>44.80093765258789 -0.6856282949447632</ns2:pos>
+                        <ns2:pos>44.80092239379883 -0.6856546998023987</ns2:pos>
+                        <ns2:pos>44.800907135009766 -0.6856793165206909</ns2:pos>
+                        <ns2:pos>44.8008918762207 -0.685696542263031</ns2:pos>
+                        <ns2:pos>44.800872802734375 -0.6857184767723083</ns2:pos>
+                        <ns2:pos>44.80084991455078 -0.6857348680496216</ns2:pos>
+                        <ns2:pos>44.80082702636719 -0.6857504844665527</ns2:pos>
+                        <ns2:pos>44.80080032348633 -0.6857578158378601</ns2:pos>
+                        <ns2:pos>44.80077362060547 -0.6857617497444153</ns2:pos>
+                        <ns2:pos>44.800750732421875 -0.685761570930481</ns2:pos>
+                        <ns2:pos>44.800724029541016 -0.6857593059539795</ns2:pos>
+                        <ns2:pos>44.80069351196289 -0.6857504844665527</ns2:pos>
+                        <ns2:pos>44.80064010620117 -0.68572998046875</ns2:pos>
+                        <ns2:pos>44.800601959228516 -0.6857184171676636</ns2:pos>
+                        <ns2:pos>44.80056381225586 -0.6857113838195801</ns2:pos>
+                        <ns2:pos>44.80052185058594 -0.6857085227966309</ns2:pos>
+                        <ns2:pos>44.80048370361328 -0.6857219338417053</ns2:pos>
+                        <ns2:pos>44.800411224365234 -0.6857591867446899</ns2:pos>
+                        <ns2:pos>44.80028533935547 -0.6858411431312561</ns2:pos>
+                        <ns2:pos>44.79998016357422 -0.6861163377761841</ns2:pos>
+                        <ns2:pos>44.79966735839844 -0.6864320635795593</ns2:pos>
+                        <ns2:pos>44.79966354370117 -0.6864364147186279</ns2:pos>
+                        <ns2:pos>44.79966354370117 -0.6864364147186279</ns2:pos>
+                        <ns2:pos>44.79890060424805 -0.6871541142463684</ns2:pos>
+                        <ns2:pos>44.79866409301758 -0.6873995661735535</ns2:pos>
+                        <ns2:pos>44.79838943481445 -0.6876658797264099</ns2:pos>
+                        <ns2:pos>44.798213958740234 -0.6878570914268494</ns2:pos>
+                        <ns2:pos>44.798057556152344 -0.6880449652671814</ns2:pos>
+                        <ns2:pos>44.79788589477539 -0.6882850527763367</ns2:pos>
+                        <ns2:pos>44.797645568847656 -0.688616931438446</ns2:pos>
+                        <ns2:pos>44.797462463378906 -0.688866913318634</ns2:pos>
+                        <ns2:pos>44.797454833984375 -0.6888700723648071</ns2:pos>
+                        <ns2:pos>44.79738998413086 -0.6888923048973083</ns2:pos>
+                        <ns2:pos>44.797122955322266 -0.6892114281654358</ns2:pos>
+                        <ns2:pos>44.79697799682617 -0.6893944144248962</ns2:pos>
+                        <ns2:pos>44.79691696166992 -0.6894773840904236</ns2:pos>
+                        <ns2:pos>44.796871185302734 -0.6895564794540405</ns2:pos>
+                        <ns2:pos>44.79682922363281 -0.6896381974220276</ns2:pos>
+                        <ns2:pos>44.79680252075195 -0.6897009015083313</ns2:pos>
+                        <ns2:pos>44.796775817871094 -0.689773678779602</ns2:pos>
+                        <ns2:pos>44.796749114990234 -0.689847469329834</ns2:pos>
+                        <ns2:pos>44.79672622680664 -0.689923882484436</ns2:pos>
+                        <ns2:pos>44.79670715332031 -0.6900089383125305</ns2:pos>
+                        <ns2:pos>44.796688079833984 -0.690090537071228</ns2:pos>
+                        <ns2:pos>44.79667663574219 -0.6901650428771973</ns2:pos>
+                        <ns2:pos>44.79666519165039 -0.6902394890785217</ns2:pos>
+                        <ns2:pos>44.796661376953125 -0.6903316974639893</ns2:pos>
+                        <ns2:pos>44.796653747558594 -0.6909192800521851</ns2:pos>
+                        <ns2:pos>44.79663848876953 -0.6916761994361877</ns2:pos>
+                        <ns2:pos>44.796627044677734 -0.6921412944793701</ns2:pos>
+                        <ns2:pos>44.79661178588867 -0.6923277974128723</ns2:pos>
+                        <ns2:pos>44.79658889770508 -0.6924840211868286</ns2:pos>
+                        <ns2:pos>44.79655456542969 -0.6926563382148743</ns2:pos>
+                        <ns2:pos>44.79651641845703 -0.6928266286849976</ns2:pos>
+                        <ns2:pos>44.79646301269531 -0.6930190324783325</ns2:pos>
+                        <ns2:pos>44.7963981628418 -0.6932450532913208</ns2:pos>
+                        <ns2:pos>44.79615020751953 -0.6941142678260803</ns2:pos>
+                        <ns2:pos>44.79612731933594 -0.6942040920257568</ns2:pos>
+                        <ns2:pos>44.79612731933594 -0.6942299604415894</ns2:pos>
+                        <ns2:pos>44.79612731933594 -0.6942692399024963</ns2:pos>
+                        <ns2:pos>44.79612350463867 -0.6943089365959167</ns2:pos>
+                        <ns2:pos>44.796119689941406 -0.6943454146385193</ns2:pos>
+                        <ns2:pos>44.79610824584961 -0.6943709254264832</ns2:pos>
+                        <ns2:pos>44.79609298706055 -0.6943930387496948</ns2:pos>
+                        <ns2:pos>44.796077728271484 -0.6944164037704468</ns2:pos>
+                        <ns2:pos>44.79606246948242 -0.6944451928138733</ns2:pos>
+                        <ns2:pos>44.79604721069336 -0.6944876909255981</ns2:pos>
+                        <ns2:pos>44.796024322509766 -0.6945600509643555</ns2:pos>
+                        <ns2:pos>44.79592514038086 -0.6948962211608887</ns2:pos>
+                        <ns2:pos>44.79592514038086 -0.6949024796485901</ns2:pos>
+                        <ns2:pos>44.79592514038086 -0.6949024796485901</ns2:pos>
+                        <ns2:pos>44.795570373535156 -0.6961344480514526</ns2:pos>
+                        <ns2:pos>44.79533767700195 -0.696938157081604</ns2:pos>
+                        <ns2:pos>44.79534149169922 -0.6969716548919678</ns2:pos>
+                        <ns2:pos>44.79533767700195 -0.6969754695892334</ns2:pos>
+                        <ns2:pos>44.79533767700195 -0.6969754695892334</ns2:pos>
+                        <ns2:pos>44.79532241821289 -0.6969901919364929</ns2:pos>
+                        <ns2:pos>44.79512023925781 -0.6976826786994934</ns2:pos>
+                        <ns2:pos>44.794864654541016 -0.6985747218132019</ns2:pos>
+                        <ns2:pos>44.79460525512695 -0.6994869112968445</ns2:pos>
+                        <ns2:pos>44.79454040527344 -0.6997120380401611</ns2:pos>
+                        <ns2:pos>44.79452896118164 -0.6998149156570435</ns2:pos>
+                        <ns2:pos>44.794464111328125 -0.700038492679596</ns2:pos>
+                        <ns2:pos>44.794410705566406 -0.7002254724502563</ns2:pos>
+                        <ns2:pos>44.794376373291016 -0.7003067135810852</ns2:pos>
+                        <ns2:pos>44.794342041015625 -0.7003982663154602</ns2:pos>
+                        <ns2:pos>44.794193267822266 -0.7009091973304749</ns2:pos>
+                        <ns2:pos>44.79417037963867 -0.7009894251823425</ns2:pos>
+                        <ns2:pos>44.794158935546875 -0.7010560035705566</ns2:pos>
+                        <ns2:pos>44.79414749145508 -0.7011438012123108</ns2:pos>
+                        <ns2:pos>44.79412078857422 -0.7012374401092529</ns2:pos>
+                        <ns2:pos>44.794044494628906 -0.7014974355697632</ns2:pos>
+                        <ns2:pos>44.793853759765625 -0.7021306753158569</ns2:pos>
+                        <ns2:pos>44.793800354003906 -0.7023160457611084</ns2:pos>
+                        <ns2:pos>44.793800354003906 -0.7023190855979919</ns2:pos>
+                        <ns2:pos>44.793785095214844 -0.7023741602897644</ns2:pos>
+                        <ns2:pos>44.79374694824219 -0.70248943567276</ns2:pos>
+                        <ns2:pos>44.793724060058594 -0.7025783061981201</ns2:pos>
+                        <ns2:pos>44.79370880126953 -0.7026675343513489</ns2:pos>
+                        <ns2:pos>44.79369354248047 -0.7027655839920044</ns2:pos>
+                        <ns2:pos>44.79368591308594 -0.7028599977493286</ns2:pos>
+                        <ns2:pos>44.793670654296875 -0.7031506896018982</ns2:pos>
+                        <ns2:pos>44.79366683959961 -0.7032291293144226</ns2:pos>
+                        <ns2:pos>44.79366683959961 -0.7032837271690369</ns2:pos>
+                        <ns2:pos>44.793678283691406 -0.7033301591873169</ns2:pos>
+                        <ns2:pos>44.79369354248047 -0.7033625841140747</ns2:pos>
+                        <ns2:pos>44.793724060058594 -0.7034019827842712</ns2:pos>
+                        <ns2:pos>44.79378890991211 -0.7034637928009033</ns2:pos>
+                        <ns2:pos>44.79383850097656 -0.7035468816757202</ns2:pos>
+                        <ns2:pos>44.79386520385742 -0.7036581039428711</ns2:pos>
+                        <ns2:pos>44.79386520385742 -0.7037791609764099</ns2:pos>
+                        <ns2:pos>44.79383850097656 -0.7038899064064026</ns2:pos>
+                        <ns2:pos>44.79378890991211 -0.7039720416069031</ns2:pos>
+                        <ns2:pos>44.793724060058594 -0.7040256261825562</ns2:pos>
+                        <ns2:pos>44.793643951416016 -0.7040538787841797</ns2:pos>
+                        <ns2:pos>44.79353332519531 -0.7040303945541382</ns2:pos>
+                        <ns2:pos>44.79348373413086 -0.7040362358093262</ns2:pos>
+                        <ns2:pos>44.793460845947266 -0.7040452361106873</ns2:pos>
+                        <ns2:pos>44.79344177246094 -0.7040648460388184</ns2:pos>
+                        <ns2:pos>44.79342269897461 -0.7040883898735046</ns2:pos>
+                        <ns2:pos>44.7933464050293 -0.7042130827903748</ns2:pos>
+                        <ns2:pos>44.79325866699219 -0.7043458819389343</ns2:pos>
+                        <ns2:pos>44.793216705322266 -0.7044196128845215</ns2:pos>
+                        <ns2:pos>44.79316711425781 -0.7045246362686157</ns2:pos>
+                        <ns2:pos>44.79313659667969 -0.7045922875404358</ns2:pos>
+                        <ns2:pos>44.79309844970703 -0.7046963572502136</ns2:pos>
+                        <ns2:pos>44.793060302734375 -0.7047926783561707</ns2:pos>
+                        <ns2:pos>44.79270553588867 -0.7058060765266418</ns2:pos>
+                        <ns2:pos>44.79270935058594 -0.7058367729187012</ns2:pos>
+                        <ns2:pos>44.79270553588867 -0.7058385610580444</ns2:pos>
+                        <ns2:pos>44.79269027709961 -0.7058482766151428</ns2:pos>
+                        <ns2:pos>44.792686462402344 -0.7058634757995605</ns2:pos>
+                        <ns2:pos>44.792442321777344 -0.7065351009368896</ns2:pos>
+                        <ns2:pos>44.792327880859375 -0.7068914771080017</ns2:pos>
+                        <ns2:pos>44.79205322265625 -0.707801342010498</ns2:pos>
+                        <ns2:pos>44.79189682006836 -0.7083423137664795</ns2:pos>
+                        <ns2:pos>44.7918586730957 -0.7084619402885437</ns2:pos>
+                        <ns2:pos>44.7916145324707 -0.7092635035514832</ns2:pos>
+                        <ns2:pos>44.79161834716797 -0.7093031406402588</ns2:pos>
+                        <ns2:pos>44.79160690307617 -0.7093108892440796</ns2:pos>
+                        <ns2:pos>44.79159927368164 -0.7093159556388855</ns2:pos>
+                        <ns2:pos>44.791290283203125 -0.7102288603782654</ns2:pos>
+                        <ns2:pos>44.79084396362305 -0.7115317583084106</ns2:pos>
+                        <ns2:pos>44.790435791015625 -0.712737500667572</ns2:pos>
+                        <ns2:pos>44.79022979736328 -0.7133764624595642</ns2:pos>
+                        <ns2:pos>44.79023361206055 -0.713407039642334</ns2:pos>
+                        <ns2:pos>44.79022979736328 -0.7134090662002563</ns2:pos>
+                        <ns2:pos>44.79022979736328 -0.7134090662002563</ns2:pos>
+                        <ns2:pos>44.790218353271484 -0.7134125232696533</ns2:pos>
+                        <ns2:pos>44.79017639160156 -0.7135403752326965</ns2:pos>
+                        <ns2:pos>44.789920806884766 -0.7142912745475769</ns2:pos>
+                        <ns2:pos>44.789878845214844 -0.7144283652305603</ns2:pos>
+                        <ns2:pos>44.7898063659668 -0.7146229147911072</ns2:pos>
+                        <ns2:pos>44.78975296020508 -0.714695155620575</ns2:pos>
+                        <ns2:pos>44.78968811035156 -0.7147542238235474</ns2:pos>
+                        <ns2:pos>44.78960037231445 -0.7148037552833557</ns2:pos>
+                        <ns2:pos>44.78945541381836 -0.7148792743682861</ns2:pos>
+                        <ns2:pos>44.78874206542969 -0.7152397632598877</ns2:pos>
+                        <ns2:pos>44.78778076171875 -0.7157219648361206</ns2:pos>
+                        <ns2:pos>44.78718185424805 -0.7160207033157349</ns2:pos>
+                        <ns2:pos>44.78679656982422 -0.7162179350852966</ns2:pos>
+                        <ns2:pos>44.78662872314453 -0.7163110971450806</ns2:pos>
+                        <ns2:pos>44.786460876464844 -0.7164292335510254</ns2:pos>
+                        <ns2:pos>44.78630828857422 -0.7165446877479553</ns2:pos>
+                        <ns2:pos>44.78602981567383 -0.7167477607727051</ns2:pos>
+                        <ns2:pos>44.78566360473633 -0.7170201539993286</ns2:pos>
+                        <ns2:pos>44.78532409667969 -0.7172776460647583</ns2:pos>
+                        <ns2:pos>44.7847785949707 -0.7176786065101624</ns2:pos>
+                        <ns2:pos>44.78406524658203 -0.7182114720344543</ns2:pos>
+                        <ns2:pos>44.78400802612305 -0.7182555198669434</ns2:pos>
+                        <ns2:pos>44.78397750854492 -0.7182598114013672</ns2:pos>
+                        <ns2:pos>44.78394317626953 -0.7182536721229553</ns2:pos>
+                        <ns2:pos>44.78391647338867 -0.7182433009147644</ns2:pos>
+                        <ns2:pos>44.78389358520508 -0.7182167768478394</ns2:pos>
+                        <ns2:pos>44.7814826965332 -0.7155734300613403</ns2:pos>
+                        <ns2:pos>44.77832794189453 -0.7121210694313049</ns2:pos>
+                        <ns2:pos>44.778297424316406 -0.7120831608772278</ns2:pos>
+                        <ns2:pos>44.77827835083008 -0.7120422124862671</ns2:pos>
+                        <ns2:pos>44.77827453613281 -0.711991548538208</ns2:pos>
+                        <ns2:pos>44.77828598022461 -0.7119413018226624</ns2:pos>
+                        <ns2:pos>44.77830123901367 -0.7119070887565613</ns2:pos>
+                        <ns2:pos>44.77836227416992 -0.7117884755134583</ns2:pos>
+                        <ns2:pos>44.77867889404297 -0.7112118601799011</ns2:pos>
+                        <ns2:pos>44.778690338134766 -0.7111703753471375</ns2:pos>
+                        <ns2:pos>44.778690338134766 -0.7110476493835449</ns2:pos>
+                        <ns2:pos>44.778560638427734 -0.7109100818634033</ns2:pos>
+                        <ns2:pos>44.778560638427734 -0.7109100818634033</ns2:pos>
+                        <ns2:pos>44.77825927734375 -0.7105796337127686</ns2:pos>
+                        <ns2:pos>44.77797317504883 -0.7102670073509216</ns2:pos>
+                        <ns2:pos>44.77793884277344 -0.7102190852165222</ns2:pos>
+                        <ns2:pos>44.77791213989258 -0.7101647853851318</ns2:pos>
+                        <ns2:pos>44.77788543701172 -0.7101051807403564</ns2:pos>
+                        <ns2:pos>44.77786636352539 -0.7100290656089783</ns2:pos>
+                        <ns2:pos>44.77785110473633 -0.709949791431427</ns2:pos>
+                        <ns2:pos>44.7778434753418 -0.7098684906959534</ns2:pos>
+                        <ns2:pos>44.77783966064453 -0.7097863554954529</ns2:pos>
+                        <ns2:pos>44.77784729003906 -0.7097046375274658</ns2:pos>
+                        <ns2:pos>44.77785873413086 -0.7096245884895325</ns2:pos>
+                        <ns2:pos>44.77787780761719 -0.7095473408699036</ns2:pos>
+                        <ns2:pos>44.77790451049805 -0.7094740271568298</ns2:pos>
+                        <ns2:pos>44.77793884277344 -0.7094057202339172</ns2:pos>
+                        <ns2:pos>44.77863311767578 -0.7081722021102905</ns2:pos>
+                        <ns2:pos>44.778648376464844 -0.7081241607666016</ns2:pos>
+                        <ns2:pos>44.778656005859375 -0.7080733180046082</ns2:pos>
+                        <ns2:pos>44.77865982055664 -0.7080208659172058</ns2:pos>
+                        <ns2:pos>44.77865982055664 -0.7079682350158691</ns2:pos>
+                        <ns2:pos>44.77865219116211 -0.7079167366027832</ns2:pos>
+                        <ns2:pos>44.77863693237305 -0.7078677415847778</ns2:pos>
+                        <ns2:pos>44.77861785888672 -0.7078224420547485</ns2:pos>
+                        <ns2:pos>44.778594970703125 -0.7077820301055908</ns2:pos>
+                        <ns2:pos>44.778564453125 -0.7077475190162659</ns2:pos>
+                        <ns2:pos>44.77749252319336 -0.7066172957420349</ns2:pos>
+                        <ns2:pos>44.776187896728516 -0.7052326202392578</ns2:pos>
+                        <ns2:pos>44.776153564453125 -0.705210268497467</ns2:pos>
+                        <ns2:pos>44.77611541748047 -0.7051957249641418</ns2:pos>
+                        <ns2:pos>44.77607727050781 -0.7051893472671509</ns2:pos>
+                        <ns2:pos>44.776039123535156 -0.7051913142204285</ns2:pos>
+                        <ns2:pos>44.7760009765625 -0.7052015662193298</ns2:pos>
+                        <ns2:pos>44.775962829589844 -0.7052198052406311</ns2:pos>
+                        <ns2:pos>44.77593231201172 -0.7052456736564636</ns2:pos>
+                        <ns2:pos>44.775901794433594 -0.7052785754203796</ns2:pos>
+                        <ns2:pos>44.775875091552734 -0.7053176164627075</ns2:pos>
+                        <ns2:pos>44.7756233215332 -0.7056863903999329</ns2:pos>
+                        <ns2:pos>44.775394439697266 -0.7057977318763733</ns2:pos>
+                        <ns2:pos>44.77534866333008 -0.7058532238006592</ns2:pos>
+                        <ns2:pos>44.775291442871094 -0.7058847546577454</ns2:pos>
+                        <ns2:pos>44.77522277832031 -0.705890417098999</ns2:pos>
+                        <ns2:pos>44.775169372558594 -0.7058521509170532</ns2:pos>
+                        <ns2:pos>44.7751350402832 -0.7057982683181763</ns2:pos>
+                        <ns2:pos>44.77511215209961 -0.7057207822799683</ns2:pos>
+                        <ns2:pos>44.775108337402344 -0.7056103348731995</ns2:pos>
+                        <ns2:pos>44.77513122558594 -0.7055342197418213</ns2:pos>
+                        <ns2:pos>44.77516555786133 -0.7054826021194458</ns2:pos>
+                        <ns2:pos>44.77523422241211 -0.7054395079612732</ns2:pos>
+                        <ns2:pos>44.775264739990234 -0.7054218649864197</ns2:pos>
+                        <ns2:pos>44.77528762817383 -0.7053876519203186</ns2:pos>
+                        <ns2:pos>44.775657653808594 -0.704306960105896</ns2:pos>
+                        <ns2:pos>44.77638244628906 -0.7023975253105164</ns2:pos>
+                        <ns2:pos>44.77674865722656 -0.7014750242233276</ns2:pos>
+                        <ns2:pos>44.77675247192383 -0.7014572024345398</ns2:pos>
+                        <ns2:pos>44.77675247192383 -0.7014377117156982</ns2:pos>
+                        <ns2:pos>44.77675247192383 -0.7014161944389343</ns2:pos>
+                        <ns2:pos>44.77675247192383 -0.7014034986495972</ns2:pos>
+                        <ns2:pos>44.776756286621094 -0.7013918161392212</ns2:pos>
+                        <ns2:pos>44.77680587768555 -0.7012519836425781</ns2:pos>
+                        <ns2:pos>44.77680969238281 -0.7012438178062439</ns2:pos>
+                        <ns2:pos>44.776824951171875 -0.7012056708335876</ns2:pos>
+                        <ns2:pos>44.77683639526367 -0.7011855840682983</ns2:pos>
+                        <ns2:pos>44.7768440246582 -0.7011778950691223</ns2:pos>
+                        <ns2:pos>44.776859283447266 -0.7011557221412659</ns2:pos>
+                        <ns2:pos>44.77687454223633 -0.7011365294456482</ns2:pos>
+                        <ns2:pos>44.776885986328125 -0.7011135220527649</ns2:pos>
+                        <ns2:pos>44.77714538574219 -0.7004455327987671</ns2:pos>
+                        <ns2:pos>44.77751159667969 -0.6995227932929993</ns2:pos>
+                        <ns2:pos>44.77799987792969 -0.6984354853630066</ns2:pos>
+                        <ns2:pos>44.77814483642578 -0.6980888843536377</ns2:pos>
+                        <ns2:pos>44.7784423828125 -0.6974126100540161</ns2:pos>
+                        <ns2:pos>44.77854537963867 -0.6971904635429382</ns2:pos>
+                        <ns2:pos>44.77854537963867 -0.6971904635429382</ns2:pos>
+                        <ns2:pos>44.77854537963867 -0.6971867084503174</ns2:pos>
+                        <ns2:pos>44.77863311767578 -0.6969927549362183</ns2:pos>
+                        <ns2:pos>44.77900695800781 -0.69617760181427</ns2:pos>
+                        <ns2:pos>44.77922058105469 -0.695626437664032</ns2:pos>
+                        <ns2:pos>44.77939987182617 -0.695222020149231</ns2:pos>
+                        <ns2:pos>44.77959442138672 -0.6947873830795288</ns2:pos>
+                        <ns2:pos>44.77973556518555 -0.694510281085968</ns2:pos>
+                    </ns2:LineString>
+                </LinkSequenceProjection>
+            </members>
+        </GeneralFrame>
+    </dataObjects>
+</PublicationDelivery>
