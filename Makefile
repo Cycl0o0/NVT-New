@@ -1,8 +1,22 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Wno-misleading-indentation -O2
+UNAME_S := $(shell uname -s)
+NCURSES_CFLAGS := $(shell pkg-config --cflags ncursesw 2>/dev/null)
 NCURSES_LIBS := $(shell pkg-config --libs ncursesw 2>/dev/null || echo "-lncurses")
-CURSES_LDFLAGS = $(NCURSES_LIBS) -lcurl
-BACKEND_LDFLAGS = -lcurl
+
+ifeq ($(UNAME_S),Darwin)
+MACOS_SDK := $(shell xcrun --show-sdk-path 2>/dev/null)
+ifneq ($(MACOS_SDK),)
+CURL_LDFLAGS = $(MACOS_SDK)/usr/lib/libcurl.tbd
+else
+CURL_LDFLAGS = -L/usr/lib -lcurl
+endif
+else
+CURL_LDFLAGS = -lcurl
+endif
+
+CURSES_LDFLAGS = $(NCURSES_LIBS) $(CURL_LDFLAGS)
+BACKEND_LDFLAGS = $(CURL_LDFLAGS)
 
 COMMON_SRCS = api.c cJSON.c
 TUI_SRCS = nvt.c app_state.c data.c filter.c map_math.c network.c ui.c $(COMMON_SRCS)
@@ -25,7 +39,7 @@ backend-run: nvt-backend
 	./nvt-backend "$${NVT_BACKEND_PORT:-8080}"
 
 nvt: $(TUI_SRCS) api.h config.h cJSON.h line_colors.h
-	$(CC) $(CFLAGS) -o $@ $(TUI_SRCS) $(CURSES_LDFLAGS)
+	$(CC) $(CFLAGS) $(NCURSES_CFLAGS) -o $@ $(TUI_SRCS) $(CURSES_LDFLAGS)
 
 nvt-backend: $(BACKEND_SRCS) api.h config.h cJSON.h line_colors.h
 	$(CC) $(CFLAGS) -o $@ $(BACKEND_SRCS) $(BACKEND_LDFLAGS)
