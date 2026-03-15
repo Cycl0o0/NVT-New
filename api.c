@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -361,6 +362,319 @@ static char *http_get_query(const char *base, const char *query, long timeout_se
     body = http_get_timeout(url, timeout_sec);
     free(url);
     return body;
+}
+
+static char *http_get_extra_header_timeout(const char *url, const char *extra_header, long timeout_sec)
+{
+    CURL *curl = curl_easy_init();
+    Buffer buf = { .data = NULL, .len = 0, .cap = 0 };
+    struct curl_slist *hdrs = NULL;
+    CURLcode res;
+
+    if (!curl) return NULL;
+
+    buf.data = malloc(4096);
+    if (!buf.data) {
+        curl_easy_cleanup(curl);
+        return NULL;
+    }
+    buf.cap = 4096;
+    buf.data[0] = '\0';
+
+    hdrs = curl_slist_append(hdrs, "Accept: application/json");
+    hdrs = curl_slist_append(hdrs, "Accept-Language: fr-FR,fr;q=0.9");
+    hdrs = curl_slist_append(hdrs, "Connection: keep-alive");
+    if (extra_header && extra_header[0]) hdrs = curl_slist_append(hdrs, extra_header);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hdrs);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, api_user_agent());
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_sec);
+
+    res = curl_easy_perform(curl);
+    curl_slist_free_all(hdrs);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        free(buf.data);
+        return NULL;
+    }
+    return buf.data;
+}
+
+static char *http_get_basic_auth_timeout(const char *url, const char *username,
+                                         const char *password, long timeout_sec)
+{
+    CURL *curl = curl_easy_init();
+    Buffer buf = { .data = NULL, .len = 0, .cap = 0 };
+    struct curl_slist *hdrs = NULL;
+    CURLcode res;
+
+    if (!curl || !username || !username[0]) {
+        if (curl) curl_easy_cleanup(curl);
+        return NULL;
+    }
+
+    buf.data = malloc(4096);
+    if (!buf.data) {
+        curl_easy_cleanup(curl);
+        return NULL;
+    }
+    buf.cap = 4096;
+    buf.data[0] = '\0';
+
+    hdrs = curl_slist_append(hdrs, "Accept: application/json");
+    hdrs = curl_slist_append(hdrs, "Accept-Language: fr-FR,fr;q=0.9");
+    hdrs = curl_slist_append(hdrs, "Connection: keep-alive");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hdrs);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, api_user_agent());
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_sec);
+    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+    curl_easy_setopt(curl, CURLOPT_PASSWORD, password ? password : "");
+
+    res = curl_easy_perform(curl);
+    curl_slist_free_all(hdrs);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        free(buf.data);
+        return NULL;
+    }
+    return buf.data;
+}
+
+static const char *idfm_api_key(void)
+{
+    return IDFM_API_KEY[0] ? IDFM_API_KEY : NULL;
+}
+
+static const char *sncf_api_key(void)
+{
+    return SNCF_API_KEY[0] ? SNCF_API_KEY : NULL;
+}
+
+static char *http_get_idfm(const char *url)
+{
+    char header[192];
+    const char *key = idfm_api_key();
+
+    if (!key || !key[0]) return NULL;
+    /* The live PRIM Navitia gateway accepts the dedicated apikey header here. */
+    snprintf(header, sizeof(header), "apikey: %s", key);
+    return http_get_extra_header_timeout(url, header, 20L);
+}
+
+static char *http_get_sncf(const char *url)
+{
+    const char *key = sncf_api_key();
+
+    if (!key || !key[0]) return NULL;
+    return http_get_basic_auth_timeout(url, key, "", 20L);
+}
+
+static int json_array_has_string(const cJSON *arr, const char *value)
+{
+    cJSON *item;
+
+    if (!cJSON_IsArray(arr) || !value || !value[0]) return 0;
+    cJSON_ArrayForEach(item, arr) {
+        if (cJSON_IsString(item) && strcmp(item->valuestring, value) == 0) return 1;
+    }
+    return 0;
+}
+
+static void utf8_append_codepoint(char *dst, size_t dst_sz, size_t *len, unsigned codepoint)
+{
+    if (!dst || !dst_sz || !len) return;
+    if (*len >= dst_sz - 1) return;
+
+    if (codepoint <= 0x7F) {
+        if (*len + 1 >= dst_sz) return;
+        dst[(*len)++] = (char)codepoint;
+    } else if (codepoint <= 0x7FF) {
+        if (*len + 2 >= dst_sz) return;
+        dst[(*len)++] = (char)(0xC0 | (codepoint >> 6));
+        dst[(*len)++] = (char)(0x80 | (codepoint & 0x3F));
+    } else if (codepoint <= 0xFFFF) {
+        if (*len + 3 >= dst_sz) return;
+        dst[(*len)++] = (char)(0xE0 | (codepoint >> 12));
+        dst[(*len)++] = (char)(0x80 | ((codepoint >> 6) & 0x3F));
+        dst[(*len)++] = (char)(0x80 | (codepoint & 0x3F));
+    } else {
+        if (*len + 4 >= dst_sz) return;
+        dst[(*len)++] = (char)(0xF0 | (codepoint >> 18));
+        dst[(*len)++] = (char)(0x80 | ((codepoint >> 12) & 0x3F));
+        dst[(*len)++] = (char)(0x80 | ((codepoint >> 6) & 0x3F));
+        dst[(*len)++] = (char)(0x80 | (codepoint & 0x3F));
+    }
+    dst[*len] = '\0';
+}
+
+static int decode_named_html_entity(const char *name, unsigned *codepoint)
+{
+    if (strcmp(name, "nbsp") == 0) *codepoint = ' ';
+    else if (strcmp(name, "amp") == 0) *codepoint = '&';
+    else if (strcmp(name, "lt") == 0) *codepoint = '<';
+    else if (strcmp(name, "gt") == 0) *codepoint = '>';
+    else if (strcmp(name, "quot") == 0) *codepoint = '"';
+    else if (strcmp(name, "apos") == 0) *codepoint = '\'';
+    else if (strcmp(name, "eacute") == 0) *codepoint = 0xE9;
+    else if (strcmp(name, "egrave") == 0) *codepoint = 0xE8;
+    else if (strcmp(name, "ecirc") == 0) *codepoint = 0xEA;
+    else if (strcmp(name, "agrave") == 0) *codepoint = 0xE0;
+    else if (strcmp(name, "ccedil") == 0) *codepoint = 0xE7;
+    else if (strcmp(name, "uuml") == 0) *codepoint = 0xFC;
+    else return 0;
+    return 1;
+}
+
+static void html_to_text(char *dst, size_t dst_sz, const char *src)
+{
+    size_t len = 0;
+    int need_space = 0;
+
+    if (!dst_sz) return;
+    dst[0] = '\0';
+    if (!src) return;
+
+    for (size_t i = 0; src[i] && len + 1 < dst_sz; ) {
+        if (src[i] == '<') {
+            size_t j = i + 1;
+            int newline = 0;
+
+            while (src[j] && src[j] != '>') j++;
+            if (src[i + 1] == 'p' || src[i + 1] == '/' || src[i + 1] == 'b' || src[i + 1] == 'l') {
+                newline = 1;
+            }
+            if (newline && len > 0 && dst[len - 1] != '\n') dst[len++] = '\n';
+            dst[len] = '\0';
+            i = src[j] == '>' ? j + 1 : j;
+            need_space = 0;
+            continue;
+        }
+
+        if (src[i] == '&') {
+            char entity[32];
+            size_t j = i + 1;
+            size_t k = 0;
+            unsigned codepoint = 0;
+
+            while (src[j] && src[j] != ';' && k + 1 < sizeof(entity)) entity[k++] = src[j++];
+            entity[k] = '\0';
+            if (src[j] == ';') j++;
+
+            if (entity[0] == '#') {
+                codepoint = (entity[1] == 'x' || entity[1] == 'X')
+                    ? (unsigned)strtoul(entity + 2, NULL, 16)
+                    : (unsigned)strtoul(entity + 1, NULL, 10);
+                utf8_append_codepoint(dst, dst_sz, &len, codepoint ? codepoint : '?');
+                i = j;
+                need_space = 0;
+                continue;
+            }
+            if (decode_named_html_entity(entity, &codepoint)) {
+                utf8_append_codepoint(dst, dst_sz, &len, codepoint);
+                i = j;
+                need_space = 0;
+                continue;
+            }
+        }
+
+        if (isspace((unsigned char)src[i])) {
+            if (!need_space && len > 0 && dst[len - 1] != '\n') {
+                dst[len++] = ' ';
+                dst[len] = '\0';
+            }
+            need_space = 1;
+            i++;
+            continue;
+        }
+
+        dst[len++] = src[i++];
+        dst[len] = '\0';
+        need_space = 0;
+    }
+
+    while (len > 0 && (dst[len - 1] == ' ' || dst[len - 1] == '\n')) dst[--len] = '\0';
+}
+
+static void parse_hex_triplet(const char *src, int *r, int *g, int *b)
+{
+    unsigned value = 0;
+
+    if (src && src[0] == '#') src++;
+    if (src && strlen(src) >= 6) sscanf(src, "%x", &value);
+    if (r) *r = (value >> 16) & 0xFF;
+    if (g) *g = (value >> 8) & 0xFF;
+    if (b) *b = value & 0xFF;
+}
+
+static int parse_navitia_datetime(const char *src, struct tm *tm_out)
+{
+    struct tm tmv;
+
+    if (!src || strlen(src) < 15 || !tm_out) return 0;
+    memset(&tmv, 0, sizeof(tmv));
+    if (sscanf(src, "%4d%2d%2dT%2d%2d%2d",
+               &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
+               &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec) != 6) {
+        return 0;
+    }
+    tmv.tm_year -= 1900;
+    tmv.tm_mon -= 1;
+    tmv.tm_isdst = -1;
+    *tm_out = tmv;
+    return 1;
+}
+
+static int navitia_datetime_diff_seconds(const char *current_dt, const char *target_dt)
+{
+    struct tm current_tm;
+    struct tm target_tm;
+    time_t current_ts;
+    time_t target_ts;
+
+    if (!parse_navitia_datetime(current_dt, &current_tm)) return -1;
+    if (!parse_navitia_datetime(target_dt, &target_tm)) return -1;
+
+    current_ts = mktime(&current_tm);
+    target_ts = mktime(&target_tm);
+    if (current_ts == (time_t)-1 || target_ts == (time_t)-1) return -1;
+    return (int)difftime(target_ts, current_ts);
+}
+
+static void navitia_to_iso_datetime(const char *src, char *dst, size_t dst_sz)
+{
+    struct tm tmv;
+
+    if (!dst_sz) return;
+    dst[0] = '\0';
+    if (!parse_navitia_datetime(src, &tmv)) return;
+    strftime(dst, dst_sz, "%Y-%m-%dT%H:%M:%S", &tmv);
+}
+
+static void seconds_to_waiting_time(int seconds, char *dst, size_t dst_sz)
+{
+    int hours;
+    int minutes;
+    int secs;
+
+    if (!dst_sz) return;
+    dst[0] = '\0';
+    if (seconds < 0) return;
+    hours = seconds / 3600;
+    minutes = (seconds % 3600) / 60;
+    secs = seconds % 60;
+    snprintf(dst, dst_sz, "%02d:%02d:%02d", hours, minutes, secs);
 }
 
 /* ── helpers ─────────────────────────────────────────────────────── */
@@ -990,6 +1304,779 @@ int fetch_toulouse_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int 
     }
 
     cJSON_Delete(root);
+    return n;
+}
+
+static const char *idfm_line_mode_name(const cJSON *item)
+{
+    cJSON *commercial_mode = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "commercial_mode");
+    cJSON *physical_modes = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "physical_modes");
+    cJSON *physical_mode = cJSON_GetArrayItem(physical_modes, 0);
+
+    if (commercial_mode && jstr(commercial_mode, "name")[0]) return jstr(commercial_mode, "name");
+    if (physical_mode && jstr(physical_mode, "name")[0]) return jstr(physical_mode, "name");
+    return "";
+}
+
+static void idfm_fill_line(ToulouseLine *line, const cJSON *item)
+{
+    cJSON *routes = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "routes");
+    cJSON *route;
+
+    memset(line, 0, sizeof(*line));
+    SCOPY(line->ref, jstr(item, "id"));
+    line->id = parse_prefixed_id(jstr(item, "id"));
+    SCOPY(line->code, jstr(item, "code"));
+    if (!line->code[0]) SCOPY(line->code, jstr(item, "name"));
+    SCOPY(line->libelle, jstr(item, "name"));
+    SCOPY(line->mode, idfm_line_mode_name(item));
+    SCOPY(line->couleur, jstr(item, "color"));
+    SCOPY(line->texte_couleur, jstr(item, "text_color"));
+    parse_hex_triplet(line->couleur, &line->r, &line->g, &line->b);
+
+    line->terminus_count = 0;
+    cJSON_ArrayForEach(route, routes) {
+        cJSON *direction = cJSON_GetObjectItemCaseSensitive(route, "direction");
+        const char *direction_id = direction ? jstr(direction, "id") : "";
+        const char *direction_name = direction ? jstr(direction, "name") : jstr(route, "name");
+        int dup = 0;
+
+        if (line->terminus_count >= (int)(sizeof(line->terminus_refs) / sizeof(line->terminus_refs[0]))) break;
+        for (int i = 0; i < line->terminus_count; i++) {
+            if (strcmp(line->terminus_refs[i], direction_id) == 0) {
+                dup = 1;
+                break;
+            }
+        }
+        if (dup) continue;
+        SCOPY(line->terminus_refs[line->terminus_count], direction_id);
+        SCOPY(line->terminus_names[line->terminus_count], direction_name);
+        line->terminus_count++;
+    }
+}
+
+int fetch_idfm_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
+{
+    int n = 0;
+    int total_lines = 0;
+
+    if (!snap || !lines || max_lines <= 0) return -1;
+    memset(snap, 0, sizeof(*snap));
+    SCOPY(snap->doc_ref, "https://prim.iledefrance-mobilites.fr/fr/aide-et-contact/documentation/generalites/ressources");
+    SCOPY(snap->doc_version, "v2");
+    SCOPY(snap->doc_date, "2026-03-14");
+    SCOPY(snap->lines_url, IDFM_API_BASE "/lines");
+    SCOPY(snap->stops_url, IDFM_API_BASE "/lines/{line_id}/stop_areas");
+    SCOPY(snap->alerts_url, IDFM_LINE_REPORTS_BASE "/line_reports");
+    snap->live = 1;
+
+    for (int page = 0; n < max_lines; page++) {
+        char url[512];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), IDFM_API_BASE "/lines?count=1000&start_page=%d", page);
+        raw = http_get_idfm(url);
+        if (!raw) return n > 0 ? 0 : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? 0 : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        total_lines = jint(pagination, "total_result");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "lines");
+
+        cJSON_ArrayForEach(item, items) {
+            if (n >= max_lines) break;
+            idfm_fill_line(&lines[n], item);
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0 || n >= total_lines) break;
+    }
+
+    snap->total_lines = total_lines > 0 ? total_lines : n;
+    snap->sample_lines = n;
+    return n > 0 ? 0 : -1;
+}
+
+int fetch_idfm_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
+{
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    for (int page = 0; n < max; page++) {
+        char url[768];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), IDFM_API_BASE "/lines/%s/stop_areas?count=100&start_page=%d",
+                 line->ref, page);
+        raw = http_get_idfm(url);
+        if (!raw) return n > 0 ? n : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? n : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "stop_areas");
+
+        cJSON_ArrayForEach(item, items) {
+            ToulouseStop *stop;
+            cJSON *coord;
+            cJSON *regions;
+            cJSON *region;
+
+            if (n >= max) break;
+            stop = &out[n];
+            memset(stop, 0, sizeof(*stop));
+            SCOPY(stop->ref, jstr(item, "id"));
+            stop->id = parse_prefixed_id(jstr(item, "id"));
+            SCOPY(stop->libelle, jstr(item, "name"));
+            SCOPY(stop->adresse, jstr(item, "label"));
+            SCOPY(stop->lignes, line->code);
+            SCOPY(stop->mode, line->mode);
+
+            coord = cJSON_GetObjectItemCaseSensitive(item, "coord");
+            if (coord) {
+                stop->lon = atof(jstr(coord, "lon"));
+                stop->lat = atof(jstr(coord, "lat"));
+            }
+
+            regions = cJSON_GetObjectItemCaseSensitive(item, "administrative_regions");
+            region = cJSON_GetArrayItem(regions, 0);
+            if (region) SCOPY(stop->commune, jstr(region, "name"));
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0) break;
+    }
+
+    return n;
+}
+
+static const char *idfm_best_message_text(const cJSON *messages, char *title, size_t title_sz)
+{
+    static char text[2048];
+    cJSON *message;
+    const char *fallback = "";
+
+    if (title_sz) title[0] = '\0';
+    text[0] = '\0';
+
+    cJSON_ArrayForEach(message, messages) {
+        cJSON *channel = cJSON_GetObjectItemCaseSensitive(message, "channel");
+        cJSON *types = channel ? cJSON_GetObjectItemCaseSensitive(channel, "types") : NULL;
+        const char *msg = jstr(message, "text");
+
+        if (!msg[0]) continue;
+        if (json_array_has_string(types, "title")) {
+            snprintf(title, title_sz, "%s", msg);
+            continue;
+        }
+        if (json_array_has_string(types, "web")) {
+            html_to_text(text, sizeof(text), msg);
+            return text;
+        }
+        if (!fallback[0]) fallback = msg;
+    }
+
+    if (fallback[0]) html_to_text(text, sizeof(text), fallback);
+    return text;
+}
+
+static void idfm_impacted_line_codes(const cJSON *impacted_objects, char *dst, size_t dst_sz)
+{
+    cJSON *entry;
+
+    if (!dst_sz) return;
+    dst[0] = '\0';
+    cJSON_ArrayForEach(entry, impacted_objects) {
+        cJSON *pt_object = cJSON_GetObjectItemCaseSensitive(entry, "pt_object");
+        cJSON *line = pt_object ? cJSON_GetObjectItemCaseSensitive(pt_object, "line") : NULL;
+        const char *code = line ? jstr(line, "code") : "";
+
+        if (code[0]) append_token(dst, dst_sz, code);
+    }
+}
+
+int fetch_idfm_alerts(ToulouseAlert *out, int max)
+{
+    int n = 0;
+
+    if (!out || max <= 0) return -1;
+
+    for (int page = 0; n < max; page++) {
+        char url[512];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), IDFM_LINE_REPORTS_BASE "/line_reports?count=100&start_page=%d", page);
+        raw = http_get_idfm(url);
+        if (!raw) return n > 0 ? n : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? n : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "disruptions");
+
+        cJSON_ArrayForEach(item, items) {
+            ToulouseAlert *alert;
+            cJSON *severity;
+            const char *message;
+
+            if (n >= max) break;
+            alert = &out[n];
+            memset(alert, 0, sizeof(*alert));
+            severity = cJSON_GetObjectItemCaseSensitive(item, "severity");
+            SCOPY(alert->id, jstr(item, "id"));
+            SCOPY(alert->scope, jstr(item, "category"));
+            SCOPY(alert->importance, severity ? jstr(severity, "name") : "");
+            message = idfm_best_message_text(
+                cJSON_GetObjectItemCaseSensitive(item, "messages"),
+                alert->titre,
+                sizeof(alert->titre)
+            );
+            SCOPY(alert->message, message);
+            if (!alert->titre[0]) SCOPY(alert->titre, alert->message);
+            idfm_impacted_line_codes(cJSON_GetObjectItemCaseSensitive(item, "impacted_objects"),
+                                     alert->lines, sizeof(alert->lines));
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0) break;
+    }
+
+    return n;
+}
+
+static int idfm_departure_matches_line(const cJSON *departure, const ToulouseLine *line)
+{
+    cJSON *route = cJSON_GetObjectItemCaseSensitive((cJSON *)departure, "route");
+    cJSON *line_obj = route ? cJSON_GetObjectItemCaseSensitive(route, "line") : NULL;
+    cJSON *display = cJSON_GetObjectItemCaseSensitive((cJSON *)departure, "display_informations");
+    const char *line_id = line_obj ? jstr(line_obj, "id") : "";
+    const char *code = display ? jstr(display, "code") : "";
+
+    if (line && line->ref[0] && strcmp(line_id, line->ref) == 0) return 1;
+    if (line && line->code[0] && strcmp(code, line->code) == 0) return 1;
+    return 0;
+}
+
+int fetch_idfm_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root;
+    cJSON *context;
+    cJSON *items;
+    cJSON *item;
+    const char *current_dt;
+    int n = 0;
+
+    if (!line || !stop || !stop->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url), IDFM_API_BASE "/stop_areas/%s/departures?count=1000", stop->ref);
+    raw = http_get_idfm(url);
+    if (!raw) return -1;
+
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    context = cJSON_GetObjectItemCaseSensitive(root, "context");
+    current_dt = context ? jstr(context, "current_datetime") : "";
+    items = cJSON_GetObjectItemCaseSensitive(root, "departures");
+
+    cJSON_ArrayForEach(item, items) {
+        ToulousePassage *passage;
+        cJSON *display;
+        cJSON *route;
+        cJSON *direction;
+        cJSON *stop_date_time;
+        const char *departure_dt;
+        const char *base_departure_dt;
+        int wait_seconds;
+
+        if (n >= max) break;
+        if (!idfm_departure_matches_line(item, line)) continue;
+
+        display = cJSON_GetObjectItemCaseSensitive(item, "display_informations");
+        route = cJSON_GetObjectItemCaseSensitive(item, "route");
+        direction = route ? cJSON_GetObjectItemCaseSensitive(route, "direction") : NULL;
+        stop_date_time = cJSON_GetObjectItemCaseSensitive(item, "stop_date_time");
+        departure_dt = stop_date_time ? jstr(stop_date_time, "departure_date_time") : "";
+        base_departure_dt = stop_date_time ? jstr(stop_date_time, "base_departure_date_time") : "";
+        wait_seconds = navitia_datetime_diff_seconds(current_dt, departure_dt);
+
+        passage = &out[n];
+        memset(passage, 0, sizeof(*passage));
+        SCOPY(passage->line_code, display ? jstr(display, "code") : line->code);
+        SCOPY(passage->line_name, display ? jstr(display, "name") : line->libelle);
+        SCOPY(passage->destination, display ? jstr(display, "direction") : (direction ? jstr(direction, "name") : ""));
+        SCOPY(passage->stop_name, stop->libelle);
+        navitia_to_iso_datetime(departure_dt, passage->datetime, sizeof(passage->datetime));
+        seconds_to_waiting_time(wait_seconds < 0 ? 0 : wait_seconds, passage->waiting_time, sizeof(passage->waiting_time));
+        passage->realtime = stop_date_time && strcmp(jstr(stop_date_time, "data_freshness"), "base_schedule") != 0;
+        passage->delayed = departure_dt[0] && base_departure_dt[0] && strcmp(departure_dt, base_departure_dt) != 0;
+        n++;
+    }
+
+    cJSON_Delete(root);
+    return n;
+}
+
+int fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root;
+    cJSON *items;
+    cJSON *entry;
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url), IDFM_API_BASE "/lines/%s/vehicle_positions?count=1", line->ref);
+    raw = http_get_idfm(url);
+    if (!raw) return -1;
+
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    items = cJSON_GetObjectItemCaseSensitive(root, "vehicle_positions");
+    entry = cJSON_GetArrayItem(items, 0);
+    if (entry) {
+        cJSON *journeys = cJSON_GetObjectItemCaseSensitive(entry, "vehicle_journey_positions");
+        cJSON *journey;
+
+        cJSON_ArrayForEach(journey, journeys) {
+            ToulouseVehicle *vehicle;
+            cJSON *vehicle_journey;
+
+            if (n >= max) break;
+            vehicle_journey = cJSON_GetObjectItemCaseSensitive(journey, "vehicle_journey");
+            if (!vehicle_journey) continue;
+
+            vehicle = &out[n];
+            memset(vehicle, 0, sizeof(*vehicle));
+            SCOPY(vehicle->line_code, line->code);
+            SCOPY(vehicle->line_name, line->libelle);
+            SCOPY(vehicle->current_stop, jstr(vehicle_journey, "name"));
+            SCOPY(vehicle->terminus, jstr(vehicle_journey, "headsign"));
+            SCOPY(vehicle->sens, jstr(vehicle_journey, "headsign"));
+            vehicle->realtime = 1;
+            n++;
+        }
+    }
+
+    cJSON_Delete(root);
+    return n;
+}
+
+static const char *sncf_line_mode_name(const cJSON *item)
+{
+    cJSON *physical_modes = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "physical_modes");
+    cJSON *physical_mode = cJSON_GetArrayItem(physical_modes, 0);
+    cJSON *commercial_mode = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "commercial_mode");
+
+    if (physical_mode && jstr(physical_mode, "name")[0]) return jstr(physical_mode, "name");
+    if (commercial_mode && jstr(commercial_mode, "name")[0]) return jstr(commercial_mode, "name");
+    return "";
+}
+
+static void sncf_fill_line(ToulouseLine *line, const cJSON *item)
+{
+    cJSON *routes = cJSON_GetObjectItemCaseSensitive((cJSON *)item, "routes");
+    cJSON *route;
+
+    memset(line, 0, sizeof(*line));
+    SCOPY(line->ref, jstr(item, "id"));
+    line->id = parse_prefixed_id(jstr(item, "id"));
+    SCOPY(line->code, jstr(item, "code"));
+    if (!line->code[0]) SCOPY(line->code, jstr(item, "name"));
+    SCOPY(line->libelle, jstr(item, "name"));
+    if (!line->libelle[0]) SCOPY(line->libelle, line->code);
+    SCOPY(line->mode, sncf_line_mode_name(item));
+    SCOPY(line->couleur, jstr(item, "color"));
+    SCOPY(line->texte_couleur, jstr(item, "text_color"));
+    parse_hex_triplet(line->couleur, &line->r, &line->g, &line->b);
+
+    cJSON_ArrayForEach(route, routes) {
+        cJSON *direction = cJSON_GetObjectItemCaseSensitive(route, "direction");
+        const char *direction_id = direction ? jstr(direction, "id") : "";
+        const char *direction_name = direction ? jstr(direction, "name") : jstr(route, "name");
+        int dup = 0;
+
+        if (line->terminus_count >= (int)(sizeof(line->terminus_refs) / sizeof(line->terminus_refs[0]))) break;
+        for (int i = 0; i < line->terminus_count; i++) {
+            if (strcmp(line->terminus_refs[i], direction_id) == 0) {
+                dup = 1;
+                break;
+            }
+        }
+        if (dup) continue;
+        SCOPY(line->terminus_refs[line->terminus_count], direction_id);
+        SCOPY(line->terminus_names[line->terminus_count], direction_name);
+        line->terminus_count++;
+    }
+}
+
+int fetch_sncf_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
+{
+    int n = 0;
+    int total_lines = 0;
+
+    if (!snap || !lines || max_lines <= 0) return -1;
+    memset(snap, 0, sizeof(*snap));
+    SCOPY(snap->doc_ref, "https://doc.navitia.io/");
+    SCOPY(snap->doc_version, "v1");
+    SCOPY(snap->doc_date, "2026-03-14");
+    SCOPY(snap->lines_url, SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines");
+    SCOPY(snap->stops_url, SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines/{line_id}/stop_areas");
+    SCOPY(snap->alerts_url, SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/traffic_reports");
+    snap->live = 1;
+
+    for (int page = 0; n < max_lines; page++) {
+        char url[512];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines?count=1000&start_page=%d", page);
+        raw = http_get_sncf(url);
+        if (!raw) return n > 0 ? 0 : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? 0 : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        total_lines = jint(pagination, "total_result");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "lines");
+
+        cJSON_ArrayForEach(item, items) {
+            if (n >= max_lines) break;
+            sncf_fill_line(&lines[n], item);
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0 || n >= total_lines) break;
+    }
+
+    snap->total_lines = total_lines > 0 ? total_lines : n;
+    snap->sample_lines = n;
+    return n > 0 ? 0 : -1;
+}
+
+int fetch_sncf_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
+{
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    for (int page = 0; n < max; page++) {
+        char url[768];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines/%s/stop_areas?count=100&start_page=%d",
+                 line->ref, page);
+        raw = http_get_sncf(url);
+        if (!raw) return n > 0 ? n : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? n : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "stop_areas");
+
+        cJSON_ArrayForEach(item, items) {
+            ToulouseStop *stop;
+            cJSON *coord;
+            cJSON *regions;
+            cJSON *region;
+
+            if (n >= max) break;
+            stop = &out[n];
+            memset(stop, 0, sizeof(*stop));
+            SCOPY(stop->ref, jstr(item, "id"));
+            stop->id = parse_prefixed_id(jstr(item, "id"));
+            SCOPY(stop->libelle, jstr(item, "name"));
+            SCOPY(stop->adresse, jstr(item, "label"));
+            SCOPY(stop->lignes, line->code);
+            SCOPY(stop->mode, line->mode);
+
+            coord = cJSON_GetObjectItemCaseSensitive(item, "coord");
+            if (coord) {
+                stop->lon = atof(jstr(coord, "lon"));
+                stop->lat = atof(jstr(coord, "lat"));
+            }
+
+            regions = cJSON_GetObjectItemCaseSensitive(item, "administrative_regions");
+            region = cJSON_GetArrayItem(regions, 0);
+            if (region) SCOPY(stop->commune, jstr(region, "name"));
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0) break;
+    }
+
+    return n;
+}
+
+int fetch_sncf_alerts(ToulouseAlert *out, int max)
+{
+    int n = 0;
+
+    if (!out || max <= 0) return -1;
+
+    for (int page = 0; n < max; page++) {
+        char url[512];
+        char *raw;
+        cJSON *root;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/traffic_reports?count=100&start_page=%d", page);
+        raw = http_get_sncf(url);
+        if (!raw) return n > 0 ? n : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? n : -1;
+
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "disruptions");
+
+        cJSON_ArrayForEach(item, items) {
+            ToulouseAlert *alert;
+            cJSON *severity;
+            const char *message;
+            const char *status = jstr(item, "status");
+
+            if (n >= max) break;
+            if (strcmp(status, "past") == 0) continue;
+
+            alert = &out[n];
+            memset(alert, 0, sizeof(*alert));
+            severity = cJSON_GetObjectItemCaseSensitive(item, "severity");
+            SCOPY(alert->id, jstr(item, "id"));
+            SCOPY(alert->scope, status[0] ? status : "network");
+            SCOPY(alert->importance, severity ? jstr(severity, "name") : "");
+            message = idfm_best_message_text(
+                cJSON_GetObjectItemCaseSensitive(item, "messages"),
+                alert->titre,
+                sizeof(alert->titre)
+            );
+            SCOPY(alert->message, message);
+            if (!alert->titre[0]) SCOPY(alert->titre, alert->importance[0] ? alert->importance : "Alerte SNCF");
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0) break;
+    }
+
+    return n;
+}
+
+int fetch_sncf_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root;
+    cJSON *context;
+    cJSON *items;
+    cJSON *item;
+    const char *current_dt;
+    int n = 0;
+
+    if (!line || !stop || !stop->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url), SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/stop_areas/%s/departures?count=1000", stop->ref);
+    raw = http_get_sncf(url);
+    if (!raw) return -1;
+
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    context = cJSON_GetObjectItemCaseSensitive(root, "context");
+    current_dt = context ? jstr(context, "current_datetime") : "";
+    items = cJSON_GetObjectItemCaseSensitive(root, "departures");
+
+    cJSON_ArrayForEach(item, items) {
+        ToulousePassage *passage;
+        cJSON *display;
+        cJSON *route;
+        cJSON *direction;
+        cJSON *stop_date_time;
+        const char *departure_dt;
+        const char *base_departure_dt;
+        int wait_seconds;
+
+        if (n >= max) break;
+        if (!idfm_departure_matches_line(item, line)) continue;
+
+        display = cJSON_GetObjectItemCaseSensitive(item, "display_informations");
+        route = cJSON_GetObjectItemCaseSensitive(item, "route");
+        direction = route ? cJSON_GetObjectItemCaseSensitive(route, "direction") : NULL;
+        stop_date_time = cJSON_GetObjectItemCaseSensitive(item, "stop_date_time");
+        departure_dt = stop_date_time ? jstr(stop_date_time, "departure_date_time") : "";
+        base_departure_dt = stop_date_time ? jstr(stop_date_time, "base_departure_date_time") : "";
+        wait_seconds = navitia_datetime_diff_seconds(current_dt, departure_dt);
+        if (wait_seconds < 0) continue;
+
+        passage = &out[n];
+        memset(passage, 0, sizeof(*passage));
+        SCOPY(passage->line_code, display ? jstr(display, "code") : line->code);
+        SCOPY(passage->line_name, display ? jstr(display, "name") : line->libelle);
+        SCOPY(passage->destination, display ? jstr(display, "direction") : (direction ? jstr(direction, "name") : ""));
+        SCOPY(passage->stop_name, stop->libelle);
+        navitia_to_iso_datetime(departure_dt, passage->datetime, sizeof(passage->datetime));
+        seconds_to_waiting_time(wait_seconds, passage->waiting_time, sizeof(passage->waiting_time));
+        passage->realtime = stop_date_time && strcmp(jstr(stop_date_time, "data_freshness"), "base_schedule") != 0;
+        passage->delayed = departure_dt[0] && base_departure_dt[0] && strcmp(departure_dt, base_departure_dt) != 0;
+        n++;
+    }
+
+    cJSON_Delete(root);
+    return n;
+}
+
+static const char *navitia_link_id(const cJSON *links, const char *type)
+{
+    cJSON *link;
+
+    cJSON_ArrayForEach(link, links) {
+        if (strcmp(jstr(link, "type"), type) == 0) return jstr(link, "id");
+    }
+    return "";
+}
+
+int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    for (int page = 0; n < max; page++) {
+        char url[768];
+        char *raw;
+        cJSON *root;
+        cJSON *context;
+        cJSON *pagination;
+        cJSON *items;
+        cJSON *item;
+        const char *current_dt;
+        int items_on_page;
+
+        snprintf(url, sizeof(url), SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines/%s/departures?count=100&start_page=%d",
+                 line->ref, page);
+        raw = http_get_sncf(url);
+        if (!raw) return n > 0 ? n : -1;
+
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) return n > 0 ? n : -1;
+
+        context = cJSON_GetObjectItemCaseSensitive(root, "context");
+        current_dt = context ? jstr(context, "current_datetime") : "";
+        pagination = cJSON_GetObjectItemCaseSensitive(root, "pagination");
+        items_on_page = jint(pagination, "items_on_page");
+        items = cJSON_GetObjectItemCaseSensitive(root, "departures");
+
+        cJSON_ArrayForEach(item, items) {
+            ToulouseVehicle *vehicle;
+            cJSON *display;
+            cJSON *stop_point;
+            cJSON *stop_date_time;
+            const char *vehicle_ref;
+            const char *departure_dt;
+            const char *base_departure_dt;
+            int wait_seconds;
+            int dup = 0;
+
+            if (n >= max) break;
+            if (!idfm_departure_matches_line(item, line)) continue;
+
+            stop_date_time = cJSON_GetObjectItemCaseSensitive(item, "stop_date_time");
+            departure_dt = stop_date_time ? jstr(stop_date_time, "departure_date_time") : "";
+            base_departure_dt = stop_date_time ? jstr(stop_date_time, "base_departure_date_time") : "";
+            wait_seconds = navitia_datetime_diff_seconds(current_dt, departure_dt);
+            if (wait_seconds < 0) continue;
+
+            vehicle_ref = navitia_link_id(cJSON_GetObjectItemCaseSensitive(item, "links"), "vehicle_journey");
+            for (int i = 0; i < n; i++) {
+                if (vehicle_ref[0] && strcmp(out[i].ref, vehicle_ref) == 0) {
+                    dup = 1;
+                    break;
+                }
+            }
+            if (dup) continue;
+
+            display = cJSON_GetObjectItemCaseSensitive(item, "display_informations");
+            stop_point = cJSON_GetObjectItemCaseSensitive(item, "stop_point");
+            vehicle = &out[n];
+            memset(vehicle, 0, sizeof(*vehicle));
+            SCOPY(vehicle->ref, vehicle_ref);
+            SCOPY(vehicle->line_code, display ? jstr(display, "code") : line->code);
+            SCOPY(vehicle->line_name, display ? jstr(display, "name") : line->libelle);
+            SCOPY(vehicle->current_stop, stop_point ? jstr(stop_point, "name") : "");
+            SCOPY(vehicle->next_stop, stop_point ? jstr(stop_point, "name") : "");
+            SCOPY(vehicle->terminus, display ? jstr(display, "direction") : "");
+            SCOPY(vehicle->sens, display ? jstr(display, "headsign") : "");
+            navitia_to_iso_datetime(departure_dt, vehicle->datetime, sizeof(vehicle->datetime));
+            seconds_to_waiting_time(wait_seconds, vehicle->waiting_time, sizeof(vehicle->waiting_time));
+            vehicle->realtime = stop_date_time && strcmp(jstr(stop_date_time, "data_freshness"), "base_schedule") != 0;
+            vehicle->delayed = departure_dt[0] && base_departure_dt[0] && strcmp(departure_dt, base_departure_dt) != 0;
+            n++;
+        }
+        cJSON_Delete(root);
+
+        if (items_on_page <= 0 || n >= max) break;
+    }
+
     return n;
 }
 

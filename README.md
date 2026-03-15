@@ -8,7 +8,7 @@ The project currently provides:
 
 - a terminal user interface in C (`nvt`)
 - a local backend API for transit data
-- support for both Bordeaux and Toulouse networks
+- support for Bordeaux, Toulouse, and Paris IDFM networks
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
 
@@ -19,6 +19,7 @@ The project currently provides:
 ## Features
 
 - Ncurses-based TUI app written in C
+- Multi-network live support for Bordeaux, Toulouse, and Paris IDFM
 - Local backend endpoints for lines, alerts, stop groups, passages, vehicles, and map boundaries
 - One Home Assistant config entry per `network + stop + line + direction`
 - User-defined threshold values such as `5`, `10`, `20`, or more minutes
@@ -87,6 +88,9 @@ Typical flow:
 ## Development Notes
 
 - `nvt.c` is the main TUI application entry point
+- `make test` runs the first unit tests for extracted filter and map helpers
+- Technical notes for the modularized TUI live in `docs/technical-readme.md`
+- IDFM support is configured directly in the C sources
 - The project is backend-focused; the previous frontend surface has been removed
 - Local Home Assistant test data can be stored in `.ha-test/`
 - Python cache files and compiled binaries should not be committed

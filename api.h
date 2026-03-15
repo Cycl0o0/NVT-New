@@ -78,7 +78,7 @@ typedef struct {
 
 typedef struct {
     int id;
-    char ref[32];
+    char ref[96];
     char code[16];
     char libelle[96];
     char mode[24];
@@ -86,13 +86,13 @@ typedef struct {
     char texte_couleur[16];
     int r, g, b;
     int terminus_count;
-    char terminus_refs[8][32];
+    char terminus_refs[8][96];
     char terminus_names[8][64];
 } ToulouseLine;
 
 typedef struct {
     int id;
-    char ref[32];
+    char ref[96];
     char libelle[96];
     char adresse[96];
     char commune[32];
@@ -102,7 +102,7 @@ typedef struct {
 } ToulouseStop;
 
 typedef struct {
-    char id[48];
+    char id[96];
     char titre[128];
     char message[2048];
     char importance[24];
@@ -122,6 +122,7 @@ typedef struct {
 } ToulousePassage;
 
 typedef struct {
+    char ref[96];
     char line_code[16];
     char line_name[96];
     char current_stop[96];
@@ -148,6 +149,22 @@ typedef struct {
     char doc_version[16];
     char doc_date[16];
 } ToulouseSnapshot;
+
+typedef struct {
+    int total_lines;
+    int total_stops;
+    int total_alerts;
+    int sample_lines;
+    int sample_stops;
+    int sample_alerts;
+    int live;
+    char lines_url[192];
+    char stops_url[192];
+    char alerts_url[192];
+    char doc_ref[128];
+    char doc_version[16];
+    char doc_date[16];
+} IdfmSnapshot;
 
 /* ── Cache cours_id → (ligne_id, terminus_gid) ───────────────────── */
 
@@ -250,6 +267,16 @@ int       fetch_toulouse_snapshot(ToulouseSnapshot *snap, ToulouseLine *lines, i
 int       fetch_toulouse_alerts(ToulouseAlert *out, int max);
 int       fetch_toulouse_passages(const char *stop_area_ref, ToulousePassage *out, int max);
 int       fetch_toulouse_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
+int       fetch_idfm_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
+int       fetch_idfm_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
+int       fetch_idfm_alerts(ToulouseAlert *out, int max);
+int       fetch_idfm_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
+int       fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
+int       fetch_sncf_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
+int       fetch_sncf_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
+int       fetch_sncf_alerts(ToulouseAlert *out, int max);
+int       fetch_sncf_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
+int       fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
 int       fetch_toulouse_line_route(const ToulouseLine *line, LineRouteMap *out);
 int       fetch_toulouse_metro_map(MetroMap *out);
 int       fetch_metro_map(MetroMap *out);

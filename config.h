@@ -6,6 +6,12 @@
 #define TISSEO_API_KEY "8ee7d45b-a219-4f42-93fa-6c098df58b87"
 #define TISSEO_API_BASE "https://api.tisseo.fr/v2"
 #define TISSEO_NETWORK_ENCODED "Tiss%C3%A9o"
+#define IDFM_API_KEY "nAtkIh7qfelk1sUWawKqdigIKVY0mKvY"
+#define IDFM_API_BASE "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
+#define IDFM_LINE_REPORTS_BASE "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports"
+#define SNCF_API_KEY "538d62fe-af52-4ec5-9a90-97b20b7dd733"
+#define SNCF_API_BASE "https://api.sncf.com/v1"
+#define SNCF_COVERAGE "sncf"
 #define MAP_API_BASE  "https://geo.api.gouv.fr"
 #define OVERPASS_API_BASE "https://overpass-api.de/api/interpreter"
 #define MAP_BDX_EPCI  "243300316"
@@ -14,10 +20,10 @@
 #define USER_AGENT_FMT "NVT/%s  %s/%s %s/%s"
 #define USER_AGENT_MAX 192
 
-#define MAX_LINES     256
+#define MAX_LINES     4096
 #define MAX_STOPS     8192
 #define MAX_VEHICLES  512
-#define MAX_ALERTS    128
+#define MAX_ALERTS    2048
 #define MAX_PASSAGES  512
 #define MAX_STOP_GROUPS 2048
 #define COURSE_BUCKETS  512

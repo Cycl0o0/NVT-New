@@ -1,6 +1,12 @@
 #include "api.h"
+#include "app_state.h"
 #include "config.h"
+#include "data.h"
+#include "filter.h"
 #include "line_colors.h"
+#include "map_math.h"
+#include "network.h"
+#include "ui.h"
 
 #include <ncurses.h>
 #include <locale.h>
@@ -62,170 +68,155 @@ static const Theme themes[] = {
 };
 #define N_THEMES ((int)(sizeof(themes)/sizeof(themes[0])))
 #define MAX_VEHICLE_ZOOM 5
-static int g_theme;
-static int g_256;
 
-/* ── globals ─────────────────────────────────────────────────────── */
+/* ── runtime state ───────────────────────────────────────────────── */
 
-static Line     g_lines[MAX_LINES];
-static int      g_nlines;
-static Vehicle  g_vehicles[MAX_VEHICLES];
-static int      g_nvehicles;
-static Alert    g_alerts[MAX_ALERTS];
-static int      g_nalerts;
-static StopMap  g_stops;
-static StopGroup g_stop_groups[MAX_STOP_GROUPS];
-static int       g_nstop_groups;
-static Passage   g_passages[MAX_PASSAGES];
-static int       g_npassages;
-static ToulouseSnapshot g_tls_snapshot;
-static ToulouseLine g_tls_lines[MAX_LINES];
-static int       g_ntls_lines;
-static ToulouseStop g_tls_stops[MAX_STOPS];
-static int       g_ntls_stops;
-static ToulouseAlert g_tls_alerts[MAX_ALERTS];
-static int       g_ntls_alerts;
-static ToulousePassage g_tls_passages[MAX_PASSAGES];
-static int       g_ntls_passages;
-static ToulouseVehicle g_tls_vehicles[MAX_VEHICLES];
-static int       g_ntls_vehicles;
-static CourseCache g_course_cache;
-static MetroMap   g_metro_map;
-static int        g_has_metro_map;
-static int        g_map_attempted;
-static MetroMap   g_tls_metro_map;
-static int        g_has_tls_metro_map;
-static int        g_tls_map_attempted;
-static LineRouteMap g_line_route;
-static int          g_has_line_route;
-static int          g_line_route_gid = -1;
-static LineRouteMap g_tls_line_route;
-static int          g_has_tls_line_route;
-static char         g_tls_line_route_ref[32];
-static AtlasMap      g_vehicle_detail_map;
-static int           g_has_vehicle_detail_map;
-static int           g_vehicle_detail_map_valid;
-static int           g_vehicle_detail_map_zoom = -1;
-static int           g_vehicle_detail_map_line_gid = -1;
-static AtlasMap      g_atlas_map;
-static int           g_has_atlas_map;
-static int           g_atlas_map_attempted;
-static AtlasRoutes   g_atlas_routes;
-static int           g_has_atlas_routes;
-static int           g_atlas_routes_attempted;
-static int       g_sel_stop_group;
+static AppState g_app;
 
-static int       g_stop_filtered[MAX_STOP_GROUPS];
-static int       g_nstop_filtered;
-static char      g_stop_search[64];
+#define g_lines (g_app.bdx.lines)
+#define g_nlines (g_app.bdx.nlines)
+#define g_vehicles (g_app.bdx.vehicles)
+#define g_nvehicles (g_app.bdx.nvehicles)
+#define g_alerts (g_app.bdx.alerts)
+#define g_nalerts (g_app.bdx.nalerts)
+#define g_stops (g_app.bdx.stops)
+#define g_stop_groups (g_app.bdx.stop_groups)
+#define g_nstop_groups (g_app.bdx.nstop_groups)
+#define g_passages (g_app.bdx.passages)
+#define g_npassages (g_app.bdx.npassages)
+#define g_sel_stop_group (g_app.bdx.sel_stop_group)
+#define g_stop_filtered (g_app.bdx.stop_filtered)
+#define g_nstop_filtered (g_app.bdx.nstop_filtered)
+#define g_stop_search (g_app.bdx.stop_search)
+#define g_filtered (g_app.bdx.filtered)
+#define g_nfiltered (g_app.bdx.nfiltered)
+#define g_search (g_app.bdx.search)
+#define g_cursor (g_app.bdx.cursor)
+#define g_scroll (g_app.bdx.scroll)
+#define g_sel_line (g_app.bdx.sel_line)
 
-static int      g_filtered[MAX_LINES];
-static int      g_nfiltered;
-static char     g_search[64];
-static int      g_tls_filtered[MAX_LINES];
-static int      g_ntls_filtered;
-static char     g_tls_search[64];
-static int      g_tls_cursor, g_tls_scroll;
-static int      g_tls_sel_line = -1;
-static int      g_tls_stop_filtered[MAX_STOPS];
-static int      g_ntls_stop_filtered;
-static char     g_tls_stop_search[64];
-static int      g_tls_stop_cursor, g_tls_stop_scroll;
-static int      g_tls_sel_stop = -1;
-static int      g_atlas_filtered[MAX_LINES];
-static int      g_natlas_filtered;
-static char     g_atlas_search[64];
-static int      g_atlas_cursor, g_atlas_scroll;
-static int      g_atlas_focus_gid;
+#define g_tls_snapshot (g_app.tls.snapshot)
+#define g_tls_lines (g_app.tls.lines)
+#define g_ntls_lines (g_app.tls.nlines)
+#define g_tls_stops (g_app.tls.stops)
+#define g_ntls_stops (g_app.tls.nstops)
+#define g_tls_alerts (g_app.tls.alerts)
+#define g_ntls_alerts (g_app.tls.nalerts)
+#define g_tls_passages (g_app.tls.passages)
+#define g_ntls_passages (g_app.tls.npassages)
+#define g_tls_vehicles (g_app.tls.vehicles)
+#define g_ntls_vehicles (g_app.tls.nvehicles)
+#define g_tls_filtered (g_app.tls.filtered)
+#define g_ntls_filtered (g_app.tls.nfiltered)
+#define g_tls_search (g_app.tls.search)
+#define g_tls_cursor (g_app.tls.cursor)
+#define g_tls_scroll (g_app.tls.scroll)
+#define g_tls_sel_line (g_app.tls.sel_line)
+#define g_tls_stop_filtered (g_app.tls.stop_filtered)
+#define g_ntls_stop_filtered (g_app.tls.nstop_filtered)
+#define g_tls_stop_search (g_app.tls.stop_search)
+#define g_tls_stop_cursor (g_app.tls.stop_cursor)
+#define g_tls_stop_scroll (g_app.tls.stop_scroll)
+#define g_tls_sel_stop (g_app.tls.sel_stop)
 
-enum { SCR_LINES, SCR_VEHICLES, SCR_ALERTS, SCR_STOP_SEARCH, SCR_PASSAGES, SCR_ATLAS };
-enum { NET_BDX, NET_TLS };
-static int      g_screen = SCR_LINES;
-static int      g_network = NET_BDX;
-static int      g_cursor, g_scroll, g_sel_line;
-static int      g_vehicle_zoom;
-static int      g_show_help;
-static int      g_alert_scroll, g_alert_total_h;
-static char     g_toast[128];
-static time_t   g_toast_time;
+#define g_idf_snapshot (g_app.idf.snapshot)
+#define g_idf_lines (g_app.idf.lines)
+#define g_nidf_lines (g_app.idf.nlines)
+#define g_idf_stops (g_app.idf.stops)
+#define g_nidf_stops (g_app.idf.nstops)
+#define g_idf_alerts (g_app.idf.alerts)
+#define g_nidf_alerts (g_app.idf.nalerts)
+#define g_idf_passages (g_app.idf.passages)
+#define g_nidf_passages (g_app.idf.npassages)
+#define g_idf_vehicles (g_app.idf.vehicles)
+#define g_nidf_vehicles (g_app.idf.nvehicles)
+#define g_idf_filtered (g_app.idf.filtered)
+#define g_nidf_filtered (g_app.idf.nfiltered)
+#define g_idf_search (g_app.idf.search)
+#define g_idf_cursor (g_app.idf.cursor)
+#define g_idf_scroll (g_app.idf.scroll)
+#define g_idf_sel_line (g_app.idf.sel_line)
+#define g_idf_stop_filtered (g_app.idf.stop_filtered)
+#define g_nidf_stop_filtered (g_app.idf.nstop_filtered)
+#define g_idf_stop_search (g_app.idf.stop_search)
+#define g_idf_stop_cursor (g_app.idf.stop_cursor)
+#define g_idf_stop_scroll (g_app.idf.stop_scroll)
+#define g_idf_sel_stop (g_app.idf.sel_stop)
+
+#define g_course_cache (g_app.map.course_cache)
+#define g_metro_map (g_app.map.metro_map)
+#define g_has_metro_map (g_app.map.has_metro_map)
+#define g_map_attempted (g_app.map.map_attempted)
+#define g_tls_metro_map (g_app.map.tls_metro_map)
+#define g_has_tls_metro_map (g_app.map.has_tls_metro_map)
+#define g_tls_map_attempted (g_app.map.tls_map_attempted)
+#define g_line_route (g_app.map.line_route)
+#define g_has_line_route (g_app.map.has_line_route)
+#define g_line_route_gid (g_app.map.line_route_gid)
+#define g_tls_line_route (g_app.map.tls_line_route)
+#define g_has_tls_line_route (g_app.map.has_tls_line_route)
+#define g_tls_line_route_ref (g_app.map.tls_line_route_ref)
+#define g_vehicle_detail_map (g_app.map.vehicle_detail_map)
+#define g_has_vehicle_detail_map (g_app.map.has_vehicle_detail_map)
+#define g_vehicle_detail_map_valid (g_app.map.vehicle_detail_map_valid)
+#define g_vehicle_detail_map_zoom (g_app.map.vehicle_detail_map_zoom)
+#define g_vehicle_detail_map_line_gid (g_app.map.vehicle_detail_map_line_gid)
+#define g_atlas_map (g_app.map.atlas_map)
+#define g_has_atlas_map (g_app.map.has_atlas_map)
+#define g_atlas_map_attempted (g_app.map.atlas_map_attempted)
+#define g_atlas_routes (g_app.map.atlas_routes)
+#define g_has_atlas_routes (g_app.map.has_atlas_routes)
+#define g_atlas_routes_attempted (g_app.map.atlas_routes_attempted)
+
+#define g_atlas_filtered (g_app.ui.atlas_filtered)
+#define g_natlas_filtered (g_app.ui.natlas_filtered)
+#define g_atlas_search (g_app.ui.atlas_search)
+#define g_atlas_cursor (g_app.ui.atlas_cursor)
+#define g_atlas_scroll (g_app.ui.atlas_scroll)
+#define g_atlas_focus_gid (g_app.ui.atlas_focus_gid)
+#define g_screen (g_app.ui.screen)
+#define g_network (g_app.ui.network)
+#define g_theme (g_app.ui.theme)
+#define g_256 (g_app.ui.use_256)
+#define g_vehicle_zoom (g_app.ui.vehicle_zoom)
+#define g_show_help (g_app.ui.show_help)
+#define g_alert_scroll (g_app.ui.alert_scroll)
+#define g_alert_total_h (g_app.ui.alert_total_h)
+#define g_network_loaded (g_app.ui.network_loaded)
+#define g_toast (g_app.ui.toast)
+#define g_toast_time (g_app.ui.toast_time)
 
 /* ── sorting / filtering ─────────────────────────────────────────── */
 
-static int type_order(const char *v)
-{ return strcmp(v,"TRAM")==0?0:strcmp(v,"BUS")==0?1:2; }
-
-static int cmp_lines(const void *a, const void *b)
-{
-    const Line *la=a, *lb=b;
-    int d = type_order(la->vehicule) - type_order(lb->vehicule);
-    return d ? d : la->ident - lb->ident;
-}
-
 static int strcasestr_s(const char *h, const char *n)
 {
-    size_t nl=strlen(n); if(!nl) return 1;
-    for (size_t i=0; i+nl<=strlen(h); i++) {
-        size_t j;
-        for (j=0;j<nl;j++) if(tolower((unsigned char)h[i+j])!=tolower((unsigned char)n[j])) break;
-        if (j==nl) return 1;
-    }
-    return 0;
-}
-
-static int match_off(const char *h, const char *n)
-{
-    size_t nl=strlen(n); if(!nl) return -1;
-    for (size_t i=0; i+nl<=strlen(h); i++) {
-        size_t j;
-        for (j=0;j<nl;j++) if(tolower((unsigned char)h[i+j])!=tolower((unsigned char)n[j])) break;
-        if (j==nl) return (int)i;
-    }
-    return -1;
-}
-
-static int line_matches_search(const Line *l, const char *search)
-{
-    char id[16];
-    if (!l->active) return 0;
-    if (!search[0]) return 1;
-    snprintf(id,sizeof(id),"%d",l->ident);
-    return strcasestr_s(l->libelle,search)
-        || strcasestr_s(l->vehicule,search)
-        || strcasestr_s(id,search);
+    return nvt_strcasestr_s(h, n);
 }
 
 static int line_matches_atlas(const Line *l, const char *search)
 {
-    char id[16];
-    if (!search[0]) return 1;
-    snprintf(id,sizeof(id),"%d",l->ident);
-    return strcasestr_s(l->libelle,search)
-        || strcasestr_s(l->vehicule,search)
-        || strcasestr_s(id,search);
+    return nvt_line_matches_atlas(l, search);
 }
 
 static int line_idx_by_gid(int gid)
 {
-    for (int i=0; i<g_nlines; i++) if (g_lines[i].gid == gid) return i;
-    return -1;
+    return nvt_find_line_index_by_gid(g_lines, g_nlines, gid);
 }
 
 static void rebuild_filter(void)
 {
-    g_nfiltered=0;
-    for (int i=0; i<g_nlines; i++) {
-        if (!line_matches_search(&g_lines[i], g_search)) continue;
-        g_filtered[g_nfiltered++]=i;
-    }
+    g_nfiltered = nvt_rebuild_line_filter(g_lines, g_nlines, g_search, g_filtered, MAX_LINES);
 }
 
 static void rebuild_atlas_filter(void)
 {
-    g_natlas_filtered=0;
-    for (int i=0; i<g_nlines; i++) {
-        if (!line_matches_atlas(&g_lines[i], g_atlas_search)) continue;
-        g_atlas_filtered[g_natlas_filtered++]=i;
-    }
+    g_natlas_filtered = nvt_rebuild_atlas_filter(
+        g_lines,
+        g_nlines,
+        g_atlas_search,
+        g_atlas_filtered,
+        MAX_LINES
+    );
     if (g_atlas_focus_gid && line_idx_by_gid(g_atlas_focus_gid) < 0) g_atlas_focus_gid = 0;
     if (g_atlas_cursor >= g_natlas_filtered) g_atlas_cursor = g_natlas_filtered > 0 ? g_natlas_filtered - 1 : 0;
     if (g_atlas_cursor < 0) g_atlas_cursor = 0;
@@ -233,11 +224,13 @@ static void rebuild_atlas_filter(void)
 
 static void rebuild_stop_filter(void)
 {
-    g_nstop_filtered=0;
-    for (int i=0; i<g_nstop_groups; i++) {
-        if (g_stop_search[0] && !strcasestr_s(g_stop_groups[i].libelle,g_stop_search)) continue;
-        g_stop_filtered[g_nstop_filtered++]=i;
-    }
+    g_nstop_filtered = nvt_rebuild_stop_filter(
+        g_stop_groups,
+        g_nstop_groups,
+        g_stop_search,
+        g_stop_filtered,
+        MAX_STOP_GROUPS
+    );
 }
 
 static int count_active_lines_all(void)
@@ -364,7 +357,7 @@ static int count_unique_passage_lines(void)
 
 static int toulouse_mode_is_rail(const char *mode)
 {
-    return strcasestr_s(mode, "tram") || strcasestr_s(mode, "metro") || strcasestr_s(mode, "métro");
+    return nvt_toulouse_mode_is_rail(mode);
 }
 
 static int count_toulouse_active_lines_all(void)
@@ -413,54 +406,35 @@ static int toulouse_alert_applies_to_line(const ToulouseAlert *alert, const Toul
     return toulouse_list_has_token(alert->lines, line->code);
 }
 
-static int toulouse_line_matches_search(const ToulouseLine *l, const char *search)
-{
-    if (!search[0]) return 1;
-    return strcasestr_s(l->libelle, search)
-        || strcasestr_s(l->code, search)
-        || strcasestr_s(l->mode, search)
-        || strcasestr_s(l->couleur, search);
-}
-
 static void rebuild_toulouse_filter(void)
 {
-    g_ntls_filtered = 0;
-    for (int i = 0; i < g_ntls_lines; i++) {
-        if (!toulouse_line_matches_search(&g_tls_lines[i], g_tls_search)) continue;
-        g_tls_filtered[g_ntls_filtered++] = i;
-    }
+    g_ntls_filtered = nvt_rebuild_toulouse_line_filter(
+        g_tls_lines,
+        g_ntls_lines,
+        g_tls_search,
+        g_tls_filtered,
+        MAX_LINES
+    );
     if (g_tls_cursor >= g_ntls_filtered) g_tls_cursor = g_ntls_filtered > 0 ? g_ntls_filtered - 1 : 0;
     if (g_tls_cursor < 0) g_tls_cursor = 0;
 }
 
 static void rebuild_toulouse_stop_filter(void)
 {
-    g_ntls_stop_filtered = 0;
-    for (int i = 0; i < g_ntls_stops; i++) {
-        if (g_tls_stop_search[0] &&
-            !strcasestr_s(g_tls_stops[i].libelle, g_tls_stop_search) &&
-            !strcasestr_s(g_tls_stops[i].commune, g_tls_stop_search) &&
-            !strcasestr_s(g_tls_stops[i].lignes, g_tls_stop_search)) continue;
-        g_tls_stop_filtered[g_ntls_stop_filtered++] = i;
-    }
+    g_ntls_stop_filtered = nvt_rebuild_toulouse_stop_filter(
+        g_tls_stops,
+        g_ntls_stops,
+        g_tls_stop_search,
+        g_tls_stop_filtered,
+        MAX_STOPS
+    );
     if (g_tls_stop_cursor >= g_ntls_stop_filtered) g_tls_stop_cursor = g_ntls_stop_filtered > 0 ? g_ntls_stop_filtered - 1 : 0;
     if (g_tls_stop_cursor < 0) g_tls_stop_cursor = 0;
 }
 
 static int toulouse_list_has_token(const char *list, const char *token)
 {
-    size_t tl = strlen(token);
-    const char *p = list;
-
-    if (!token[0]) return 0;
-    while (*p) {
-        while (*p == ' ') p++;
-        if (!*p) break;
-        const char *start = p;
-        while (*p && *p != ' ') p++;
-        if ((size_t)(p - start) == tl && strncmp(start, token, tl) == 0) return 1;
-    }
-    return 0;
+    return nvt_toulouse_list_has_token(list, token);
 }
 
 static int toulouse_token_count(const char *list)
@@ -529,10 +503,7 @@ static int count_toulouse_unique_passage_lines(void)
 
 static int toulouse_waiting_minutes(const char *waiting_time)
 {
-    int hh = 0, mm = 0, ss = 0;
-    if (!waiting_time || !waiting_time[0]) return -1;
-    if (sscanf(waiting_time, "%d:%d:%d", &hh, &mm, &ss) != 3) return -1;
-    return hh * 60 + mm + (ss > 0 ? 1 : 0);
+    return nvt_toulouse_waiting_minutes(waiting_time);
 }
 
 static void toulouse_waiting_eta(const char *waiting_time, char *buf, size_t sz)
@@ -612,51 +583,329 @@ static ToulouseStop *selected_toulouse_stop(void)
     return &g_tls_stops[g_tls_stop_filtered[g_tls_stop_cursor]];
 }
 
-static const char *network_name(void)
+static int live_network_is_sncf(void)
 {
-    return g_network == NET_TLS ? "Toulouse" : "Bordeaux";
+    return g_network == NET_SNCF;
+}
+
+static NvtIdfmState *current_live_state(void)
+{
+    return live_network_is_sncf() ? (NvtIdfmState *)&g_app.sncf : &g_app.idf;
+}
+
+static const char *current_live_network_short(void)
+{
+    return live_network_is_sncf() ? "SNCF" : "IDFM";
+}
+
+#define g_live_snapshot (current_live_state()->snapshot)
+#define g_live_lines (current_live_state()->lines)
+#define g_nlive_lines (current_live_state()->nlines)
+#define g_live_stops (current_live_state()->stops)
+#define g_nlive_stops (current_live_state()->nstops)
+#define g_live_alerts (current_live_state()->alerts)
+#define g_nlive_alerts (current_live_state()->nalerts)
+#define g_live_passages (current_live_state()->passages)
+#define g_nlive_passages (current_live_state()->npassages)
+#define g_live_vehicles (current_live_state()->vehicles)
+#define g_nlive_vehicles (current_live_state()->nvehicles)
+#define g_live_filtered (current_live_state()->filtered)
+#define g_nlive_filtered (current_live_state()->nfiltered)
+#define g_live_search (current_live_state()->search)
+#define g_live_cursor (current_live_state()->cursor)
+#define g_live_scroll (current_live_state()->scroll)
+#define g_live_sel_line (current_live_state()->sel_line)
+#define g_live_stop_filtered (current_live_state()->stop_filtered)
+#define g_nlive_stop_filtered (current_live_state()->nstop_filtered)
+#define g_live_stop_search (current_live_state()->stop_search)
+#define g_live_stop_cursor (current_live_state()->stop_cursor)
+#define g_live_stop_scroll (current_live_state()->stop_scroll)
+#define g_live_sel_stop (current_live_state()->sel_stop)
+
+static void rebuild_idfm_filter(void)
+{
+    NvtIdfmState *st = current_live_state();
+
+    st->nfiltered = nvt_rebuild_toulouse_line_filter(
+        st->lines,
+        st->nlines,
+        st->search,
+        st->filtered,
+        MAX_LINES
+    );
+    if (st->cursor >= st->nfiltered) st->cursor = st->nfiltered > 0 ? st->nfiltered - 1 : 0;
+    if (st->cursor < 0) st->cursor = 0;
 }
 
 static void toast(const char *fmt, ...);
-static void reset_toulouse_line_route(void);
-static void reset_toulouse_metro_map_cache(void);
 
-static void switch_network(int net)
+static void reset_idfm_stop_view(int clear_query)
+{
+    NvtIdfmState *st = current_live_state();
+
+    st->nstop_filtered = 0;
+    st->npassages = 0;
+    st->sel_stop = -1;
+    st->stop_cursor = 0;
+    st->stop_scroll = 0;
+    if (clear_query) memset(st->stop_search, 0, sizeof(st->stop_search));
+}
+
+static void reset_idfm_stop_results(int clear_query)
+{
+    current_live_state()->nstops = 0;
+    reset_idfm_stop_view(clear_query);
+}
+
+static void open_idfm_stop_search(int line_index, int clear_query)
+{
+    NvtIdfmState *st = current_live_state();
+
+    if (line_index < 0 || line_index >= st->nlines) {
+        toast("Selectionnez d'abord une ligne");
+        return;
+    }
+    st->sel_line = line_index;
+    reset_idfm_stop_results(clear_query);
+    g_screen = SCR_STOP_SEARCH;
+}
+
+static ToulouseLine *selected_idfm_line(void)
+{
+    NvtIdfmState *st = current_live_state();
+
+    if (st->sel_line >= 0 && st->sel_line < st->nlines) return &st->lines[st->sel_line];
+    if (st->nfiltered <= 0) return NULL;
+    return &st->lines[st->filtered[st->cursor]];
+}
+
+static const ToulouseLine *idfm_line_by_code(const char *code)
+{
+    NvtIdfmState *st = current_live_state();
+
+    if (!code || !code[0]) return NULL;
+    for (int i = 0; i < st->nlines; i++) {
+        if (strcmp(st->lines[i].code, code) == 0) return &st->lines[i];
+    }
+    return NULL;
+}
+
+static ToulouseStop *selected_idfm_stop(void)
+{
+    NvtIdfmState *st = current_live_state();
+
+    if (st->nstop_filtered <= 0) return NULL;
+    return &st->stops[st->stop_filtered[st->stop_cursor]];
+}
+
+static int count_idfm_active_lines_all(void)
+{
+    return current_live_state()->nlines;
+}
+
+static int count_idfm_lines_rail(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->nlines; i++) {
+        const char *type = nvt_idfm_line_type_label(&st->lines[i]);
+        if (strcmp(type, "METRO") == 0 || strcmp(type, "RER") == 0 || strcmp(type, "TRAM") == 0 || strcmp(type, "TRAIN") == 0) n++;
+    }
+    return n;
+}
+
+static int count_idfm_lines_busish(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->nlines; i++) {
+        if (strcmp(nvt_idfm_line_type_label(&st->lines[i]), "BUS") == 0) n++;
+    }
+    return n;
+}
+
+static int count_idfm_line_alerts(const ToulouseLine *line)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    if (!line) return 0;
+    for (int i = 0; i < st->nalerts; i++) {
+        if (toulouse_alert_applies_to_line(&st->alerts[i], line)) n++;
+    }
+    return n;
+}
+
+static int count_idfm_global_alerts(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->nalerts; i++) if (!st->alerts[i].lines[0]) n++;
+    return n;
+}
+
+static int count_idfm_impacted_lines(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->nlines; i++) if (count_idfm_line_alerts(&st->lines[i]) > 0) n++;
+    return n;
+}
+
+static int count_idfm_live_passages(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->npassages; i++) if (st->passages[i].realtime) n++;
+    return n;
+}
+
+static int count_idfm_delayed_passages(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->npassages; i++) if (st->passages[i].delayed) n++;
+    return n;
+}
+
+static int count_idfm_unique_passage_lines(void)
+{
+    NvtIdfmState *st = current_live_state();
+    int n = 0;
+    for (int i = 0; i < st->npassages; i++) {
+        int dup = 0;
+        for (int j = 0; j < i; j++) {
+            if (strcmp(st->passages[i].line_code, st->passages[j].line_code) == 0) {
+                dup = 1;
+                break;
+            }
+        }
+        if (!dup && st->passages[i].line_code[0]) n++;
+    }
+    return n;
+}
+
+static int idfm_alert_cp(const ToulouseAlert *alert);
+
+static const char *network_name(void)
+{
+    return nvt_network_name(g_network);
+}
+
+static int cmpp(const void *a,const void *b);
+static void reset_toulouse_line_route(void);
+static void switch_network(NvtNetwork net)
 {
     if (net == g_network) return;
-    g_network = net;
-    g_screen = SCR_LINES;
-    g_cursor = g_scroll = 0;
-    g_tls_cursor = g_tls_scroll = 0;
-    g_tls_stop_cursor = g_tls_stop_scroll = 0;
-    g_tls_sel_line = -1;
-    g_tls_sel_stop = -1;
-    g_ntls_vehicles = 0;
-    reset_toulouse_line_route();
-    reset_toulouse_metro_map_cache();
-    g_alert_scroll = 0;
-    toast("Reseau %s", network_name());
+    nvt_switch_network(&g_app, net);
+}
+
+static int refresh_current_network_overview(const char *success_msg)
+{
+    char err[128];
+    const NvtNetworkAdapter *adapter = nvt_network_adapter(g_network);
+
+    if (adapter->refresh_overview(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (adapter->refresh_alerts(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (success_msg && success_msg[0]) toast("%s", success_msg);
+    return 0;
+}
+
+static int refresh_current_network_alerts(const char *success_fmt)
+{
+    char err[128];
+    const NvtNetworkAdapter *adapter = nvt_network_adapter(g_network);
+    int count;
+
+    if (adapter->refresh_alerts(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (g_network == NET_TLS) count = g_ntls_alerts;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nalerts;
+    else count = g_nalerts;
+    if (success_fmt && success_fmt[0]) toast(success_fmt, count);
+    return count;
+}
+
+static int load_current_network_stops(const char *success_fmt)
+{
+    char err[128];
+    const NvtNetworkAdapter *adapter = nvt_network_adapter(g_network);
+    int count;
+
+    if (!adapter->load_stops) return 0;
+    if (adapter->load_stops(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (g_network == NET_TLS) count = g_ntls_stops;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nstops;
+    else count = g_nstop_groups;
+    if (success_fmt && success_fmt[0]) toast(success_fmt, count);
+    return count;
+}
+
+static int load_current_network_passages(const char *success_fmt)
+{
+    char err[128];
+    const NvtNetworkAdapter *adapter = nvt_network_adapter(g_network);
+    int count;
+
+    if (adapter->load_passages(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (g_network == NET_BDX && g_npassages > 1) qsort(g_passages, g_npassages, sizeof(Passage), cmpp);
+    if (g_network == NET_TLS) count = g_ntls_passages;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->npassages;
+    else count = g_npassages;
+    if (success_fmt && success_fmt[0]) toast(success_fmt, count);
+    return count;
+}
+
+static int load_current_network_vehicles(const char *success_fmt)
+{
+    char err[128];
+    const NvtNetworkAdapter *adapter = nvt_network_adapter(g_network);
+    int count;
+
+    if (adapter->load_vehicles(&g_app, err, sizeof(err)) < 0) {
+        toast("%s", err);
+        return -1;
+    }
+    if (g_network == NET_TLS) count = g_ntls_vehicles;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nvehicles;
+    else count = g_nvehicles;
+    if (success_fmt && success_fmt[0]) toast(success_fmt, count);
+    return count;
 }
 
 /* ── toast ────────────────────────────────────────────────────────── */
 
 static void toast(const char *fmt, ...)
-{ va_list a; va_start(a,fmt); vsnprintf(g_toast,sizeof(g_toast),fmt,a); va_end(a); g_toast_time=time(NULL); }
+{
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(g_toast, sizeof(g_toast), fmt, args);
+    va_end(args);
+    g_toast_time = time(NULL);
+}
 
 static void reset_line_route(void)
 {
-    memset(&g_line_route, 0, sizeof(g_line_route));
-    g_has_line_route = 0;
-    g_line_route_gid = -1;
+    nvt_app_reset_line_route(&g_app);
 }
 
 static void reset_vehicle_detail_map(void)
 {
-    memset(&g_vehicle_detail_map, 0, sizeof(g_vehicle_detail_map));
-    g_has_vehicle_detail_map = 0;
-    g_vehicle_detail_map_valid = 0;
-    g_vehicle_detail_map_zoom = -1;
-    g_vehicle_detail_map_line_gid = -1;
+    nvt_app_reset_vehicle_detail_map(&g_app);
 }
 
 static void ensure_line_route(void)
@@ -670,9 +919,7 @@ static void ensure_line_route(void)
 
 static void reset_toulouse_line_route(void)
 {
-    memset(&g_tls_line_route, 0, sizeof(g_tls_line_route));
-    g_has_tls_line_route = 0;
-    g_tls_line_route_ref[0] = '\0';
+    nvt_app_reset_toulouse_line_route(&g_app);
 }
 
 static void ensure_toulouse_line_route(void)
@@ -687,30 +934,17 @@ static void ensure_toulouse_line_route(void)
 
 static void reset_atlas_map(void)
 {
-    memset(&g_atlas_map, 0, sizeof(g_atlas_map));
-    g_has_atlas_map = 0;
-    g_atlas_map_attempted = 0;
+    nvt_app_reset_atlas_map(&g_app);
 }
 
 static void reset_atlas_routes(void)
 {
-    memset(&g_atlas_routes, 0, sizeof(g_atlas_routes));
-    g_has_atlas_routes = 0;
-    g_atlas_routes_attempted = 0;
+    nvt_app_reset_atlas_routes(&g_app);
 }
 
 static void reset_metro_map_cache(void)
 {
-    memset(&g_metro_map, 0, sizeof(g_metro_map));
-    g_has_metro_map = 0;
-    g_map_attempted = 0;
-}
-
-static void reset_toulouse_metro_map_cache(void)
-{
-    memset(&g_tls_metro_map, 0, sizeof(g_tls_metro_map));
-    g_has_tls_metro_map = 0;
-    g_tls_map_attempted = 0;
+    nvt_app_reset_metro_map_cache(&g_app);
 }
 
 /* ── color pairs ─────────────────────────────────────────────────── */
@@ -731,8 +965,8 @@ enum {
 };
 
 static int lcp_map[1024];
-static unsigned tls_bg[64], tls_fg[64];
-static int tls_pair[64];
+static unsigned tls_bg[256], tls_fg[256];
+static int tls_pair[256];
 static int g_ntls_pairs, g_tls_pair_next;
 
 static int hex256(unsigned c)
@@ -901,134 +1135,79 @@ static void draw_toulouse_badge_by_code(int y, int x, const char *code)
     attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
 }
 
+static void draw_idfm_badge(int y, int x, const ToulouseLine *line)
+{
+    int cp = toulouse_line_pair(line);
+
+    if (!cp) cp = toulouse_badge_fallback_cp(line);
+    attron(COLOR_PAIR(cp) | A_BOLD);
+    mvprintw(y, x, " %-5.5s ", line && line->code[0] ? line->code : "-----");
+    attroff(COLOR_PAIR(cp) | A_BOLD);
+}
+
+static void draw_idfm_badge_by_code(int y, int x, const char *code)
+{
+    const ToulouseLine *line = idfm_line_by_code(code);
+
+    if (line) {
+        draw_idfm_badge(y, x, line);
+        return;
+    }
+    attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+    mvprintw(y, x, " %-5.5s ", code && code[0] ? code : "-----");
+    attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+}
+
 /* ── UI primitives ───────────────────────────────────────────────── */
 
 static void rbox(int y1,int x1,int y2,int x2)
 {
-    if(y2<=y1||x2<=x1) return;
-    attron(COLOR_PAIR(CP_BORDER));
-    mvaddstr(y1,x1,RB_TL); mvaddstr(y1,x2,RB_TR);
-    mvaddstr(y2,x1,RB_BL); mvaddstr(y2,x2,RB_BR);
-    for(int x=x1+1;x<x2;x++){mvaddstr(y1,x,RB_H);mvaddstr(y2,x,RB_H);}
-    for(int y=y1+1;y<y2;y++){mvaddstr(y,x1,RB_V);mvaddstr(y,x2,RB_V);}
-    attroff(COLOR_PAIR(CP_BORDER));
+    nvt_ui_rbox(y1, x1, y2, x2, CP_BORDER);
 }
 
 static void hbar(int y,int x1,int x2)
 {
-    attron(COLOR_PAIR(CP_BORDER)|A_DIM);
-    for(int x=x1;x<x2;x++) mvaddstr(y,x,RB_H);
-    attroff(COLOR_PAIR(CP_BORDER)|A_DIM);
+    nvt_ui_hbar(y, x1, x2, CP_BORDER);
 }
 
 static void scrollbar(int ys,int h,int pos,int total)
 {
-    if(total<=h||h<3) return;
-    int x=COLS-1, th=h*h/total; if(th<1)th=1;
-    int tp=total>h?(pos*(h-th))/(total-h):0;
-    if(tp<0)tp=0; if(tp+th>h)tp=h-th;
-    for(int i=0;i<h;i++){
-        if(i>=tp&&i<tp+th){attron(COLOR_PAIR(CP_ACCENT)|A_BOLD);mvaddstr(ys+i,x,U_BLOCK);attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);}
-        else{attron(COLOR_PAIR(CP_BORDER)|A_DIM);mvaddstr(ys+i,x,RB_V);attroff(COLOR_PAIR(CP_BORDER)|A_DIM);}
-    }
-}
-
-static int grad_color(int pct)
-{
-    if(!g_256) return pct<50?CP_YELLOW:CP_GREEN;
-    /* red→orange→yellow→green gradient */
-    if(pct<20) return CP_RED;
-    if(pct<40) return CP_YELLOW;
-    if(pct<70) return CP_YELLOW;
-    return CP_GREEN;
+    nvt_ui_scrollbar(ys, h, pos, total, CP_ACCENT, CP_BORDER);
 }
 
 static void progress_bar(int y,int x,int w,int pct)
 {
-    if(w<2) return;
-    int filled=pct*w/100; if(filled>w)filled=w;
-    move(y,x);
-    for(int i=0;i<w;i++){
-        if(i<filled){int c=grad_color(i*100/w);attron(COLOR_PAIR(c)|A_BOLD);addstr(U_BLOCK);attroff(COLOR_PAIR(c)|A_BOLD);}
-        else if(i==filled&&pct>0){attron(A_DIM);addstr(U_BLIGHT);attroff(A_DIM);}
-        else{attron(A_DIM);addstr(U_MDOT);attroff(A_DIM);}
-    }
+    nvt_ui_progress_bar(y, x, w, pct, g_256, CP_GREEN, CP_YELLOW, CP_RED);
 }
 
 static void print_hl(int y,int x,const char *t,const char *s,int mw)
 {
-    int tl=(int)strlen(t); if(tl>mw)tl=mw;
-    int mo=s[0]?match_off(t,s):-1, sl=(int)strlen(s);
-    move(y,x);
-    if(mo<0||mo>=tl){printw("%-*.*s",mw,mw,t);return;}
-    printw("%.*s",mo,t);
-    attron(A_UNDERLINE|A_BOLD); int me=mo+sl; if(me>tl)me=tl;
-    printw("%.*s",me-mo,t+mo); attroff(A_UNDERLINE|A_BOLD);
-    int af=tl-me; if(af>0) printw("%.*s",af,t+me);
-    int pr=tl; while(pr<mw){addch(' ');pr++;}
+    nvt_ui_print_highlight(y, x, t, s, mw);
 }
 
 static void fill_span(int y,int x1,int x2,int cp,int attr)
 {
-    if(y<0||y>=LINES||x2<x1) return;
-    if(x1<0) x1=0;
-    if(x2>=COLS) x2=COLS-1;
-    attron(COLOR_PAIR(cp)|attr);
-    mvhline(y,x1,' ',x2-x1+1);
-    attroff(COLOR_PAIR(cp)|attr);
+    nvt_ui_fill_span(y, x1, x2, cp, attr);
 }
 
 static void panel_box(int y1,int x1,int y2,int x2,const char *title,const char *meta)
 {
-    if(y2<=y1||x2<=x1) return;
-    for(int y=y1+1;y<y2;y++) mvhline(y,x1+1,' ',x2-x1-1);
-    rbox(y1,x1,y2,x2);
-    if(title&&title[0]){
-        attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
-        mvprintw(y1,x1+2," %s ",title);
-        attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
-    }
-    if(meta&&meta[0]){
-        int ml=(int)strlen(meta)+2;
-        int mx=x2-ml;
-        if(mx>x1+12){
-            attron(A_DIM);
-            mvprintw(y1,mx," %s ",meta);
-            attroff(A_DIM);
-        }
-    }
+    nvt_ui_panel_box(y1, x1, y2, x2, title, meta, CP_BORDER, CP_SECTION);
 }
 
 static void print_fit(int y,int x,int w,const char *text)
 {
-    if(w<=0) return;
-    mvprintw(y,x,"%-*.*s",w,w,text?text:"");
+    nvt_ui_print_fit(y, x, w, text);
 }
 
 static void stat_card(int y,int x,int w,const char *label,const char *value,const char *detail,int cp)
 {
-    int x2=x+w-1;
-    if(w<16) return;
-    panel_box(y,x,y+4,x2,label,NULL);
-    attron(COLOR_PAIR(cp)|A_BOLD);
-    mvprintw(y+1,x+2,"%s",value);
-    attroff(COLOR_PAIR(cp)|A_BOLD);
-    if(detail&&detail[0]){
-        attron(A_DIM);
-        print_fit(y+2,x+2,w-4,detail);
-        attroff(A_DIM);
-    }
-    fill_span(y+3,x+2,x2-2,cp,A_DIM);
+    nvt_ui_stat_card(y, x, w, label, value, detail, cp, CP_BORDER, CP_SECTION);
 }
 
 static void kv_line(int y,int x,int label_w,const char *label,const char *value,int cp)
 {
-    attron(A_DIM);
-    mvprintw(y,x,"%-*s",label_w,label);
-    attroff(A_DIM);
-    attron(COLOR_PAIR(cp)|A_BOLD);
-    printw("%s",value&&value[0]?value:"-");
-    attroff(COLOR_PAIR(cp)|A_BOLD);
+    nvt_ui_kv_line(y, x, label_w, label, value, cp);
 }
 
 static void draw_line_badge(int y,int x,const Line *l)
@@ -1049,30 +1228,7 @@ static void draw_line_badge(int y,int x,const Line *l)
 
 static int draw_wrapped_block(int y,int x,int w,int max_lines,const char *text,int cp,int attr)
 {
-    int lines=0;
-    const char *p=text;
-    if(w<4||max_lines<1||!text) return 0;
-    while(*p&&lines<max_lines){
-        while(*p==' ') p++;
-        if(!*p) break;
-        if(*p=='\n'){lines++;p++;continue;}
-        int len=0, cut=0, last_space=-1;
-        while(p[len]&&p[len]!='\n'&&len<w){
-            if(p[len]==' ') last_space=len;
-            len++;
-        }
-        cut=len;
-        if(p[len]&&p[len]!='\n'&&len==w&&last_space>0) cut=last_space;
-        if(cut<=0) cut=len;
-        attron(COLOR_PAIR(cp)|attr);
-        mvprintw(y+lines,x,"%.*s",cut,p);
-        attroff(COLOR_PAIR(cp)|attr);
-        lines++;
-        p+=cut;
-        while(*p==' ') p++;
-        if(*p=='\n') p++;
-    }
-    return lines;
+    return nvt_ui_draw_wrapped_block(y, x, w, max_lines, text, cp, attr);
 }
 
 /* ── Powerline header / tabs / status ────────────────────────────── */
@@ -1111,8 +1267,12 @@ static void draw_header(const char *title, const char *bc)
 static void draw_tabs(void)
 {
     static const char *lb[]={"Lignes","Vehicules","Alertes","Arrets","Passages"};
-    static const int sc[]={SCR_LINES,SCR_VEHICLES,SCR_ALERTS,SCR_STOP_SEARCH,SCR_PASSAGES};
-    int alert_count = g_network == NET_TLS ? g_ntls_alerts : g_nalerts;
+    static const NvtScreen sc[]={SCR_LINES,SCR_VEHICLES,SCR_ALERTS,SCR_STOP_SEARCH,SCR_PASSAGES};
+    int alert_count;
+
+    if (g_network == NET_TLS) alert_count = g_ntls_alerts;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF) alert_count = g_nlive_alerts;
+    else alert_count = g_nalerts;
 
     /* fill tab bar background */
     attron(COLOR_PAIR(CP_TAB_BG)); mvhline(1,0,' ',COLS); attroff(COLOR_PAIR(CP_TAB_BG));
@@ -1215,7 +1375,7 @@ static void draw_help(void)
            {"Ctrl+U / Ctrl+D","Demi-page"},{"g / G","Debut / Fin"}},
     act[]={{"Enter","Selectionner / ouvrir ligne"},{"/ ","Rechercher"},
            {"Esc","Effacer filtre / Retour"},{"r / F5","Rafraichir"},
-           {"+ / - / 0","Zoom carte + detail"},{"n / B / T","Changer de reseau"}},
+           {"+ / - / 0","Zoom carte + detail"},{"n","Menu reseaux"}},
     scr[]={{"1","Lignes"},{"2","Vehicules"},{"3 / a","Alertes"},
            {"4 / p","Arrets"},{"5","Passages"},{"q","Retour / Quitter"}};
     int nnav=(int)(sizeof(nav)/sizeof(nav[0]));
@@ -1572,67 +1732,13 @@ static void draw_vehicle_lane_panel(int y1,int x1,int y2,int x2,const char *dir)
 
 static void map_project(double lon,double lat,double minlon,double maxlon,double minlat,double maxlat,int w,int h,int *px,int *py)
 {
-    double xr=(maxlon>minlon)?(lon-minlon)/(maxlon-minlon):0.5;
-    double yr=(maxlat>minlat)?(lat-minlat)/(maxlat-minlat):0.5;
-    int x=(int)(xr*(w-1)+0.5);
-    int y=(int)((1.0-yr)*(h-1)+0.5);
-    if(x<0) x=0; if(x>=w) x=w-1;
-    if(y<0) y=0; if(y>=h) y=h-1;
-    *px=x; *py=y;
-}
-
-enum { MAP_CLIP_LEFT=1, MAP_CLIP_RIGHT=2, MAP_CLIP_BOTTOM=4, MAP_CLIP_TOP=8 };
-
-static int map_clip_code(double lon,double lat,double minlon,double maxlon,double minlat,double maxlat)
-{
-    int code=0;
-    if(lon<minlon) code|=MAP_CLIP_LEFT;
-    else if(lon>maxlon) code|=MAP_CLIP_RIGHT;
-    if(lat<minlat) code|=MAP_CLIP_BOTTOM;
-    else if(lat>maxlat) code|=MAP_CLIP_TOP;
-    return code;
+    nvt_map_project(lon, lat, minlon, maxlon, minlat, maxlat, w, h, px, py);
 }
 
 static int map_clip_segment(double *lon0,double *lat0,double *lon1,double *lat1,
                             double minlon,double maxlon,double minlat,double maxlat)
 {
-    int c0=map_clip_code(*lon0,*lat0,minlon,maxlon,minlat,maxlat);
-    int c1=map_clip_code(*lon1,*lat1,minlon,maxlon,minlat,maxlat);
-
-    for(;;){
-        double lon, lat;
-        int out;
-
-        if(!(c0|c1)) return 1;
-        if(c0&c1) return 0;
-
-        out=c0?c0:c1;
-        if(out&MAP_CLIP_TOP){
-            if(*lat1==*lat0) return 0;
-            lon=*lon0+(*lon1-*lon0)*(maxlat-*lat0)/(*lat1-*lat0);
-            lat=maxlat;
-        } else if(out&MAP_CLIP_BOTTOM){
-            if(*lat1==*lat0) return 0;
-            lon=*lon0+(*lon1-*lon0)*(minlat-*lat0)/(*lat1-*lat0);
-            lat=minlat;
-        } else if(out&MAP_CLIP_RIGHT){
-            if(*lon1==*lon0) return 0;
-            lat=*lat0+(*lat1-*lat0)*(maxlon-*lon0)/(*lon1-*lon0);
-            lon=maxlon;
-        } else {
-            if(*lon1==*lon0) return 0;
-            lat=*lat0+(*lat1-*lat0)*(minlon-*lon0)/(*lon1-*lon0);
-            lon=minlon;
-        }
-
-        if(out==c0){
-            *lon0=lon; *lat0=lat;
-            c0=map_clip_code(*lon0,*lat0,minlon,maxlon,minlat,maxlat);
-        } else {
-            *lon1=lon; *lat1=lat;
-            c1=map_clip_code(*lon1,*lat1,minlon,maxlon,minlat,maxlat);
-        }
-    }
+    return nvt_map_clip_segment(lon0, lat0, lon1, lat1, minlon, maxlon, minlat, maxlat);
 }
 
 enum { MAP_N=1, MAP_E=2, MAP_S=4, MAP_W=8 };
@@ -2029,6 +2135,7 @@ static void apply_vehicle_zoom(double base_minlon,double base_maxlon,double base
     *out_maxlat=center_lat+half_lat;
 }
 
+/* Select the best available bounds by combining basemap, route and live vehicle extents. */
 static int compute_vehicle_map_bounds(int *out_has_basemap,int *out_has_route,
                                       double *out_base_minlon,double *out_base_maxlon,
                                       double *out_base_minlat,double *out_base_maxlat,
@@ -2485,6 +2592,7 @@ static int count_atlas_visible_paths(void)
     return n;
 }
 
+/* Compose the atlas canvas by layering geography, focus routes and labels on one ncurses grid. */
 static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
 {
     int legend_y=y1+1, py=y1+3, px=x1+2;
@@ -3033,19 +3141,12 @@ static void draw_stops(void)
 
 /* ── Screen: Passages ────────────────────────────────────────────── */
 
-static int hm2m(const char *h){if(!h[0])return 0; return((h[0]-'0')*10+(h[1]-'0'))*60+(h[3]-'0')*10+(h[4]-'0');}
+static int hm2m(const char *h){return nvt_hhmm_to_minutes(h);}
 static int nowm(void){time_t t=time(NULL);struct tm *m=localtime(&t);return m->tm_hour*60+m->tm_min;}
 static int pskey(const char *h){int m=hm2m(h),b=nowm()-60;return((m-b)+1440)%1440;}
 static int cmpp(const void *a,const void *b){const Passage *pa=a,*pb=b;
     const char *ha=pa->hor_estime[0]?pa->hor_estime:pa->hor_theo,*hb=pb->hor_estime[0]?pb->hor_estime:pb->hor_theo;
     return pskey(ha)-pskey(hb);}
-
-static void load_passages(void)
-{
-    StopGroup *sg=&g_stop_groups[g_sel_stop_group]; g_npassages=0;
-    for(int i=0;i<sg->ngids;i++){int n=fetch_passages(sg->gids[i],g_passages+g_npassages,MAX_PASSAGES-g_npassages,&g_course_cache);if(n>0)g_npassages+=n;}
-    if(g_npassages>1) qsort(g_passages,g_npassages,sizeof(Passage),cmpp);
-}
 
 static int pdcol(const Passage *p){
     if(!p->hor_estime[0]||!p->hor_theo[0]) return CP_GREEN;
@@ -3467,6 +3568,15 @@ static int toulouse_alert_cp(const ToulouseAlert *alert)
     return CP_CYAN_T;
 }
 
+static int idfm_alert_cp(const ToulouseAlert *alert)
+{
+    if (!alert) return CP_CYAN_T;
+    if (strcasestr_s(alert->importance, "perturb") || strcasestr_s(alert->importance, "critical")) return CP_ALERT_HI;
+    if (strcasestr_s(alert->importance, "significant")) return CP_ALERT_MED;
+    if (strcasestr_s(alert->importance, "information")) return CP_CYAN_T;
+    return alert->lines[0] ? CP_ALERT_MED : CP_CYAN_T;
+}
+
 static void draw_toulouse_alerts(void)
 {
     int total=g_ntls_alerts;
@@ -3577,40 +3687,6 @@ static void draw_toulouse_alerts(void)
         else ri[0]=0;
         draw_status(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme",ri);
     }
-}
-
-static void load_toulouse_passages(void)
-{
-    ToulouseStop *stop = (g_tls_sel_stop >= 0 && g_tls_sel_stop < g_ntls_stops) ? &g_tls_stops[g_tls_sel_stop] : NULL;
-    g_ntls_passages = 0;
-    if (!stop) return;
-    g_ntls_passages = fetch_toulouse_passages(stop->ref, g_tls_passages, MAX_PASSAGES);
-    if (g_ntls_passages < 0) g_ntls_passages = 0;
-}
-
-static int cmp_toulouse_vehicle(const void *a, const void *b)
-{
-    const ToulouseVehicle *va = a, *vb = b;
-    int sa = strcmp(va->sens, "ALLER") == 0 ? 0 : 1;
-    int sb = strcmp(vb->sens, "ALLER") == 0 ? 0 : 1;
-    int da = toulouse_waiting_minutes(va->waiting_time);
-    int db = toulouse_waiting_minutes(vb->waiting_time);
-
-    if (sa != sb) return sa - sb;
-    if (da < 0) da = 1 << 20;
-    if (db < 0) db = 1 << 20;
-    return da - db;
-}
-
-static void load_toulouse_vehicles(void)
-{
-    ToulouseLine *line = selected_toulouse_line();
-
-    g_ntls_vehicles = 0;
-    if (!line) return;
-    g_ntls_vehicles = fetch_toulouse_vehicles(line, g_tls_vehicles, MAX_VEHICLES);
-    if (g_ntls_vehicles < 0) g_ntls_vehicles = 0;
-    if (g_ntls_vehicles > 1) qsort(g_tls_vehicles, g_ntls_vehicles, sizeof(ToulouseVehicle), cmp_toulouse_vehicle);
 }
 
 static void draw_toulouse_stops(void)
@@ -4178,7 +4254,7 @@ static void draw_toulouse_vehicles(void)
         mvprintw(6,4,U_INFO" aucune ligne selectionnee");
         attroff(A_DIM);
         draw_toast_msg();
-        draw_status(" n:reseau"U_MDOT"1:lignes"U_MDOT"t:theme","n/a");
+        draw_status(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme","n/a");
         return;
     }
 
@@ -4273,6 +4349,750 @@ static void draw_toulouse_vehicles(void)
         snprintf(mid,sizeof(mid)," q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme");
         snprintf(ri,sizeof(ri),"%d veh.",g_ntls_vehicles);
         draw_status(mid,ri);
+    }
+}
+
+static void draw_idfm(void)
+{
+    ToulouseLine *sel = g_nlive_filtered > 0 ? &g_live_lines[g_live_filtered[g_live_cursor]] : NULL;
+    int total = count_idfm_active_lines_all();
+    int rails = count_idfm_lines_rail();
+    int buses = count_idfm_lines_busish();
+    int alert_lines = count_idfm_impacted_lines();
+    int top = 3;
+
+    draw_header(live_network_is_sncf() ? "NVT // SNCF" : "NVT // Paris IDFM",
+                g_live_search[0] ? "reseau filtre" : "navitia live");
+    draw_tabs();
+
+    if (COLS >= 94 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+        char buf[32];
+
+        snprintf(buf, sizeof(buf), "%d", total);
+        stat_card(top, 2, cw, "LINES", buf, "referentiel charge", CP_ACCENT);
+        snprintf(buf, sizeof(buf), "%d", rails);
+        stat_card(top, 2 + cw + gap, cw, "RAIL", buf, "metro rer tram train", CP_CYAN_T);
+        snprintf(buf, sizeof(buf), "%d", buses);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "BUS", buf, "bus et cars", CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", alert_lines);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, "lignes impactees", alert_lines ? CP_ALERT_MED : CP_GREEN);
+        top += 5;
+    }
+
+    if (COLS >= 112 && LINES - top >= 16) {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int left_w = COLS * 58 / 100;
+        int lx1 = 1;
+        int lx2;
+        int rx1;
+        int rx2 = COLS - 2;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr;
+        int name_w;
+
+        if (left_w < 60) left_w = 60;
+        if (left_w > COLS - 34) left_w = COLS - 34;
+        lx2 = lx1 + left_w - 1;
+        rx1 = lx2 + 1;
+        mr = y2 - list_y;
+        name_w = lx2 - lx1 - 28;
+        if (mr < 1) mr = 1;
+        if (name_w < 18) name_w = 18;
+
+        panel_box(y1, lx1, y2, lx2, "Line Index", g_live_search[0] ? g_live_search : "all lines");
+        panel_box(y1, rx1, y2, rx2, "Line Focus", sel ? nvt_idfm_line_type_label(sel) : "idle");
+
+        if (g_live_cursor < g_live_scroll) g_live_scroll = g_live_cursor;
+        if (g_live_cursor >= g_live_scroll + mr) g_live_scroll = g_live_cursor - mr + 1;
+
+        attron(A_DIM);
+        mvprintw(head_y, lx1 + 3, "LINE");
+        mvprintw(head_y, lx1 + 12, "NAME");
+        mvprintw(head_y, lx2 - 16, "TYPE");
+        mvprintw(head_y, lx2 - 6, "ALT");
+        attroff(A_DIM);
+
+        for (int i = 0; i < mr && g_live_scroll + i < g_nlive_filtered; i++) {
+            int idx = g_live_filtered[g_live_scroll + i];
+            ToulouseLine *line = &g_live_lines[idx];
+            int row = list_y + i;
+            int alerts = count_idfm_line_alerts(line);
+            int selected = (g_live_scroll + i == g_live_cursor);
+
+            if (selected) {
+                fill_span(row, lx1 + 1, lx2 - 1, CP_SEL, 0);
+                attron(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+                mvaddstr(row, lx1 + 1, U_CBAR);
+                attroff(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+                attron(COLOR_PAIR(CP_SEL));
+            } else if (i % 2) {
+                attron(A_DIM);
+                mvhline(row, lx1 + 1, ' ', lx2 - lx1 - 1);
+                attroff(A_DIM);
+                attron(A_DIM);
+            }
+
+            draw_idfm_badge(row, lx1 + 3, line);
+            if (selected) attron(COLOR_PAIR(CP_SEL));
+            print_hl(row, lx1 + 12, line->libelle, g_live_search, name_w);
+            mvprintw(row, lx2 - 16, "%-6s", nvt_idfm_line_type_label(line));
+            if (alerts > 0) {
+                attron(COLOR_PAIR(CP_ALERT_MED) | A_BOLD);
+                mvprintw(row, lx2 - 6, "%2d", alerts);
+                attroff(COLOR_PAIR(CP_ALERT_MED) | A_BOLD);
+            } else {
+                mvprintw(row, lx2 - 6, " -");
+            }
+
+            if (selected) attroff(COLOR_PAIR(CP_SEL));
+            else if (i % 2) attroff(A_DIM);
+        }
+        scrollbar(list_y, mr, g_live_scroll, g_nlive_filtered);
+
+        if (sel) {
+            int alerts = count_idfm_line_alerts(sel);
+            int y = y1 + 2;
+            int px = rx1 + 2;
+            int pw = rx2 - rx1 - 3;
+            char buf[96];
+
+            draw_idfm_badge(y, px, sel);
+            attron(A_BOLD);
+            print_fit(y, px + 9, pw - 10, sel->libelle);
+            attroff(A_BOLD);
+            attron(A_DIM);
+            mvprintw(y + 1, px, "%s", nvt_idfm_line_type_label(sel));
+            attroff(A_DIM);
+
+            snprintf(buf, sizeof(buf), "%d", sel->terminus_count);
+            stat_card(y + 3, px, (pw - 1) / 2, "ROUTES", buf, "directions exposees", CP_GREEN);
+            snprintf(buf, sizeof(buf), "%d", alerts);
+            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "ALERTS", buf, alerts ? "perturbations en cours" : "ligne stable", alerts ? CP_ALERT_MED : CP_GREEN);
+
+            y += 9;
+            attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            mvprintw(y++, px, "Telemetry");
+            attroff(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            kv_line(y++, px, 10, "api ref", sel->ref, CP_ACCENT);
+            kv_line(y++, px, 10, "type", nvt_idfm_line_type_label(sel), CP_ACCENT);
+            kv_line(y++, px, 10, "mode", sel->mode[0] ? sel->mode : "--", CP_ACCENT);
+            snprintf(buf, sizeof(buf), "%d / %d", g_nlive_filtered ? g_live_cursor + 1 : 0, g_nlive_filtered);
+            kv_line(y++, px, 10, "focus", buf, CP_ACCENT);
+
+            y++;
+            attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            mvprintw(y++, px, "Signal");
+            attroff(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            if (alerts) {
+                int shown = 0;
+                for (int i = 0; i < g_nlive_alerts && y < y2 - 2 && shown < 2; i++) {
+                    int cp = idfm_alert_cp(&g_live_alerts[i]);
+
+                    if (!toulouse_alert_applies_to_line(&g_live_alerts[i], sel)) continue;
+                    attron(COLOR_PAIR(cp) | A_BOLD);
+                    mvprintw(y, px, "%s ", cp == CP_ALERT_HI ? U_DIAMOND : U_WARN);
+                    attroff(COLOR_PAIR(cp) | A_BOLD);
+                    attron(A_BOLD);
+                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : "Message reseau");
+                    attroff(A_BOLD);
+                    y++;
+                    y += draw_wrapped_block(y, px + 2, pw - 4, 3, g_live_alerts[i].message, cp, 0);
+                    y++;
+                    shown++;
+                }
+            } else if (count_idfm_global_alerts()) {
+                int shown = 0;
+                for (int i = 0; i < g_nlive_alerts && y < y2 - 2 && shown < 2; i++) {
+                    int cp = idfm_alert_cp(&g_live_alerts[i]);
+
+                    if (g_live_alerts[i].lines[0]) continue;
+                    attron(COLOR_PAIR(cp) | A_BOLD);
+                    mvprintw(y, px, "%s ", U_INFO);
+                    attroff(COLOR_PAIR(cp) | A_BOLD);
+                    attron(A_BOLD);
+                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : "Information reseau");
+                    attroff(A_BOLD);
+                    y++;
+                    y += draw_wrapped_block(y, px + 2, pw - 4, 2, g_live_alerts[i].message, cp, 0);
+                    y++;
+                    shown++;
+                }
+            } else {
+                attron(A_DIM);
+                mvprintw(y++, px, U_CHECK" aucune alerte sur cette ligne");
+                mvprintw(y++, px, "Enter: courses actives, p: arrets desservis.");
+                attroff(A_DIM);
+            }
+        }
+    } else {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr = y2 - list_y;
+        int name_w = COLS - 28;
+
+        if (mr < 1) mr = 1;
+        if (name_w < 16) name_w = 16;
+        panel_box(y1, 1, y2, COLS - 2, "Line Index", g_live_search[0] ? g_live_search : "all lines");
+        attron(A_DIM);
+        mvprintw(head_y, 3, "LINE");
+        mvprintw(head_y, 12, "NAME");
+        mvprintw(head_y, COLS - 14, "TYPE");
+        attroff(A_DIM);
+
+        if (g_live_cursor < g_live_scroll) g_live_scroll = g_live_cursor;
+        if (g_live_cursor >= g_live_scroll + mr) g_live_scroll = g_live_cursor - mr + 1;
+
+        for (int i = 0; i < mr && g_live_scroll + i < g_nlive_filtered; i++) {
+            int idx = g_live_filtered[g_live_scroll + i];
+            int row = list_y + i;
+            int selected = (g_live_scroll + i == g_live_cursor);
+
+            if (selected) {
+                fill_span(row, 2, COLS - 3, CP_SEL, 0);
+                attron(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+                mvaddstr(row, 2, U_CBAR);
+                attroff(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+            }
+            draw_idfm_badge(row, 4, &g_live_lines[idx]);
+            print_hl(row, 13, g_live_lines[idx].libelle, g_live_search, name_w);
+            mvprintw(row, COLS - 14, "%-6s", nvt_idfm_line_type_label(&g_live_lines[idx]));
+        }
+        scrollbar(list_y, mr, g_live_scroll, g_nlive_filtered);
+    }
+
+    if (g_live_search[0]) {
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s   %d hits", g_live_search, g_nlive_filtered);
+        attroff(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+    }
+    draw_toast_msg();
+
+    {
+        char r[32];
+        snprintf(r, sizeof(r), "%d/%d", g_nlive_filtered > 0 ? g_live_cursor + 1 : 0, g_nlive_filtered);
+        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme", r);
+    }
+}
+
+static void draw_idfm_alerts(void)
+{
+    int total = g_nlive_alerts;
+    int hi = 0;
+    int med = 0;
+    int low = 0;
+    int impacted = count_idfm_impacted_lines();
+    int top = 3;
+
+    for (int i = 0; i < g_nlive_alerts; i++) {
+        int cp = idfm_alert_cp(&g_live_alerts[i]);
+        if (cp == CP_ALERT_HI) hi++;
+        else if (cp == CP_ALERT_MED) med++;
+        else low++;
+    }
+
+    draw_header(live_network_is_sncf() ? "Operations // SNCF Alerts" : "Operations // IDFM Alerts",
+                total ? "messages navitia" : "quiet network");
+    draw_tabs();
+
+    if (COLS >= 94 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+        char buf[32];
+
+        snprintf(buf, sizeof(buf), "%d", total);
+        stat_card(top, 2, cw, "TOTAL", buf, "perturbations chargees", total ? CP_ALERT_MED : CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", hi);
+        stat_card(top, 2 + cw + gap, cw, "CRIT", buf, "fort impact", hi ? CP_ALERT_HI : CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", med);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "WARN", buf, "impacts ligne", med ? CP_ALERT_MED : CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", impacted);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "LINES", buf, "lignes impactees", impacted ? CP_ALERT_MED : CP_GREEN);
+        top += 5;
+    }
+
+    {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int cs = y1 + 2;
+        int ch = y2 - cs;
+        int vy = 0;
+        char meta[64];
+
+        snprintf(meta, sizeof(meta), "%d crit / %d warn / %d info", hi, med, low);
+        panel_box(y1, 1, y2, COLS - 2, "Alert Feed", meta);
+        g_alert_total_h = 0;
+
+        if (!total) {
+            attron(A_DIM);
+            mvprintw(y1 + 3, 3, U_CHECK" aucune alerte active");
+            attroff(A_DIM);
+        }
+
+        for (int i = 0; i < g_nlive_alerts; i++) {
+            ToulouseAlert *a = &g_live_alerts[i];
+            int cp = idfm_alert_cp(a);
+            int sy = cs + vy - g_alert_scroll;
+
+            if (sy >= cs && sy < cs + ch) {
+                attron(COLOR_PAIR(cp) | A_BOLD);
+                mvprintw(sy, 3, "%s", cp == CP_ALERT_HI ? U_DIAMOND : cp == CP_ALERT_MED ? U_WARN : U_INFO);
+                attroff(COLOR_PAIR(cp) | A_BOLD);
+                attron(A_BOLD);
+                print_fit(sy, 6, COLS - 18, a->titre[0] ? a->titre : "Information reseau");
+                attroff(A_BOLD);
+            }
+            vy++;
+
+            sy = cs + vy - g_alert_scroll;
+            if (sy >= cs && sy < cs + ch) {
+                attron(A_DIM);
+                if (a->lines[0]) mvprintw(sy, 6, "%s  severity %s", a->lines, a->importance[0] ? a->importance : "--");
+                else mvprintw(sy, 6, "network-wide  severity %s", a->importance[0] ? a->importance : "--");
+                attroff(A_DIM);
+            }
+            vy++;
+
+            sy = cs + vy - g_alert_scroll;
+            if (sy >= cs && sy < cs + ch) {
+                vy += draw_wrapped_block(sy, 8, COLS - 16, 5, a->message, cp, 0);
+            } else {
+                vy += 3;
+            }
+
+            sy = cs + vy - g_alert_scroll;
+            if (i < g_nlive_alerts - 1 && sy >= cs && sy < cs + ch) {
+                attron(A_DIM);
+                mvhline(sy, 4, ACS_HLINE, COLS - 10);
+                attroff(A_DIM);
+            }
+            vy++;
+        }
+        g_alert_total_h = vy;
+        if (g_alert_total_h > ch) scrollbar(cs, ch, g_alert_scroll, g_alert_total_h);
+    }
+
+    draw_toast_msg();
+    {
+        char ri[32];
+        if (g_alert_total_h > 0) snprintf(ri, sizeof(ri), "%d/%d", g_alert_scroll + 1, g_alert_total_h);
+        else ri[0] = '\0';
+        draw_status(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme", ri);
+    }
+}
+
+static void draw_idfm_stops(void)
+{
+    ToulouseLine *line = selected_idfm_line();
+    ToulouseStop *sel = selected_idfm_stop();
+    int cached = (sel && g_live_sel_stop == g_live_stop_filtered[g_live_stop_cursor]) ? g_nlive_passages : 0;
+    int top = 3;
+
+    draw_header(live_network_is_sncf() ? "Stop Areas // SNCF" : "Stop Areas // IDFM",
+                g_live_stop_search[0] ? "recherche active" : "recherche requise");
+    draw_tabs();
+
+    if (COLS >= 94 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+        char buf[32];
+
+        snprintf(buf, sizeof(buf), "%d", g_nlive_stops);
+        stat_card(top, 2, cw, "STOPS", buf, "resultats charges", CP_ACCENT);
+        snprintf(buf, sizeof(buf), "%d", g_nlive_stop_filtered);
+        stat_card(top, 2 + cw + gap, cw, "VISIBLE", buf, "hits courants", CP_CYAN_T);
+        snprintf(buf, sizeof(buf), "%s", line ? line->code : "--");
+        stat_card(top, 2 + (cw + gap) * 2, cw, "LINE", buf, line ? line->libelle : "selectionnez une ligne", CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", cached);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "CACHE", buf, cached ? "departs memorises" : "ouvrez un board", cached ? CP_GREEN : CP_YELLOW);
+        top += 5;
+    }
+
+    if (COLS >= 108 && LINES - top >= 16) {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int left_w = COLS * 55 / 100;
+        int lx1 = 1;
+        int lx2;
+        int rx1;
+        int rx2 = COLS - 2;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr;
+        int name_w;
+
+        if (left_w < 48) left_w = 48;
+        if (left_w > COLS - 34) left_w = COLS - 34;
+        lx2 = lx1 + left_w - 1;
+        rx1 = lx2 + 1;
+        mr = y2 - list_y;
+        name_w = lx2 - lx1 - 14;
+        if (mr < 1) mr = 1;
+        if (name_w < 18) name_w = 18;
+
+        panel_box(y1, lx1, y2, lx2, "Stop Index", g_live_stop_search[0] ? g_live_stop_search : "search by stop name");
+        panel_box(y1, rx1, y2, rx2, "Stop Preview", sel ? sel->libelle : "idle");
+
+        attron(A_DIM);
+        mvprintw(head_y, lx1 + 3, "STOP");
+        mvprintw(head_y, lx2 - 10, "CITY");
+        attroff(A_DIM);
+
+        if (g_live_stop_cursor < g_live_stop_scroll) g_live_stop_scroll = g_live_stop_cursor;
+        if (g_live_stop_cursor >= g_live_stop_scroll + mr) g_live_stop_scroll = g_live_stop_cursor - mr + 1;
+
+        for (int i = 0; i < mr && g_live_stop_scroll + i < g_nlive_stop_filtered; i++) {
+            int idx = g_live_stop_filtered[g_live_stop_scroll + i];
+            int row = list_y + i;
+            int selected = (g_live_stop_scroll + i == g_live_stop_cursor);
+
+            if (selected) {
+                fill_span(row, lx1 + 1, lx2 - 1, CP_SEL, 0);
+                attron(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+                mvaddstr(row, lx1 + 1, U_CBAR);
+                attroff(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+            }
+            print_hl(row, lx1 + 4, g_live_stops[idx].libelle, g_live_stop_search, name_w);
+            print_fit(row, lx2 - 18, 16, g_live_stops[idx].commune[0] ? g_live_stops[idx].commune : "--");
+        }
+        scrollbar(list_y, mr, g_live_stop_scroll, g_nlive_stop_filtered);
+
+        if (!line) {
+            attron(A_DIM);
+            mvprintw(list_y, lx1 + 3, "Selectionnez d'abord une ligne %s.", current_live_network_short());
+            mvprintw(y1 + 3, rx1 + 2, "Aucune ligne active.");
+            attroff(A_DIM);
+        } else if (!g_live_stop_search[0]) {
+            draw_idfm_badge(y1 + 2, rx1 + 2, line);
+            attron(A_BOLD);
+            print_fit(y1 + 2, rx1 + 11, rx2 - rx1 - 12, line->libelle);
+            attroff(A_BOLD);
+            attron(A_DIM);
+            mvprintw(list_y, lx1 + 3, "Appuyez sur / puis validez avec Entree pour rechercher un arret.");
+            mvprintw(y1 + 4, rx1 + 2, "Recherche limitee a la ligne choisie pour eviter le chargement massif.");
+            mvprintw(y1 + 5, rx1 + 2, "Ligne: %s (%s)", line->code, nvt_idfm_line_type_label(line));
+            attroff(A_DIM);
+        } else if (!g_nlive_stop_filtered) {
+            attron(A_DIM);
+            mvprintw(list_y, lx1 + 3, "Aucun arret trouve pour \"%s\".", g_live_stop_search);
+            mvprintw(y1 + 3, rx1 + 2, "Essayez un nom d'arret plus court ou une commune.");
+            attroff(A_DIM);
+        } else if (sel) {
+            int y = y1 + 2;
+            int px = rx1 + 2;
+            int pw = rx2 - rx1 - 3;
+            char buf[64];
+
+            attron(A_BOLD);
+            print_fit(y, px, pw, sel->libelle);
+            attroff(A_BOLD);
+            attron(A_DIM);
+            mvprintw(y + 1, px, "%s", sel->commune[0] ? sel->commune : (live_network_is_sncf() ? "France" : "Ile-de-France"));
+            attroff(A_DIM);
+
+            snprintf(buf, sizeof(buf), "%s", line ? line->code : "--");
+            stat_card(y + 3, px, (pw - 1) / 2, "LINE", buf, line ? line->libelle : "aucune ligne", CP_GREEN);
+            snprintf(buf, sizeof(buf), "%d", cached);
+            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "CACHE", buf, cached ? "board charge" : "Enter pour charger", cached ? CP_GREEN : CP_YELLOW);
+
+            y += 9;
+            attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            mvprintw(y++, px, "Stop IDs");
+            attroff(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            kv_line(y++, px, 10, "stop area", sel->ref, CP_ACCENT);
+            if (sel->adresse[0]) kv_line(y++, px, 10, "label", sel->adresse, CP_ACCENT);
+
+            if (cached && y < y2 - 2) {
+                y++;
+                attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
+                mvprintw(y++, px, "Cached Departures");
+                attroff(COLOR_PAIR(CP_SECTION) | A_BOLD);
+                for (int i = 0; i < g_nlive_passages && i < 4 && y < y2 - 1; i++) {
+                    char hr[8];
+
+                    toulouse_passage_clock(&g_live_passages[i], hr, sizeof(hr));
+                    attron(COLOR_PAIR(g_live_passages[i].realtime ? CP_GREEN : CP_YELLOW) | A_BOLD);
+                    mvprintw(y, px, "%5s", hr);
+                    attroff(COLOR_PAIR(g_live_passages[i].realtime ? CP_GREEN : CP_YELLOW) | A_BOLD);
+                    mvprintw(y, px + 8, "%s", g_live_passages[i].line_code);
+                    y++;
+                }
+            }
+        }
+    } else {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr = y2 - list_y;
+        int cw = COLS - 22;
+
+        if (mr < 1) mr = 1;
+        if (cw < 18) cw = 18;
+        panel_box(y1, 1, y2, COLS - 2, "Stop Index", g_live_stop_search[0] ? g_live_stop_search : "search by stop name");
+        attron(A_DIM);
+        mvprintw(head_y, 3, "STOP");
+        mvprintw(head_y, COLS - 10, "CITY");
+        attroff(A_DIM);
+
+        if (g_live_stop_cursor < g_live_stop_scroll) g_live_stop_scroll = g_live_stop_cursor;
+        if (g_live_stop_cursor >= g_live_stop_scroll + mr) g_live_stop_scroll = g_live_stop_cursor - mr + 1;
+
+        for (int i = 0; i < mr && g_live_stop_scroll + i < g_nlive_stop_filtered; i++) {
+            int idx = g_live_stop_filtered[g_live_stop_scroll + i];
+            int row = list_y + i;
+
+            print_hl(row, 4, g_live_stops[idx].libelle, g_live_stop_search, cw);
+            print_fit(row, COLS - 18, 16, g_live_stops[idx].commune);
+        }
+        scrollbar(list_y, mr, g_live_stop_scroll, g_nlive_stop_filtered);
+
+        if (!line) {
+            attron(A_DIM);
+            mvprintw(list_y, 4, "Selectionnez d'abord une ligne %s.", current_live_network_short());
+            attroff(A_DIM);
+        } else if (!g_live_stop_search[0]) {
+            attron(A_DIM);
+            mvprintw(list_y, 4, "Appuyez sur / puis Entree pour rechercher un arret sur %s.", line->code);
+            attroff(A_DIM);
+        } else if (!g_nlive_stop_filtered) {
+            attron(A_DIM);
+            mvprintw(list_y, 4, "Aucun arret trouve pour \"%s\".", g_live_stop_search);
+            attroff(A_DIM);
+        }
+    }
+
+    if (g_live_stop_search[0]) {
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s   %d hits", g_live_stop_search, g_nlive_stop_filtered);
+        attroff(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+    }
+    draw_toast_msg();
+    {
+        char r[32];
+        snprintf(r, sizeof(r), "%d/%d", g_nlive_stop_filtered > 0 ? g_live_stop_cursor + 1 : 0, g_nlive_stop_filtered);
+        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme", r);
+    }
+}
+
+static void draw_idfm_passages(void)
+{
+    ToulouseLine *line = selected_idfm_line();
+    ToulouseStop *stop = (g_live_sel_stop >= 0 && g_live_sel_stop < g_nlive_stops) ? &g_live_stops[g_live_sel_stop] : NULL;
+    char title[128];
+    char crumb[128];
+    char buf[32];
+    int top = 3;
+    int live = count_idfm_live_passages();
+    int delayed = count_idfm_delayed_passages();
+    int uniq = count_idfm_unique_passage_lines();
+    int next_min = g_nlive_passages ? toulouse_waiting_minutes(g_live_passages[0].waiting_time) : -1;
+
+    snprintf(title, sizeof(title), "Departures // %s", stop ? stop->libelle : "stop area");
+    snprintf(crumb, sizeof(crumb), "%s "U_ARROW" %s", line ? line->code : "ligne", stop ? stop->libelle : "selection");
+    draw_header(title, crumb);
+    draw_tabs();
+
+    if (COLS >= 94 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+
+        if (next_min < 0) snprintf(buf, sizeof(buf), "--");
+        else if (next_min <= 1) snprintf(buf, sizeof(buf), "NOW");
+        else snprintf(buf, sizeof(buf), "%dmin", next_min);
+        stat_card(top, 2, cw, "NEXT", buf, "prochain depart", next_min >= 0 ? CP_GREEN : CP_YELLOW);
+        snprintf(buf, sizeof(buf), "%d", live);
+        stat_card(top, 2 + cw + gap, cw, "LIVE", buf, "estimations live", live ? CP_GREEN : CP_YELLOW);
+        snprintf(buf, sizeof(buf), "%d", uniq);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "LINES", buf, "lignes a venir", CP_ACCENT);
+        snprintf(buf, sizeof(buf), "%d", delayed);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "DELAY", buf, "ecarts theorique/reel", delayed ? CP_ALERT_MED : CP_GREEN);
+        top += 5;
+    }
+
+    {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int head_y = y1 + 1;
+        int row_y = head_y + 2;
+
+        panel_box(y1, 1, y2, COLS - 2, "Departure Board", stop ? stop->libelle : "idle");
+        attron(A_DIM);
+        mvprintw(head_y, 3, "TIME");
+        mvprintw(head_y, 12, "ETA");
+        mvprintw(head_y, 22, "LINE");
+        mvprintw(head_y, 33, "DIRECTION");
+        attroff(A_DIM);
+
+        for (int i = 0; i < g_nlive_passages && row_y + i < y2; i++) {
+            ToulousePassage *p = &g_live_passages[i];
+            char hr[8];
+            char eta[16];
+            int cp = p->realtime ? CP_GREEN : CP_YELLOW;
+            int row = row_y + i;
+
+            toulouse_passage_clock(p, hr, sizeof(hr));
+            toulouse_waiting_eta(p->waiting_time, eta, sizeof(eta));
+            if (i % 2) attron(A_DIM);
+            mvhline(row, 2, ' ', COLS - 4);
+            if (i % 2) attroff(A_DIM);
+            attron(COLOR_PAIR(cp) | A_BOLD);
+            mvprintw(row, 3, "%5s", hr);
+            attroff(COLOR_PAIR(cp) | A_BOLD);
+            mvprintw(row, 12, "%6s", eta);
+            draw_idfm_badge_by_code(row, 21, p->line_code);
+            print_fit(row, 33, COLS - 36, p->destination);
+        }
+
+        if (!g_nlive_passages) {
+            attron(A_DIM);
+            mvprintw(y1 + 4, 3, U_INFO" aucun depart pour cette ligne a cet arret");
+            mvprintw(y1 + 6, 3, "r recharge le board, / revient a la liste des arrets.");
+            attroff(A_DIM);
+        }
+    }
+
+    draw_toast_msg();
+    {
+        char r[32];
+        snprintf(r, sizeof(r), "%d dep.", g_nlive_passages);
+        draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme", r);
+    }
+}
+
+static void draw_idfm_vehicles(void)
+{
+    ToulouseLine *line = selected_idfm_line();
+    ToulouseStop *stop = (g_live_sel_stop >= 0 && g_live_sel_stop < g_nlive_stops) ? &g_live_stops[g_live_sel_stop] : NULL;
+    int unique_destinations = 0;
+    int alerts = count_idfm_line_alerts(line);
+    int cached_passages = stop ? g_nlive_passages : 0;
+    int top = 3;
+
+    if (!line) {
+        draw_header(live_network_is_sncf() ? "Journeys // SNCF" : "Vehicles // Paris IDFM", "no line selected");
+        draw_tabs();
+        panel_box(3, 1, LINES - 3, COLS - 2, "Active Journeys", "idle");
+        attron(A_DIM);
+        mvprintw(6, 4, U_INFO" aucune ligne selectionnee");
+        attroff(A_DIM);
+        draw_toast_msg();
+        draw_status(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme", "n/a");
+        return;
+    }
+
+    for (int i = 0; i < g_nlive_vehicles; i++) {
+        int dup = 0;
+        for (int j = 0; j < i; j++) {
+            if (strcmp(g_live_vehicles[i].terminus, g_live_vehicles[j].terminus) == 0) {
+                dup = 1;
+                break;
+            }
+        }
+        if (!dup && g_live_vehicles[i].terminus[0]) unique_destinations++;
+    }
+
+    draw_header(live_network_is_sncf() ? "Journeys // SNCF" : "Vehicles // Paris IDFM", line->libelle);
+    draw_tabs();
+
+    if (COLS >= 92 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+        char buf[32];
+
+        snprintf(buf, sizeof(buf), "%d", g_nlive_vehicles);
+        stat_card(top, 2, cw, "JOURNEYS", buf, "courses actives", CP_ACCENT);
+        snprintf(buf, sizeof(buf), "%d", unique_destinations);
+        stat_card(top, 2 + cw + gap, cw, "HEADSIGNS", buf, "destinations vues", CP_CYAN_T);
+        snprintf(buf, sizeof(buf), "%s", line->code);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "LINE", buf, line->libelle, CP_GREEN);
+        snprintf(buf, sizeof(buf), "%d", alerts);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, alerts ? "perturbations en cours" : "aucune alerte", alerts ? CP_ALERT_MED : CP_GREEN);
+        top += 5;
+    }
+
+    {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int journeys_y2 = y2;
+
+        if (cached_passages > 0 && y2 - y1 >= 12) journeys_y2 = y2 - 7;
+
+        {
+            int head_y = y1 + 1;
+            int row_y = head_y + 2;
+
+            panel_box(y1, 1, journeys_y2, COLS - 2, "Active Journeys", "positions non exposees par l'endpoint");
+            attron(A_DIM);
+            mvprintw(head_y, 3, "TRIP");
+            mvprintw(head_y, 16, "HEADSIGN");
+            attroff(A_DIM);
+
+            for (int i = 0; i < g_nlive_vehicles && row_y + i < journeys_y2; i++) {
+                if (i % 2) attron(A_DIM);
+                mvhline(row_y + i, 2, ' ', COLS - 4);
+                if (i % 2) attroff(A_DIM);
+                attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                mvprintw(row_y + i, 3, "%-10.10s", g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
+                attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                print_fit(row_y + i, 16, COLS - 20, g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus : "destination indisponible");
+            }
+
+            if (!g_nlive_vehicles) {
+                attron(A_DIM);
+                mvprintw(y1 + 4, 3, U_INFO" aucune course active retournee");
+                mvprintw(y1 + 6, 3, "L'API Navitia expose ici des courses actives sans coordonnees cartographiques.");
+                attroff(A_DIM);
+            }
+        }
+
+        if (cached_passages > 0 && journeys_y2 < y2) {
+            int py1 = journeys_y2 + 1;
+            int py2 = y2;
+            int head_y = py1 + 1;
+            int row_y = head_y + 2;
+            char meta[96];
+
+            snprintf(meta, sizeof(meta), "%s", stop ? stop->libelle : "stop area");
+            panel_box(py1, 1, py2, COLS - 2, "Live Departures", meta);
+            attron(A_DIM);
+            mvprintw(head_y, 3, "TIME");
+            mvprintw(head_y, 12, "ETA");
+            mvprintw(head_y, 22, "DIR");
+            attroff(A_DIM);
+
+            for (int i = 0; i < cached_passages && row_y + i < py2; i++) {
+                char hr[8];
+                char eta[16];
+                int cp = g_live_passages[i].realtime ? CP_GREEN : CP_YELLOW;
+
+                toulouse_passage_clock(&g_live_passages[i], hr, sizeof(hr));
+                toulouse_waiting_eta(g_live_passages[i].waiting_time, eta, sizeof(eta));
+                attron(COLOR_PAIR(cp) | A_BOLD);
+                mvprintw(row_y + i, 3, "%5s", hr);
+                attroff(COLOR_PAIR(cp) | A_BOLD);
+                mvprintw(row_y + i, 12, "%6s", eta);
+                print_fit(row_y + i, 22, COLS - 26, g_live_passages[i].destination);
+            }
+        } else if (!stop && y2 - y1 >= 12) {
+            attron(A_DIM);
+            mvprintw(y2 - 2, 3, "p puis Enter charge les arrets et les prochains passages de la ligne.");
+            attroff(A_DIM);
+        }
+    }
+
+    draw_toast_msg();
+    {
+        char ri[32];
+        snprintf(ri, sizeof(ri), "%d act.", g_nlive_vehicles);
+        draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme", ri);
     }
 }
 
@@ -4376,6 +5196,101 @@ static void do_toulouse_stop_search(void)
     timeout(1000);
 }
 
+static void do_idfm_search(void)
+{
+    int len = (int)strlen(g_live_search);
+    curs_set(1);
+    timeout(-1);
+    for (;;) {
+        erase();
+        draw_idfm();
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s", g_live_search);
+        attroff(A_BOLD);
+        printw("   (%d)", g_nlive_filtered);
+        attroff(COLOR_PAIR(CP_SEARCH));
+        move(LINES - 2, 3 + len);
+        refresh();
+        {
+            int ch = getch();
+            if (ch == '\n' || ch == 27) break;
+            if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8) && len > 0) g_live_search[--len] = '\0';
+            else if (len < (int)sizeof(g_live_search) - 1 && ch >= 32 && ch < 127) {
+                g_live_search[len++] = (char)ch;
+                g_live_search[len] = '\0';
+            }
+        }
+        rebuild_idfm_filter();
+        g_live_cursor = 0;
+        g_live_scroll = 0;
+    }
+    curs_set(0);
+    timeout(1000);
+}
+
+static void do_idfm_stop_search(void)
+{
+    int len = (int)strlen(g_live_stop_search);
+    int submitted = 0;
+
+    curs_set(1);
+    timeout(-1);
+    for (;;) {
+        erase();
+        draw_idfm_stops();
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s", g_live_stop_search);
+        attroff(A_BOLD);
+        printw("   (%d)", g_nlive_stop_filtered);
+        attroff(COLOR_PAIR(CP_SEARCH));
+        move(LINES - 2, 3 + len);
+        refresh();
+        {
+            int ch = getch();
+            if (ch == '\n') {
+                submitted = 1;
+                break;
+            }
+            if (ch == 27) break;
+            if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8) && len > 0) {
+                g_live_stop_search[--len] = '\0';
+                reset_idfm_stop_view(0);
+            }
+            else if (len < (int)sizeof(g_live_stop_search) - 1 && ch >= 32 && ch < 127) {
+                g_live_stop_search[len++] = (char)ch;
+                g_live_stop_search[len] = '\0';
+                reset_idfm_stop_view(0);
+            }
+        }
+    }
+    curs_set(0);
+    timeout(1000);
+    if (!submitted) return;
+    if (!g_live_stop_search[0]) {
+        reset_idfm_stop_view(0);
+        toast("Recherche arret effacee");
+        return;
+    }
+    if (g_live_sel_line < 0) {
+        toast("Selectionnez d'abord une ligne");
+        return;
+    }
+    if (g_nlive_stops <= 0 && load_current_network_stops(NULL) < 0) return;
+    g_nlive_stop_filtered = nvt_rebuild_toulouse_stop_filter(
+        g_live_stops,
+        g_nlive_stops,
+        g_live_stop_search,
+        g_live_stop_filtered,
+        MAX_STOPS
+    );
+    g_live_stop_cursor = 0;
+    g_live_stop_scroll = 0;
+    if (g_nlive_stop_filtered > 0) toast("%d arrets trouves", g_nlive_stop_filtered);
+    else toast("Aucun arret pour %s", g_live_stop_search);
+}
+
 static void do_atlas_search(void)
 {
     int len=(int)strlen(g_atlas_search); curs_set(1); timeout(-1);
@@ -4417,7 +5332,7 @@ static void draw_load(int step,int tot,const char *name,int fr)
     for(int i=0;i<lh;i++) mvprintw(cy+i,cx,"%s",logo[i]);
     attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);
 
-    attron(A_DIM); mvprintw(cy+lh+1,COLS/2-18,"Navigateur Transports Bordeaux + Toulouse"); attroff(A_DIM);
+    attron(A_DIM); mvprintw(cy+lh+1,COLS/2-11,"Navigateur Transports"); attroff(A_DIM);
     attron(COLOR_PAIR(CP_SECTION)); mvprintw(cy+lh+2,COLS/2-3,"v%s",NVT_VERSION); attroff(COLOR_PAIR(CP_SECTION));
 
     int ly=cy+lh+4;
@@ -4440,63 +5355,296 @@ static void draw_load(int step,int tot,const char *name,int fr)
     refresh();
 }
 
+static const char *network_summary(NvtNetwork network)
+{
+    switch (network) {
+    case NET_TLS:
+        return "Metro, tram, bus et alertes Tisseo";
+    case NET_IDFM:
+        return "Metro, RER, tram, train et bus IDFM";
+    case NET_SNCF:
+        return "Train, TER, cars SNCF et departs Navitia";
+    case NET_BDX:
+    default:
+        return "Tram, bus, passages et vehicules Bordeaux";
+    }
+}
+
+static const char *network_menu_state(NvtNetwork network)
+{
+    if (network == g_network && g_network_loaded[network]) return "actif";
+    if (g_network_loaded[network]) return "pret";
+    return "a charger";
+}
+
+static void animate_load_step(int step, int total, const char *name, int base_frame)
+{
+    for (int f = 0; f < 4; f++) {
+        draw_load(step, total, name, base_frame + f);
+        napms(60);
+    }
+}
+
+static int ensure_network_loaded(NvtNetwork network)
+{
+    char err[128];
+
+    if (network < 0 || network >= NET_COUNT) return -1;
+    if (g_network_loaded[network]) return 0;
+
+    switch (network) {
+    case NET_BDX:
+        animate_load_step(0, 3, "Arrets Bordeaux", 0);
+        if (nvt_data_init_bordeaux(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_nstop_groups = 0;
+            g_nstop_filtered = 0;
+            return -1;
+        }
+        animate_load_step(1, 3, "Lignes Bordeaux", 4);
+        if (nvt_data_refresh_bordeaux_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_nlines = 0;
+            g_nfiltered = 0;
+            g_natlas_filtered = 0;
+            return -1;
+        }
+        animate_load_step(2, 3, "Alertes Bordeaux", 8);
+        if (nvt_data_refresh_bordeaux_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_nalerts = 0;
+        }
+        break;
+    case NET_TLS:
+        animate_load_step(0, 2, "Reseau Toulouse", 0);
+        if (nvt_data_refresh_toulouse_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            memset(&g_tls_snapshot, 0, sizeof(g_tls_snapshot));
+            g_ntls_lines = 0;
+            g_ntls_stops = 0;
+            g_ntls_filtered = 0;
+            g_ntls_stop_filtered = 0;
+            return -1;
+        }
+        animate_load_step(1, 2, "Alertes Toulouse", 4);
+        if (nvt_data_refresh_toulouse_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_ntls_alerts = 0;
+        }
+        break;
+    case NET_IDFM:
+        animate_load_step(0, 2, "Reseau IDFM", 0);
+        if (nvt_data_refresh_idfm_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            memset(&g_idf_snapshot, 0, sizeof(g_idf_snapshot));
+            g_nidf_lines = 0;
+            g_nidf_filtered = 0;
+            return -1;
+        }
+        animate_load_step(1, 2, "Alertes IDFM", 4);
+        if (nvt_data_refresh_idfm_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_nidf_alerts = 0;
+        }
+        break;
+    case NET_SNCF:
+        animate_load_step(0, 2, "Reseau SNCF", 0);
+        if (nvt_data_refresh_sncf_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            memset(&g_app.sncf.snapshot, 0, sizeof(g_app.sncf.snapshot));
+            g_app.sncf.nlines = 0;
+            g_app.sncf.nfiltered = 0;
+            return -1;
+        }
+        animate_load_step(1, 2, "Alertes SNCF", 4);
+        if (nvt_data_refresh_sncf_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_app.sncf.nalerts = 0;
+        }
+        break;
+    case NET_COUNT:
+        return -1;
+    }
+
+    g_network_loaded[network] = 1;
+    draw_load(1, 1, "Pret !", 0);
+    napms(180);
+    return 0;
+}
+
+static void draw_network_menu(const char *title, const char *subtitle, int cursor, int allow_cancel)
+{
+    int h = 19;
+    int w = 64;
+    int y0 = (LINES - h) / 2;
+    int x0 = (COLS - w) / 2;
+
+    if (y0 < 0) y0 = 0;
+    if (x0 < 0) x0 = 0;
+
+    erase();
+    for (int y = y0; y <= y0 + h; y++) mvhline(y, x0, ' ', w + 1);
+    rbox(y0, x0, y0 + h, x0 + w);
+
+    attron(COLOR_PAIR(CP_BORDER) | A_BOLD);
+    mvprintw(y0, x0 + (w - (int)strlen(title) - 2) / 2, " %s ", title);
+    attroff(COLOR_PAIR(CP_BORDER) | A_BOLD);
+
+    if (subtitle && subtitle[0]) {
+        attron(A_DIM);
+        mvprintw(y0 + 2, x0 + 4, "%s", subtitle);
+        attroff(A_DIM);
+    }
+
+    for (int i = 0; i < NET_COUNT; i++) {
+        int row = y0 + 4 + i * 3;
+        int selected = (i == cursor);
+        int cp = selected ? CP_SEL : CP_HELP_KEY;
+
+        if (selected) {
+            fill_span(row, x0 + 2, x0 + w - 2, CP_SEL, 0);
+            fill_span(row + 1, x0 + 2, x0 + w - 2, CP_SEL, 0);
+        }
+
+        attron(COLOR_PAIR(cp) | A_BOLD);
+        mvprintw(row, x0 + 4, "%d. %-12s", i + 1, nvt_network_name((NvtNetwork)i));
+        attroff(COLOR_PAIR(cp) | A_BOLD);
+
+        if (selected) attron(COLOR_PAIR(CP_SEL));
+        else attron(A_DIM);
+        mvprintw(row, x0 + w - 18, "%-14s", network_menu_state((NvtNetwork)i));
+        mvprintw(row + 1, x0 + 6, "%s", network_summary((NvtNetwork)i));
+        if (selected) attroff(COLOR_PAIR(CP_SEL));
+        else attroff(A_DIM);
+    }
+
+    attron(A_DIM);
+    if (allow_cancel) mvprintw(y0 + h - 1, x0 + 4, "j/k ou fleches, Entree pour choisir, Esc pour annuler");
+    else mvprintw(y0 + h - 1, x0 + 4, "j/k ou fleches, Entree pour choisir");
+    attroff(A_DIM);
+}
+
+static int prompt_network_menu(const char *title, const char *subtitle, NvtNetwork initial, int allow_cancel)
+{
+    int cursor = (initial >= 0 && initial < NET_COUNT) ? initial : 0;
+
+    timeout(-1);
+    for (;;) {
+        draw_network_menu(title, subtitle, cursor, allow_cancel);
+        refresh();
+
+        switch (getch()) {
+        case 'j':
+        case KEY_DOWN:
+            cursor = (cursor + 1) % NET_COUNT;
+            break;
+        case 'k':
+        case KEY_UP:
+            cursor = (cursor + NET_COUNT - 1) % NET_COUNT;
+            break;
+        case '1':
+            timeout(1000);
+            return NET_BDX;
+        case '2':
+            timeout(1000);
+            return NET_TLS;
+        case '3':
+            timeout(1000);
+            return NET_IDFM;
+        case '4':
+            timeout(1000);
+            return NET_SNCF;
+        case '\n':
+        case KEY_ENTER:
+            timeout(1000);
+            return cursor;
+        case 27:
+        case 'q':
+            if (allow_cancel) {
+                timeout(1000);
+                return -1;
+            }
+            break;
+        }
+    }
+}
+
+static void open_network_menu(int allow_cancel)
+{
+    int selected = prompt_network_menu(
+        allow_cancel ? "Changer de reseau" : "Choisir un reseau",
+        allow_cancel ? "Les reseaux sont charges uniquement a la demande." : "Chargement initial limite au reseau choisi.",
+        g_network,
+        allow_cancel
+    );
+
+    if (selected < 0) return;
+    if (ensure_network_loaded((NvtNetwork)selected) == 0) {
+        switch_network((NvtNetwork)selected);
+        toast("Reseau %s", network_name());
+    } else if ((NvtNetwork)selected != g_network) {
+        switch_network((NvtNetwork)selected);
+    }
+}
+
 /* ── main ────────────────────────────────────────────────────────── */
 
 int main(void)
 {
     setlocale(LC_ALL,""); setlocale(LC_NUMERIC,"C");
+    nvt_app_init(&g_app);
     api_init();
     initscr(); cbreak(); noecho(); keypad(stdscr,TRUE); curs_set(0); timeout(1000);
     init_colors();
 
-    /* loading */
-    {
-        static const char *st[]={"Arrets","Groupes d'arrets","Lignes","Alertes","Toulouse"};
-        for(int f=0;f<4;f++){draw_load(0,5,st[0],f);napms(60);}
-        stopmap_init(&g_stops); fetch_stops(&g_stops);
-        for(int f=0;f<4;f++){draw_load(1,5,st[1],4+f);napms(60);}
-        g_nstop_groups=fetch_stop_groups(g_stop_groups,MAX_STOP_GROUPS);
-        if(g_nstop_groups<0)g_nstop_groups=0; rebuild_stop_filter(); course_cache_init(&g_course_cache);
-        for(int f=0;f<4;f++){draw_load(2,5,st[2],8+f);napms(60);}
-        g_nlines=fetch_lines(g_lines,MAX_LINES);
-        if(g_nlines<0)g_nlines=0; qsort(g_lines,g_nlines,sizeof(Line),cmp_lines); rebuild_filter(); rebuild_atlas_filter();
-        for(int f=0;f<4;f++){draw_load(3,5,st[3],12+f);napms(60);}
-        g_nalerts=fetch_alerts(g_alerts,MAX_ALERTS);
-        if(g_nalerts<0)g_nalerts=0;
-        for(int f=0;f<4;f++){draw_load(4,5,st[4],16+f);napms(60);}
-        if(fetch_toulouse_snapshot(&g_tls_snapshot, g_tls_lines, MAX_LINES, g_tls_stops, MAX_STOPS) < 0){
-            memset(&g_tls_snapshot, 0, sizeof(g_tls_snapshot));
-            g_ntls_lines = 0;
-            g_ntls_stops = 0;
-        } else {
-            g_ntls_lines = g_tls_snapshot.sample_lines;
-            g_ntls_stops = g_tls_snapshot.sample_stops;
-        }
-        g_ntls_alerts = fetch_toulouse_alerts(g_tls_alerts, MAX_ALERTS);
-        if (g_ntls_alerts < 0) g_ntls_alerts = 0;
-        rebuild_toulouse_filter();
-        rebuild_toulouse_stop_filter();
-        draw_load(5,5,"Pret !",0); napms(500);
-    }
+    open_network_menu(0);
 
     time_t lvr=0, lar=time(NULL);
-    toast("%d lignes Bordeaux, %d lignes Toulouse live",g_nlines,g_ntls_lines);
 
     for(;;){
         erase(); time_t now=time(NULL);
         switch(g_screen){
-        case SCR_LINES: if(g_network==NET_TLS) draw_toulouse(); else draw_lines(); break;
+        case SCR_LINES:
+            if(g_network==NET_TLS) draw_toulouse();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm();
+            else draw_lines();
+            break;
         case SCR_VEHICLES:
             if(g_network==NET_TLS) draw_toulouse_vehicles();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_vehicles();
             else{
-                if(now-lvr>=VEHICLE_REFRESH_SEC){g_nvehicles=fetch_vehicles(g_lines[g_sel_line].gid,g_vehicles,MAX_VEHICLES);if(g_nvehicles<0)g_nvehicles=0;lvr=now;if(g_nvehicles>0)toast("%d vehicules",g_nvehicles);}
-                if(now-lar>=ALERT_REFRESH_SEC){int n=fetch_alerts(g_alerts,MAX_ALERTS);if(n>=0)g_nalerts=n;lar=now;}
+                if(now-lvr>=VEHICLE_REFRESH_SEC){
+                    char fetch_err[128];
+                    if(nvt_data_refresh_bordeaux_vehicles(&g_app, 2, fetch_err, sizeof(fetch_err)) < 0){
+                        nvt_app_toast_error(&g_app, now, "%s", fetch_err);
+                    } else if(g_nvehicles>0) toast("%d vehicules",g_nvehicles);
+                    lvr=now;
+                }
+                if(now-lar>=ALERT_REFRESH_SEC){
+                    char fetch_err[128];
+                    if(nvt_data_refresh_bordeaux_alerts(&g_app, 2, fetch_err, sizeof(fetch_err)) < 0){
+                        nvt_app_toast_error(&g_app, now, "%s", fetch_err);
+                    }
+                    lar=now;
+                }
                 draw_vehicles(lvr);
             }
             break;
-        case SCR_ALERTS: if(g_network==NET_TLS) draw_toulouse_alerts(); else draw_alerts(); break;
-        case SCR_STOP_SEARCH: if(g_network==NET_TLS) draw_toulouse_stops(); else draw_stops(); break;
-        case SCR_PASSAGES: if(g_network==NET_TLS) draw_toulouse_passages(); else draw_passages(); break;
+        case SCR_ALERTS:
+            if(g_network==NET_TLS) draw_toulouse_alerts();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_alerts();
+            else draw_alerts();
+            break;
+        case SCR_STOP_SEARCH:
+            if(g_network==NET_TLS) draw_toulouse_stops();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_stops();
+            else draw_stops();
+            break;
+        case SCR_PASSAGES:
+            if(g_network==NET_TLS) draw_toulouse_passages();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_passages();
+            else draw_passages();
+            break;
         case SCR_ATLAS: draw_atlas(); break;
         }
         if(g_show_help) draw_help();
@@ -4505,9 +5653,7 @@ int main(void)
         if(g_show_help){g_show_help=0;continue;}
         if(ch=='?'||ch==KEY_F(1)){g_show_help=1;continue;}
         if(ch=='t'&&g_256){g_theme=(g_theme+1)%N_THEMES;apply_theme();toast("Theme: %s",themes[g_theme].name);continue;}
-        if(ch=='n'){switch_network(g_network==NET_BDX?NET_TLS:NET_BDX);continue;}
-        if(ch=='B'){switch_network(NET_BDX);continue;}
-        if(ch=='T'){switch_network(NET_TLS);continue;}
+        if(ch=='n'){open_network_menu(1);continue;}
 
         int mr=LINES-8,hp=mr/2; if(mr<1)mr=1; if(hp<1)hp=1;
 
@@ -4529,24 +5675,51 @@ int main(void)
                         g_tls_sel_line=g_tls_filtered[g_tls_cursor];
                         g_vehicle_zoom=0;
                         reset_toulouse_line_route();
-                        load_toulouse_vehicles();
                         g_screen=SCR_VEHICLES;
-                        toast("%d vehicules",g_ntls_vehicles);
+                        load_current_network_vehicles("%d vehicules");
                     }
                     break;
                 case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
                 case '/': memset(g_tls_search,0,sizeof(g_tls_search)); do_toulouse_search(); break;
                 case 27: if(g_tls_search[0]){memset(g_tls_search,0,sizeof(g_tls_search));rebuild_toulouse_filter();g_tls_cursor=0;g_tls_scroll=0;toast("Filtre efface");} break;
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH; g_tls_stop_cursor=0; g_tls_stop_scroll=0; break;
-                case 'r': case KEY_F(5):
-                    if(fetch_toulouse_snapshot(&g_tls_snapshot, g_tls_lines, MAX_LINES, g_tls_stops, MAX_STOPS) < 0){
-                        memset(&g_tls_snapshot,0,sizeof(g_tls_snapshot)); g_ntls_lines=0; g_ntls_stops=0;
-                    } else {
-                        g_ntls_lines=g_tls_snapshot.sample_lines; g_ntls_stops=g_tls_snapshot.sample_stops;
+                case 'r': case KEY_F(5): refresh_current_network_overview("Flux Toulouse recharge"); break;
+                }
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                switch(ch){
+                case 'q': goto quit;
+                case 'j': case KEY_DOWN: if(g_live_cursor<g_nlive_filtered-1) g_live_cursor++; break;
+                case 'k': case KEY_UP: if(g_live_cursor>0) g_live_cursor--; break;
+                case KEY_NPAGE: g_live_cursor+=mr; if(g_live_cursor>=g_nlive_filtered) g_live_cursor=g_nlive_filtered>0?g_nlive_filtered-1:0; break;
+                case KEY_PPAGE: g_live_cursor-=mr; if(g_live_cursor<0) g_live_cursor=0; break;
+                case 4: g_live_cursor+=hp; if(g_live_cursor>=g_nlive_filtered) g_live_cursor=g_nlive_filtered>0?g_nlive_filtered-1:0; break;
+                case 21: g_live_cursor-=hp; if(g_live_cursor<0) g_live_cursor=0; break;
+                case 'g': case KEY_HOME: g_live_cursor=0; g_live_scroll=0; break;
+                case 'G': case KEY_END: g_live_cursor=g_nlive_filtered>0?g_nlive_filtered-1:0; break;
+                case '\n': case KEY_ENTER:
+                    if(g_nlive_filtered>0){
+                        g_live_sel_line=g_live_filtered[g_live_cursor];
+                        g_screen=SCR_VEHICLES;
+                        load_current_network_vehicles(live_network_is_sncf() ? "%d trajets" : "%d courses");
                     }
-                    g_ntls_alerts=fetch_toulouse_alerts(g_tls_alerts,MAX_ALERTS); if(g_ntls_alerts<0) g_ntls_alerts=0;
-                    rebuild_toulouse_filter(); rebuild_toulouse_stop_filter(); toast("Flux Toulouse recharge");
                     break;
+                case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
+                case '/': memset(g_live_search,0,sizeof(g_live_search)); do_idfm_search(); break;
+                case 27:
+                    if(g_live_search[0]){
+                        memset(g_live_search,0,sizeof(g_live_search));
+                        rebuild_idfm_filter();
+                        g_live_cursor=0;
+                        g_live_scroll=0;
+                        toast("Filtre efface");
+                    }
+                    break;
+                case 'p': case '4':
+                    if(g_nlive_filtered>0){
+                        open_idfm_stop_search(g_live_filtered[g_live_cursor], 1);
+                    }
+                    break;
+                case 'r': case KEY_F(5): refresh_current_network_overview(live_network_is_sncf() ? "Flux SNCF recharge" : "Flux IDFM recharge"); break;
                 }
             } else {
                 switch(ch){
@@ -4564,7 +5737,7 @@ int main(void)
                 case '/': memset(g_search,0,sizeof(g_search));do_search();break;
                 case 27: if(g_search[0]){memset(g_search,0,sizeof(g_search));rebuild_filter();g_cursor=0;g_scroll=0;toast("Filtre efface");}break;
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();break;
-                case 'r': case KEY_F(5): g_nlines=fetch_lines(g_lines,MAX_LINES);if(g_nlines<0)g_nlines=0;qsort(g_lines,g_nlines,sizeof(Line),cmp_lines);rebuild_filter();rebuild_atlas_filter();g_nalerts=fetch_alerts(g_alerts,MAX_ALERTS);if(g_nalerts<0)g_nalerts=0;toast("Donnees mises a jour");break;
+                case 'r': case KEY_F(5): refresh_current_network_overview("Donnees mises a jour"); break;
                 }
             }
             break;
@@ -4576,19 +5749,35 @@ int main(void)
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case 'r': case KEY_F(5):
                     reset_toulouse_line_route();
-                    load_toulouse_vehicles();
-                    g_ntls_alerts=fetch_toulouse_alerts(g_tls_alerts,MAX_ALERTS);
-                    if(g_ntls_alerts<0)g_ntls_alerts=0;
-                    toast("%d vehicules",g_ntls_vehicles);
+                    load_current_network_vehicles("%d vehicules");
+                    refresh_current_network_alerts(NULL);
                     break;
                 case '+': case '=': if(g_vehicle_zoom<MAX_VEHICLE_ZOOM) g_vehicle_zoom++; break;
                 case '-': case '_': if(g_vehicle_zoom>0) g_vehicle_zoom--; break;
                 case '0': g_vehicle_zoom=0; break;
                 }
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                switch(ch){
+                case 'q': case 27: case '1': g_screen=SCR_LINES; break;
+                case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
+                case 'p': case '4':
+                    open_idfm_stop_search(g_live_sel_line, 1);
+                    break;
+                case 'r': case KEY_F(5):
+                    load_current_network_vehicles(live_network_is_sncf() ? "%d trajets" : "%d courses");
+                    refresh_current_network_alerts(NULL);
+                    break;
+                }
             } else {
                 switch(ch){
                 case 'q': case 27: case '1': g_screen=SCR_LINES;break;
-                case 'r': case KEY_F(5): reset_line_route(); reset_vehicle_detail_map(); lvr=0;break;
+                case 'r': case KEY_F(5):
+                    reset_line_route();
+                    reset_vehicle_detail_map();
+                    if (load_current_network_vehicles("%d vehicules") >= 0) lvr=now;
+                    refresh_current_network_alerts(NULL);
+                    lar=now;
+                    break;
                 case '+': case '=': if(g_vehicle_zoom<MAX_VEHICLE_ZOOM) g_vehicle_zoom++; break;
                 case '-': case '_': if(g_vehicle_zoom>0) g_vehicle_zoom--; break;
                 case '0': g_vehicle_zoom=0; break;
@@ -4608,11 +5797,19 @@ int main(void)
             case 'g': case KEY_HOME: g_alert_scroll=0;break;
             case 'G': case KEY_END: g_alert_scroll=g_alert_total_h>0?g_alert_total_h-1:0;break;
             case 'r': case KEY_F(5):
-                if(g_network==NET_TLS){g_ntls_alerts=fetch_toulouse_alerts(g_tls_alerts,MAX_ALERTS);if(g_ntls_alerts<0)g_ntls_alerts=0;toast("%d alertes Toulouse",g_ntls_alerts);}
-                else {int n=fetch_alerts(g_alerts,MAX_ALERTS);if(n>=0)g_nalerts=n;lar=time(NULL);toast("%d alertes",g_nalerts);}
+                refresh_current_network_alerts(
+                    g_network==NET_TLS ? "%d alertes Toulouse"
+                    : (g_network==NET_IDFM ? "%d alertes IDFM"
+                       : (g_network==NET_SNCF ? "%d alertes SNCF" : "%d alertes"))
+                );
+                lar=time(NULL);
                 break;
             case 'p': case '4':
                 if(g_network==NET_TLS){g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;}
+                else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                    if(g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
+                    open_idfm_stop_search(g_live_sel_line, 1);
+                }
                 else {g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();}
                 break;
             } break;
@@ -4628,10 +5825,32 @@ int main(void)
                 case 21: g_tls_stop_cursor-=hp;if(g_tls_stop_cursor<0)g_tls_stop_cursor=0;break;
                 case 'g': case KEY_HOME: g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case 'G': case KEY_END: g_tls_stop_cursor=g_ntls_stop_filtered>0?g_ntls_stop_filtered-1:0;break;
-                case '\n': case KEY_ENTER: if(g_ntls_stop_filtered>0){g_tls_sel_stop=g_tls_stop_filtered[g_tls_stop_cursor];g_screen=SCR_PASSAGES;load_toulouse_passages();toast("%d passages",g_ntls_passages);}break;
+                case '\n': case KEY_ENTER: if(g_ntls_stop_filtered>0){g_tls_sel_stop=g_tls_stop_filtered[g_tls_stop_cursor];g_screen=SCR_PASSAGES;load_current_network_passages("%d passages");}break;
                 case '/': memset(g_tls_stop_search,0,sizeof(g_tls_stop_search));do_toulouse_stop_search();break;
                 case '1': g_screen=SCR_LINES;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
+                }
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                switch(ch){
+                case 'q': case 27: g_screen=SCR_LINES; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case 'j': case KEY_DOWN: if(g_live_stop_cursor<g_nlive_stop_filtered-1) g_live_stop_cursor++; break;
+                case 'k': case KEY_UP: if(g_live_stop_cursor>0) g_live_stop_cursor--; break;
+                case KEY_NPAGE: g_live_stop_cursor+=mr; if(g_live_stop_cursor>=g_nlive_stop_filtered) g_live_stop_cursor=g_nlive_stop_filtered>0?g_nlive_stop_filtered-1:0; break;
+                case KEY_PPAGE: g_live_stop_cursor-=mr; if(g_live_stop_cursor<0) g_live_stop_cursor=0; break;
+                case 4: g_live_stop_cursor+=hp; if(g_live_stop_cursor>=g_nlive_stop_filtered) g_live_stop_cursor=g_nlive_stop_filtered>0?g_nlive_stop_filtered-1:0; break;
+                case 21: g_live_stop_cursor-=hp; if(g_live_stop_cursor<0) g_live_stop_cursor=0; break;
+                case 'g': case KEY_HOME: g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case 'G': case KEY_END: g_live_stop_cursor=g_nlive_stop_filtered>0?g_nlive_stop_filtered-1:0; break;
+                case '\n': case KEY_ENTER:
+                    if(g_nlive_stop_filtered>0){
+                        g_live_sel_stop=g_live_stop_filtered[g_live_stop_cursor];
+                        g_screen=SCR_PASSAGES;
+                        load_current_network_passages("%d departs");
+                    }
+                    break;
+                case '/': do_idfm_stop_search(); break;
+                case '1': g_screen=SCR_LINES; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case '3': case 'a': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
                 }
             } else {
                 switch(ch){
@@ -4644,7 +5863,7 @@ int main(void)
                 case 21: g_cursor-=hp;if(g_cursor<0)g_cursor=0;break;
                 case 'g': case KEY_HOME: g_cursor=0;g_scroll=0;break;
                 case 'G': case KEY_END: g_cursor=g_nstop_filtered>0?g_nstop_filtered-1:0;break;
-                case '\n': case KEY_ENTER: if(g_nstop_filtered>0){g_sel_stop_group=g_stop_filtered[g_cursor];g_screen=SCR_PASSAGES;load_passages();toast("%d passages",g_npassages);}break;
+                case '\n': case KEY_ENTER: if(g_nstop_filtered>0){g_sel_stop_group=g_stop_filtered[g_cursor];g_screen=SCR_PASSAGES;load_current_network_passages("%d passages");}break;
                 case '/': memset(g_stop_search,0,sizeof(g_stop_search));do_stop_search();break;
                 case '1': g_screen=SCR_LINES;g_cursor=0;g_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
@@ -4655,16 +5874,25 @@ int main(void)
             if(g_network==NET_TLS){
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
-                case 'r': case KEY_F(5): load_toulouse_passages();toast("%d passages",g_ntls_passages);break;
+                case 'r': case KEY_F(5): load_current_network_passages("%d passages");break;
                 case '/': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '1': g_screen=SCR_LINES;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
                 case '4': case 'p': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 }
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                switch(ch){
+                case 'q': case 27: g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case 'r': case KEY_F(5): load_current_network_passages("%d departs"); break;
+                case '/': g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case '1': g_screen=SCR_LINES; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                case '3': case 'a': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
+                case '4': case 'p': g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
+                }
             } else {
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;break;
-                case 'r': case KEY_F(5): load_passages();toast("%d passages",g_npassages);break;
+                case 'r': case KEY_F(5): load_current_network_passages("%d passages");break;
                 case '/': g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();break;
                 case '1': g_screen=SCR_LINES;g_cursor=0;g_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
