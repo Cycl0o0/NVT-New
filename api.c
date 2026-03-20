@@ -492,6 +492,86 @@ static int json_array_has_string(const cJSON *arr, const char *value)
     return 0;
 }
 
+static int utf8_is_continuation(unsigned char c)
+{
+    return (c & 0xC0) == 0x80;
+}
+
+static int utf8_sequence_length(const unsigned char *src)
+{
+    unsigned char c0;
+    unsigned char c1;
+    unsigned char c2;
+    unsigned char c3;
+
+    if (!src || !src[0]) return 0;
+    c0 = src[0];
+    c1 = src[1];
+    c2 = src[2];
+    c3 = src[3];
+
+    if (c0 <= 0x7F) return 1;
+    if (c0 >= 0xC2 && c0 <= 0xDF && c1 && utf8_is_continuation(c1)) return 2;
+    if (c0 == 0xE0 && c1 >= 0xA0 && c1 <= 0xBF && c2 && utf8_is_continuation(c2)) return 3;
+    if (((c0 >= 0xE1 && c0 <= 0xEC) || c0 == 0xEE || c0 == 0xEF) &&
+        c1 && utf8_is_continuation(c1) &&
+        c2 && utf8_is_continuation(c2)) {
+        return 3;
+    }
+    if (c0 == 0xED && c1 >= 0x80 && c1 <= 0x9F && c2 && utf8_is_continuation(c2)) return 3;
+    if (c0 == 0xF0 && c1 >= 0x90 && c1 <= 0xBF &&
+        c2 && utf8_is_continuation(c2) &&
+        c3 && utf8_is_continuation(c3)) {
+        return 4;
+    }
+    if (c0 >= 0xF1 && c0 <= 0xF3 &&
+        c1 && utf8_is_continuation(c1) &&
+        c2 && utf8_is_continuation(c2) &&
+        c3 && utf8_is_continuation(c3)) {
+        return 4;
+    }
+    if (c0 == 0xF4 && c1 >= 0x80 && c1 <= 0x8F &&
+        c2 && utf8_is_continuation(c2) &&
+        c3 && utf8_is_continuation(c3)) {
+        return 4;
+    }
+    return 0;
+}
+
+static unsigned cp1252_codepoint(unsigned char byte)
+{
+    switch (byte) {
+    case 0x80: return 0x20AC;
+    case 0x82: return 0x201A;
+    case 0x83: return 0x0192;
+    case 0x84: return 0x201E;
+    case 0x85: return 0x2026;
+    case 0x86: return 0x2020;
+    case 0x87: return 0x2021;
+    case 0x88: return 0x02C6;
+    case 0x89: return 0x2030;
+    case 0x8A: return 0x0160;
+    case 0x8B: return 0x2039;
+    case 0x8C: return 0x0152;
+    case 0x8E: return 0x017D;
+    case 0x91: return 0x2018;
+    case 0x92: return 0x2019;
+    case 0x93: return 0x201C;
+    case 0x94: return 0x201D;
+    case 0x95: return 0x2022;
+    case 0x96: return 0x2013;
+    case 0x97: return 0x2014;
+    case 0x98: return 0x02DC;
+    case 0x99: return 0x2122;
+    case 0x9A: return 0x0161;
+    case 0x9B: return 0x203A;
+    case 0x9C: return 0x0153;
+    case 0x9E: return 0x017E;
+    case 0x9F: return 0x0178;
+    default: return byte;
+    }
+}
+
 static void utf8_append_codepoint(char *dst, size_t dst_sz, size_t *len, unsigned codepoint)
 {
     if (!dst || !dst_sz || !len) return;
@@ -517,6 +597,38 @@ static void utf8_append_codepoint(char *dst, size_t dst_sz, size_t *len, unsigne
         dst[(*len)++] = (char)(0x80 | (codepoint & 0x3F));
     }
     dst[*len] = '\0';
+}
+
+static void copy_utf8_sanitized(char *dst, size_t dst_sz, const char *src)
+{
+    size_t len = 0;
+    const unsigned char *p = (const unsigned char *)src;
+
+    if (!dst || !dst_sz) return;
+    dst[0] = '\0';
+    if (!src) return;
+
+    while (*p && len + 1 < dst_sz) {
+        int seq_len = utf8_sequence_length(p);
+
+        if (seq_len == 1 && *p <= 0x7F) {
+            dst[len++] = (char)*p++;
+            dst[len] = '\0';
+            continue;
+        }
+
+        if (seq_len >= 2) {
+            if (len + (size_t)seq_len >= dst_sz) break;
+            memcpy(dst + len, p, (size_t)seq_len);
+            len += (size_t)seq_len;
+            dst[len] = '\0';
+            p += seq_len;
+            continue;
+        }
+
+        utf8_append_codepoint(dst, dst_sz, &len, cp1252_codepoint(*p));
+        p++;
+    }
 }
 
 static int decode_named_html_entity(const char *name, unsigned *codepoint)
@@ -714,7 +826,7 @@ static double jcoord_double(const cJSON *pt, int idx, const char *key)
     return 0.0;
 }
 
-#define SCOPY(dst, src) snprintf(dst, sizeof(dst), "%s", src)
+#define SCOPY(dst, src) copy_utf8_sanitized((dst), sizeof(dst), (src))
 
 /* ── API init / cleanup ──────────────────────────────────────────── */
 
@@ -927,7 +1039,7 @@ static void append_token(char *dst, size_t dst_sz, const char *token)
         dst[len] = '\0';
     }
     if (len < dst_sz - 1) {
-        snprintf(dst + len, dst_sz - len, "%s", token);
+        copy_utf8_sanitized(dst + len, dst_sz - len, token);
     }
 }
 
@@ -1003,7 +1115,7 @@ static void stop_line_list_from_array(const cJSON *items, const char *short_key,
         append_token(dst, dst_sz, jstr(item, short_key));
         if (mode && mode_sz && !mode[0]) {
             cJSON *transport_mode = cJSON_GetObjectItemCaseSensitive(item, "transportMode");
-            if (transport_mode) snprintf(mode, mode_sz, "%s", jstr(transport_mode, "name"));
+            if (transport_mode) copy_utf8_sanitized(mode, mode_sz, jstr(transport_mode, "name"));
         }
     }
 }
@@ -1486,7 +1598,7 @@ static const char *idfm_best_message_text(const cJSON *messages, char *title, si
 
         if (!msg[0]) continue;
         if (json_array_has_string(types, "title")) {
-            snprintf(title, title_sz, "%s", msg);
+            copy_utf8_sanitized(title, title_sz, msg);
             continue;
         }
         if (json_array_has_string(types, "web")) {

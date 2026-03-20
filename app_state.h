@@ -11,6 +11,7 @@ typedef enum {
     SCR_ALERTS,
     SCR_STOP_SEARCH,
     SCR_PASSAGES,
+    SCR_ITINERARY,
     SCR_ATLAS,
 } NvtScreen;
 

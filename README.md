@@ -3,11 +3,13 @@
 NVT is first a TUI transport monitoring application written in C.
 
 Around that TUI app, the project also provides a local backend API and a Home Assistant custom integration.
+It now also provides a local MCP server that exposes the backend data to AI clients.
 
 The project currently provides:
 
 - a terminal user interface in C (`nvt`)
 - a local backend API for transit data
+- a local MCP server for lines, stops, next passages, alerts, and line monitoring
 - support for Bordeaux, Toulouse, and Paris IDFM networks
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
@@ -21,6 +23,7 @@ The project currently provides:
 - Ncurses-based TUI app written in C
 - Multi-network live support for Bordeaux, Toulouse, and Paris IDFM
 - Local backend endpoints for lines, alerts, stop groups, passages, vehicles, and map boundaries
+- A line-based itinerary calculator in the TUI for Bordeaux, Toulouse, IDFM, and SNCF
 - One Home Assistant config entry per `network + stop + line + direction`
 - User-defined threshold values such as `5`, `10`, `20`, or more minutes
 - Alert detail display based on the alert message, not only the title
@@ -32,6 +35,7 @@ The project currently provides:
 ```text
 .
 |-- backend.c
+|-- mcp/
 |-- api.c
 |-- api.h
 |-- nvt.c
@@ -68,6 +72,19 @@ make backend-run
 
 The backend runner prints the API URL to paste into the Home Assistant `NVT` config flow.
 
+Run the MCP server locally:
+
+```bash
+make mcp-run
+```
+
+By default, the MCP server auto-starts `./nvt-backend` on a free local port.
+To point it to an already running backend instead:
+
+```bash
+NVT_BACKEND_URL=http://127.0.0.1:8080 python3 ./mcp/nvt_mcp_server.py
+```
+
 Run the TUI directly:
 
 ```bash
@@ -85,13 +102,31 @@ Typical flow:
 3. Add the `NVT` integration
 4. Select the network, stop, line, direction, threshold, and refresh interval
 
+## MCP
+
+The MCP server lives in `mcp/nvt_mcp_server.py`.
+
+It exposes tools for:
+
+- network overview
+- line search
+- stop search
+- line status
+- next passages
+- alert listing
+- composite line monitoring
+
+Connection examples and environment details live in `docs/mcp-server.md`.
+
 ## Development Notes
 
 - `nvt.c` is the main TUI application entry point
 - `make test` runs the first unit tests for extracted filter and map helpers
+- `make test` also runs the MCP server unit tests
+- Press `i` or `6` on a selected line to open the itinerary calculator, then use `o`, `d`, and `x`
 - Technical notes for the modularized TUI live in `docs/technical-readme.md`
+- MCP usage notes live in `docs/mcp-server.md`
 - IDFM support is configured directly in the C sources
-- The project is backend-focused; the previous frontend surface has been removed
 - Local Home Assistant test data can be stored in `.ha-test/`
 - Python cache files and compiled binaries should not be committed
 

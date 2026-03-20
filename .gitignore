@@ -1,6 +1,9 @@
 # Binaries
 /nvt
 /nvt-backend
+/tests/test_filter
+/tests/test_itinerary
+/tests/test_map_math
 /*.o
 
 # Python
@@ -23,6 +26,9 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local env
+.nvt-backend.env
 
 # API docs & endpoints
 /apispecific/

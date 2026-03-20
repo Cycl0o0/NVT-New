@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -32,6 +33,8 @@ typedef struct {
 typedef enum {
     NETWORK_BDX = 0,
     NETWORK_TLS = 1,
+    NETWORK_IDFM = 2,
+    NETWORK_SNCF = 3,
 } NetworkKind;
 
 static volatile sig_atomic_t g_running = 1;
@@ -53,6 +56,12 @@ static int g_tls_nstops = -1;
 static MetroMap g_tls_metro_map;
 static int g_tls_has_metro_map = 0;
 static int g_tls_map_attempted = 0;
+static IdfmSnapshot g_idfm_snapshot;
+static ToulouseLine g_idfm_lines[MAX_LINES];
+static int g_idfm_nlines = -1;
+static IdfmSnapshot g_sncf_snapshot;
+static ToulouseLine g_sncf_lines[MAX_LINES];
+static int g_sncf_nlines = -1;
 
 static void on_signal(int signum)
 {
@@ -62,6 +71,11 @@ static void on_signal(int signum)
         close(g_server_fd);
         g_server_fd = -1;
     }
+}
+
+static void on_sigpipe(int signum)
+{
+    (void)signum;
 }
 
 static void iso_now(char *buf, size_t sz)
@@ -90,7 +104,32 @@ static void log_msg(const char *fmt, ...)
 
 static const char *network_slug(NetworkKind network)
 {
-    return network == NETWORK_TLS ? "toulouse" : "bordeaux";
+    switch (network) {
+    case NETWORK_TLS:
+        return "toulouse";
+    case NETWORK_IDFM:
+        return "idfm";
+    case NETWORK_SNCF:
+        return "sncf";
+    case NETWORK_BDX:
+    default:
+        return "bordeaux";
+    }
+}
+
+static int network_is_live(NetworkKind network)
+{
+    return network == NETWORK_IDFM || network == NETWORK_SNCF;
+}
+
+static int network_supports_boundaries(NetworkKind network)
+{
+    return network == NETWORK_BDX || network == NETWORK_TLS;
+}
+
+static int network_supports_route(NetworkKind network)
+{
+    return network == NETWORK_BDX || network == NETWORK_TLS;
 }
 
 static int query_param_get(const char *query, const char *key, char *out, size_t out_sz)
@@ -142,8 +181,103 @@ static int request_network(const HttpRequest *req, NetworkKind *out)
         *out = NETWORK_TLS;
         return 0;
     }
+    if (strcasecmp(value, "idfm") == 0 || strcasecmp(value, "idf") == 0 ||
+        strcasecmp(value, "paris") == 0 || strcasecmp(value, "paris-idfm") == 0 ||
+        strcasecmp(value, "iledefrance") == 0 || strcasecmp(value, "ile-de-france") == 0) {
+        *out = NETWORK_IDFM;
+        return 0;
+    }
+    if (strcasecmp(value, "sncf") == 0) {
+        *out = NETWORK_SNCF;
+        return 0;
+    }
 
     return -1;
+}
+
+static int query_param_get_int(const char *query, const char *key, int *out)
+{
+    char value[64];
+    char *end = NULL;
+    long parsed;
+
+    if (!out) return -1;
+    if (!query_param_get(query, key, value, sizeof(value))) return 0;
+
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    if (errno || !end || *end != '\0' || parsed < 0 || parsed > INT_MAX) return -1;
+    *out = (int)parsed;
+    return 1;
+}
+
+static int request_line_gid(const HttpRequest *req, int *out)
+{
+    int rc;
+
+    if (!req || !out) return -1;
+
+    rc = query_param_get_int(req->query, "line", out);
+    if (rc != 0) return rc;
+    rc = query_param_get_int(req->query, "lineId", out);
+    if (rc != 0) return rc;
+    return query_param_get_int(req->query, "lineGid", out);
+}
+
+static int match_line_child_path(const char *path, const char *suffix, int *out_gid)
+{
+    static const char *prefix = "/api/lines/";
+    const char *cursor;
+    char *end = NULL;
+    long parsed;
+
+    if (!path || !suffix || !out_gid) return 0;
+    if (strncmp(path, prefix, strlen(prefix)) != 0) return 0;
+
+    cursor = path + strlen(prefix);
+    if (!*cursor) return 0;
+
+    errno = 0;
+    parsed = strtol(cursor, &end, 10);
+    if (errno || end == cursor || parsed < 0 || parsed > INT_MAX) return 0;
+    if (strcmp(end, suffix) != 0) return 0;
+
+    *out_gid = (int)parsed;
+    return 1;
+}
+
+static int hex_nibble(char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static void url_decode_component(const char *src, char *dst, size_t dst_sz)
+{
+    size_t j = 0;
+
+    if (!dst || !dst_sz) return;
+    dst[0] = '\0';
+    if (!src) return;
+
+    for (size_t i = 0; src[i] && j + 1 < dst_sz; i++) {
+        if (src[i] == '%' && src[i + 1] && src[i + 2]) {
+            int hi = hex_nibble(src[i + 1]);
+            int lo = hex_nibble(src[i + 2]);
+
+            if (hi >= 0 && lo >= 0) {
+                dst[j++] = (char)((hi << 4) | lo);
+                i += 2;
+                continue;
+            }
+        }
+
+        dst[j++] = src[i] == '+' ? ' ' : src[i];
+    }
+
+    dst[j] = '\0';
 }
 
 static void add_network_to_root(cJSON *root, NetworkKind network)
@@ -259,11 +393,55 @@ static const ToulouseStop *find_toulouse_stop_by_key(const char *key)
     return NULL;
 }
 
+static const ToulouseStop *find_live_stop_by_key(const ToulouseStop *stops, int n, const char *key)
+{
+    if (!key || !key[0] || !stops || n <= 0) return NULL;
+    for (int i = 0; i < n; i++) {
+        if (strcmp(stops[i].ref, key) == 0) return &stops[i];
+    }
+    return NULL;
+}
+
 static int count_toulouse_lines_type(const ToulouseLine *lines, int n, const char *type)
 {
     int total = 0;
     for (int i = 0; i < n; i++) {
         if (strcasecmp(lines[i].mode, type) == 0) total++;
+    }
+    return total;
+}
+
+static int line_mode_is_bus(const char *mode)
+{
+    if (!mode || !mode[0]) return 0;
+    return strcasestr(mode, "bus") != NULL || strcasestr(mode, "coach") != NULL;
+}
+
+static int line_mode_is_rail(const char *mode)
+{
+    if (!mode || !mode[0]) return 0;
+    return strcasestr(mode, "metro") != NULL
+        || strcasestr(mode, "tram") != NULL
+        || strcasestr(mode, "train") != NULL
+        || strcasestr(mode, "rer") != NULL
+        || strcasestr(mode, "rail") != NULL
+        || strcasestr(mode, "funicular") != NULL;
+}
+
+static int count_live_lines_bus(const ToulouseLine *lines, int n)
+{
+    int total = 0;
+    for (int i = 0; i < n; i++) {
+        if (line_mode_is_bus(lines[i].mode)) total++;
+    }
+    return total;
+}
+
+static int count_live_lines_rail(const ToulouseLine *lines, int n)
+{
+    int total = 0;
+    for (int i = 0; i < n; i++) {
+        if (line_mode_is_rail(lines[i].mode)) total++;
     }
     return total;
 }
@@ -335,17 +513,19 @@ static void add_line_codes_array(cJSON *obj, const char *codes)
     cJSON_AddItemToObject(obj, "lineCodes", items);
 }
 
-static const ToulouseLine *toulouse_primary_alert_line(const ToulouseAlert *alert)
+static const ToulouseLine *primary_alert_line(const ToulouseAlert *alert,
+                                              const ToulouseLine *lines,
+                                              int nlines)
 {
     char copy[128];
     char *token;
     char *saveptr = NULL;
 
-    if (!alert || !alert->lines[0] || g_tls_nlines <= 0) return NULL;
+    if (!alert || !alert->lines[0] || !lines || nlines <= 0) return NULL;
     snprintf(copy, sizeof(copy), "%s", alert->lines);
     token = strtok_r(copy, " ", &saveptr);
     while (token) {
-        const ToulouseLine *line = find_toulouse_line_by_code(g_tls_lines, g_tls_nlines, token);
+        const ToulouseLine *line = find_toulouse_line_by_code(lines, nlines, token);
         if (line) return line;
         token = strtok_r(NULL, " ", &saveptr);
     }
@@ -468,6 +648,101 @@ static int ensure_toulouse_metro_map(void)
     g_tls_map_attempted = 1;
     g_tls_has_metro_map = fetch_toulouse_metro_map(&g_tls_metro_map) > 0;
     return g_tls_has_metro_map ? 0 : -1;
+}
+
+static int ensure_idfm_snapshot(void)
+{
+    if (g_idfm_nlines >= 0) return 0;
+    if (fetch_idfm_snapshot(&g_idfm_snapshot, g_idfm_lines, MAX_LINES) < 0) return -1;
+    g_idfm_nlines = g_idfm_snapshot.sample_lines;
+    if (g_idfm_nlines > 1) {
+        qsort(g_idfm_lines, (size_t)g_idfm_nlines, sizeof(ToulouseLine), cmp_toulouse_lines);
+    }
+    return 0;
+}
+
+static int ensure_sncf_snapshot(void)
+{
+    if (g_sncf_nlines >= 0) return 0;
+    if (fetch_sncf_snapshot(&g_sncf_snapshot, g_sncf_lines, MAX_LINES) < 0) return -1;
+    g_sncf_nlines = g_sncf_snapshot.sample_lines;
+    if (g_sncf_nlines > 1) {
+        qsort(g_sncf_lines, (size_t)g_sncf_nlines, sizeof(ToulouseLine), cmp_toulouse_lines);
+    }
+    return 0;
+}
+
+static const ToulouseLine *network_live_lines(NetworkKind network, int *out_count)
+{
+    if (out_count) *out_count = 0;
+
+    switch (network) {
+    case NETWORK_TLS:
+        if (ensure_toulouse_snapshot() < 0) return NULL;
+        if (out_count) *out_count = g_tls_nlines;
+        return g_tls_lines;
+    case NETWORK_IDFM:
+        if (ensure_idfm_snapshot() < 0) return NULL;
+        if (out_count) *out_count = g_idfm_nlines;
+        return g_idfm_lines;
+    case NETWORK_SNCF:
+        if (ensure_sncf_snapshot() < 0) return NULL;
+        if (out_count) *out_count = g_sncf_nlines;
+        return g_sncf_lines;
+    case NETWORK_BDX:
+    default:
+        return NULL;
+    }
+}
+
+static const ToulouseLine *find_network_live_line_by_id(NetworkKind network, int line_gid)
+{
+    int nlines = 0;
+    const ToulouseLine *lines = network_live_lines(network, &nlines);
+
+    return lines ? find_toulouse_line_by_id(lines, nlines, line_gid) : NULL;
+}
+
+static int fetch_network_live_stops(NetworkKind network, const ToulouseLine *line,
+                                    ToulouseStop *out, int max)
+{
+    if (network == NETWORK_TLS) {
+        int count;
+
+        if (ensure_toulouse_snapshot() < 0 || !line) return -1;
+        count = g_tls_nstops > max ? max : g_tls_nstops;
+        memcpy(out, g_tls_stops, (size_t)count * sizeof(ToulouseStop));
+        return count;
+    }
+    if (network == NETWORK_IDFM) return fetch_idfm_line_stops(line, out, max);
+    if (network == NETWORK_SNCF) return fetch_sncf_line_stops(line, out, max);
+    return -1;
+}
+
+static int fetch_network_live_alerts(NetworkKind network, ToulouseAlert *out, int max)
+{
+    if (network == NETWORK_TLS) return fetch_toulouse_alerts(out, max);
+    if (network == NETWORK_IDFM) return fetch_idfm_alerts(out, max);
+    if (network == NETWORK_SNCF) return fetch_sncf_alerts(out, max);
+    return -1;
+}
+
+static int fetch_network_live_passages(NetworkKind network, const ToulouseLine *line,
+                                       const ToulouseStop *stop, ToulousePassage *out, int max)
+{
+    if (network == NETWORK_TLS) return fetch_toulouse_passages(stop->ref, out, max);
+    if (network == NETWORK_IDFM) return fetch_idfm_passages(line, stop, out, max);
+    if (network == NETWORK_SNCF) return fetch_sncf_passages(line, stop, out, max);
+    return -1;
+}
+
+static int fetch_network_live_vehicles(NetworkKind network, const ToulouseLine *line,
+                                       ToulouseVehicle *out, int max)
+{
+    if (network == NETWORK_TLS) return fetch_toulouse_vehicles(line, out, max);
+    if (network == NETWORK_IDFM) return fetch_idfm_vehicles(line, out, max);
+    if (network == NETWORK_SNCF) return fetch_sncf_vehicles(line, out, max);
+    return -1;
 }
 
 static char *delay_label(int retard)
@@ -628,6 +903,7 @@ static cJSON *vehicle_to_json(const Vehicle *vehicle)
     cJSON_AddStringToObject(obj, "currentStopName", current);
     cJSON_AddStringToObject(obj, "nextStopName", next);
     cJSON_AddStringToObject(obj, "tone", state_tone(vehicle));
+    cJSON_AddBoolToObject(obj, "hasPosition", vehicle->lon != 0.0 || vehicle->lat != 0.0);
     free(delay);
     return obj;
 }
@@ -637,6 +913,9 @@ static cJSON *stop_group_to_json(const StopGroup *group)
     cJSON *obj = cJSON_CreateObject();
     cJSON *gids = cJSON_CreateArray();
     char key[32];
+    double lon_sum = 0.0;
+    double lat_sum = 0.0;
+    int coord_count = 0;
 
     snprintf(key, sizeof(key), "group-%d", group->gids[0]);
     cJSON_AddStringToObject(obj, "key", key);
@@ -644,9 +923,21 @@ static cJSON *stop_group_to_json(const StopGroup *group)
     cJSON_AddStringToObject(obj, "groupe", group->groupe);
     cJSON_AddNumberToObject(obj, "platformCount", group->ngids);
     for (int i = 0; i < group->ngids; i++) {
+        double lon;
+        double lat;
+
         cJSON_AddItemToArray(gids, cJSON_CreateNumber(group->gids[i]));
+        if (stopmap_lookup_pos(&g_stop_map, group->gids[i], &lon, &lat)) {
+            lon_sum += lon;
+            lat_sum += lat;
+            coord_count++;
+        }
     }
     cJSON_AddItemToObject(obj, "gids", gids);
+    if (coord_count > 0) {
+        cJSON_AddNumberToObject(obj, "lon", lon_sum / coord_count);
+        cJSON_AddNumberToObject(obj, "lat", lat_sum / coord_count);
+    }
     return obj;
 }
 
@@ -664,6 +955,8 @@ static cJSON *toulouse_stop_to_json(const ToulouseStop *stop)
     cJSON_AddStringToObject(obj, "ref", stop->ref);
     cJSON_AddStringToObject(obj, "lines", stop->lignes);
     cJSON_AddStringToObject(obj, "mode", stop->mode);
+    cJSON_AddNumberToObject(obj, "lon", stop->lon);
+    cJSON_AddNumberToObject(obj, "lat", stop->lat);
     return obj;
 }
 
@@ -747,6 +1040,7 @@ static cJSON *toulouse_vehicle_to_json(const ToulouseVehicle *vehicle, const Tou
     cJSON_AddBoolToObject(obj, "live", vehicle->realtime);
     cJSON_AddStringToObject(obj, "datetime", vehicle->datetime);
     cJSON_AddStringToObject(obj, "waitingTime", vehicle->waiting_time);
+    cJSON_AddBoolToObject(obj, "hasPosition", 0);
     add_toulouse_line_color_fields(obj, line);
     return obj;
 }
@@ -790,6 +1084,57 @@ static cJSON *metro_map_to_json(const MetroMap *map)
 
     cJSON_AddItemToObject(root, "paths", paths);
     cJSON_AddItemToObject(root, "labels", labels);
+    return root;
+}
+
+static cJSON *line_route_to_json(const LineRouteMap *map)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON *bounds = cJSON_CreateObject();
+    cJSON *paths = cJSON_CreateArray();
+    cJSON *stats = cJSON_CreateObject();
+    double minlon = 0.0;
+    double minlat = 0.0;
+    double maxlon = 0.0;
+    double maxlat = 0.0;
+
+    if (map->npoints > 0) {
+        minlon = maxlon = map->points[0].lon;
+        minlat = maxlat = map->points[0].lat;
+        for (int i = 1; i < map->npoints; i++) {
+            if (map->points[i].lon < minlon) minlon = map->points[i].lon;
+            if (map->points[i].lon > maxlon) maxlon = map->points[i].lon;
+            if (map->points[i].lat < minlat) minlat = map->points[i].lat;
+            if (map->points[i].lat > maxlat) maxlat = map->points[i].lat;
+        }
+    }
+
+    cJSON_AddNumberToObject(bounds, "minLon", minlon);
+    cJSON_AddNumberToObject(bounds, "minLat", minlat);
+    cJSON_AddNumberToObject(bounds, "maxLon", maxlon);
+    cJSON_AddNumberToObject(bounds, "maxLat", maxlat);
+    cJSON_AddItemToObject(root, "bounds", bounds);
+
+    for (int i = 0; i < map->npaths; i++) {
+        cJSON *path = cJSON_CreateObject();
+        cJSON *points = cJSON_CreateArray();
+        for (int j = 0; j < map->paths[i].count; j++) {
+            int idx = map->paths[i].start + j;
+            cJSON *point = cJSON_CreateObject();
+            cJSON_AddNumberToObject(point, "lon", map->points[idx].lon);
+            cJSON_AddNumberToObject(point, "lat", map->points[idx].lat);
+            cJSON_AddItemToArray(points, point);
+        }
+        cJSON_AddNumberToObject(path, "kind", map->paths[i].kind);
+        cJSON_AddItemToObject(path, "points", points);
+        cJSON_AddItemToArray(paths, path);
+    }
+
+    cJSON_AddItemToObject(root, "paths", paths);
+    cJSON_AddNumberToObject(stats, "total", map->npaths);
+    cJSON_AddNumberToObject(stats, "aller", map->aller_paths);
+    cJSON_AddNumberToObject(stats, "retour", map->retour_paths);
+    cJSON_AddItemToObject(root, "stats", stats);
     return root;
 }
 
@@ -894,8 +1239,8 @@ static int handle_health(int fd)
     cJSON_AddItemToObject(root, "supportedNetworks", networks);
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_BDX)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_TLS)));
-    cJSON_AddBoolToObject(root, "mapkitConfigured",
-                          getenv("MAPKIT_JS_TOKEN") && getenv("MAPKIT_JS_TOKEN")[0]);
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     int rc = send_json(fd, 200, "OK", root, "no-store");
     cJSON_Delete(root);
     return rc;
@@ -907,8 +1252,11 @@ static int handle_lines(int fd, NetworkKind network)
     cJSON *items;
     cJSON *stats;
 
-    if (network == NETWORK_TLS) {
-        if (ensure_toulouse_snapshot() < 0) {
+    if (network_is_live(network) || network == NETWORK_TLS) {
+        int nlines = 0;
+        const ToulouseLine *lines = network_live_lines(network, &nlines);
+
+        if (!lines) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to load lines.");
         }
 
@@ -919,15 +1267,26 @@ static int handle_lines(int fd, NetworkKind network)
         add_network_to_root(root, network);
         cJSON_AddItemToObject(root, "items", items);
         cJSON_AddItemToObject(root, "stats", stats);
-        cJSON_AddNumberToObject(stats, "total", g_tls_nlines);
-        cJSON_AddNumberToObject(stats, "active", g_tls_nlines);
+        cJSON_AddNumberToObject(stats, "total", nlines);
+        cJSON_AddNumberToObject(stats, "active", nlines);
         cJSON_AddNumberToObject(stats, "tram",
-                                count_toulouse_lines_type(g_tls_lines, g_tls_nlines, "Metro") +
-                                count_toulouse_lines_type(g_tls_lines, g_tls_nlines, "Tram"));
+                                network == NETWORK_TLS
+                                    ? count_toulouse_lines_type(lines, nlines, "Metro")
+                                        + count_toulouse_lines_type(lines, nlines, "Tram")
+                                    : count_live_lines_rail(lines, nlines));
         cJSON_AddNumberToObject(stats, "bus",
-                                count_toulouse_lines_type(g_tls_lines, g_tls_nlines, "Bus"));
-        for (int i = 0; i < g_tls_nlines; i++) {
-            cJSON_AddItemToArray(items, toulouse_line_to_json(&g_tls_lines[i]));
+                                network == NETWORK_TLS
+                                    ? count_toulouse_lines_type(lines, nlines, "Bus")
+                                    : count_live_lines_bus(lines, nlines));
+        cJSON_AddNumberToObject(stats, "other",
+                                nlines - (network == NETWORK_TLS
+                                              ? count_toulouse_lines_type(lines, nlines, "Metro")
+                                                    + count_toulouse_lines_type(lines, nlines, "Tram")
+                                                    + count_toulouse_lines_type(lines, nlines, "Bus")
+                                              : count_live_lines_rail(lines, nlines)
+                                                    + count_live_lines_bus(lines, nlines)));
+        for (int i = 0; i < nlines; i++) {
+            cJSON_AddItemToArray(items, toulouse_line_to_json(&lines[i]));
         }
 
         int rc = send_json(fd, 200, "OK", root, "max-age=15");
@@ -967,14 +1326,16 @@ static int handle_alerts(int fd, NetworkKind network)
     cJSON *items;
     cJSON *stats;
 
-    if (network == NETWORK_TLS) {
+    if (network_is_live(network) || network == NETWORK_TLS) {
         ToulouseAlert alerts[MAX_ALERTS];
+        int nlines = 0;
+        const ToulouseLine *lines = network_live_lines(network, &nlines);
         int nalerts;
 
-        if (ensure_toulouse_snapshot() < 0) {
+        if (!lines) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to load alerts.");
         }
-        nalerts = fetch_toulouse_alerts(alerts, MAX_ALERTS);
+        nalerts = fetch_network_live_alerts(network, alerts, MAX_ALERTS);
         if (nalerts < 0) return send_error_json(fd, 503, "upstream_unavailable", "Unable to load alerts.");
 
         root = cJSON_CreateObject();
@@ -992,7 +1353,7 @@ static int handle_alerts(int fd, NetworkKind network)
         cJSON_AddNumberToObject(stats, "impactedLines", count_toulouse_alerted_lines(alerts, nalerts));
 
         for (int i = 0; i < nalerts; i++) {
-            cJSON_AddItemToArray(items, toulouse_alert_to_json(&alerts[i], toulouse_primary_alert_line(&alerts[i])));
+            cJSON_AddItemToArray(items, toulouse_alert_to_json(&alerts[i], primary_alert_line(&alerts[i], lines, nlines)));
         }
 
         int rc = send_json(fd, 200, "OK", root, "max-age=15");
@@ -1032,7 +1393,7 @@ static int handle_alerts(int fd, NetworkKind network)
     }
 }
 
-static int handle_stop_groups(int fd, NetworkKind network)
+static int handle_stop_groups(int fd, const HttpRequest *req, NetworkKind network)
 {
     cJSON *root;
     cJSON *items;
@@ -1055,8 +1416,10 @@ static int handle_stop_groups(int fd, NetworkKind network)
         int rc = send_json(fd, 200, "OK", root, "max-age=300");
         cJSON_Delete(root);
         return rc;
-    } else {
-        if (ensure_stop_groups() < 0) return send_error_json(fd, 503, "upstream_unavailable", "Unable to load stop groups.");
+    } else if (network == NETWORK_BDX) {
+        if (ensure_stop_groups() < 0 || ensure_stop_map() < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load stop groups.");
+        }
 
         root = cJSON_CreateObject();
         items = cJSON_CreateArray();
@@ -1071,10 +1434,50 @@ static int handle_stop_groups(int fd, NetworkKind network)
         int rc = send_json(fd, 200, "OK", root, "max-age=300");
         cJSON_Delete(root);
         return rc;
+    } else {
+        ToulouseStop stops[MAX_STOPS];
+        int nstops;
+        int line_gid = 0;
+        int line_rc = request_line_gid(req, &line_gid);
+        const ToulouseLine *line;
+
+        if (line_rc < 0) {
+            return send_error_json(fd, 400, "invalid_line", "Use a numeric line query parameter.");
+        }
+        if (line_rc == 0) {
+            return send_error_json(fd, 400, "missing_line", "Use line=<gid> for network=idfm or network=sncf.");
+        }
+
+        if (!network_live_lines(network, NULL)) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");
+        }
+        line = find_network_live_line_by_id(network, line_gid);
+        if (!line) return send_error_json(fd, 404, "line_not_found", "Unknown line.");
+
+        nstops = fetch_network_live_stops(network, line, stops, MAX_STOPS);
+        if (nstops < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load stop groups.");
+        }
+        if (nstops > 1) qsort(stops, (size_t)nstops, sizeof(ToulouseStop), cmp_toulouse_stops);
+
+        root = cJSON_CreateObject();
+        items = cJSON_CreateArray();
+        add_generated_at(root);
+        add_network_to_root(root, network);
+        cJSON_AddItemToObject(root, "line", toulouse_line_to_json(line));
+        cJSON_AddItemToObject(root, "items", items);
+        cJSON_AddNumberToObject(root, "total", nstops);
+        for (int i = 0; i < nstops; i++) {
+            cJSON_AddItemToArray(items, toulouse_stop_to_json(&stops[i]));
+        }
+
+        int rc = send_json(fd, 200, "OK", root, "max-age=300");
+        cJSON_Delete(root);
+        return rc;
     }
 }
 
-static int handle_stop_group_passages(int fd, const char *key, NetworkKind network)
+static int handle_stop_group_passages(int fd, const char *key, const HttpRequest *req, NetworkKind network)
 {
     int delayed = 0;
     int live = 0;
@@ -1136,7 +1539,7 @@ static int handle_stop_group_passages(int fd, const char *key, NetworkKind netwo
         int rc = send_json(fd, 200, "OK", root, "max-age=15");
         cJSON_Delete(root);
         return rc;
-    } else {
+    } else if (network == NETWORK_BDX) {
         const StopGroup *group;
         Passage passages[MAX_PASSAGES];
         Line lines[MAX_LINES];
@@ -1194,6 +1597,78 @@ static int handle_stop_group_passages(int fd, const char *key, NetworkKind netwo
         int rc = send_json(fd, 200, "OK", root, "max-age=15");
         cJSON_Delete(root);
         return rc;
+    } else {
+        ToulouseStop stops[MAX_STOPS];
+        ToulousePassage passages[MAX_PASSAGES];
+        int nstops;
+        int npassages;
+        int line_gid = 0;
+        int line_rc = request_line_gid(req, &line_gid);
+        const ToulouseLine *line;
+        const ToulouseStop *stop;
+
+        if (line_rc < 0) {
+            return send_error_json(fd, 400, "invalid_line", "Use a numeric line query parameter.");
+        }
+        if (line_rc == 0) {
+            return send_error_json(fd, 400, "missing_line", "Use line=<gid> for network=idfm or network=sncf.");
+        }
+
+        if (!network_live_lines(network, NULL)) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");
+        }
+        line = find_network_live_line_by_id(network, line_gid);
+        if (!line) return send_error_json(fd, 404, "line_not_found", "Unknown line.");
+
+        nstops = fetch_network_live_stops(network, line, stops, MAX_STOPS);
+        if (nstops < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to prepare passage data.");
+        }
+
+        stop = find_live_stop_by_key(stops, nstops, key);
+        if (!stop) return send_error_json(fd, 404, "stop_group_not_found", "Unknown stop group.");
+
+        npassages = fetch_network_live_passages(network, line, stop, passages, MAX_PASSAGES);
+        if (npassages < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to prepare passage data.");
+        }
+        if (npassages > 1) qsort(passages, (size_t)npassages, sizeof(ToulousePassage), cmp_toulouse_passages);
+
+        root = cJSON_CreateObject();
+        items = cJSON_CreateArray();
+        stats = cJSON_CreateObject();
+        add_generated_at(root);
+        add_network_to_root(root, network);
+        cJSON_AddItemToObject(root, "line", toulouse_line_to_json(line));
+        cJSON_AddItemToObject(root, "items", items);
+        cJSON_AddItemToObject(root, "stats", stats);
+        cJSON_AddItemToObject(root, "group", toulouse_stop_to_json(stop));
+
+        for (int i = 0; i < npassages; i++) {
+            int dup = 0;
+
+            if (passages[i].realtime) live++;
+            if (passages[i].delayed) delayed++;
+            if (passages[i].line_code[0]) {
+                for (int j = 0; j < i; j++) {
+                    if (strcmp(passages[j].line_code, passages[i].line_code) == 0) {
+                        dup = 1;
+                        break;
+                    }
+                }
+                if (!dup) unique_lines++;
+            }
+            cJSON_AddItemToArray(items, toulouse_passage_to_json(&passages[i], line));
+        }
+
+        cJSON_AddNumberToObject(stats, "total", npassages);
+        cJSON_AddNumberToObject(stats, "live", live);
+        cJSON_AddNumberToObject(stats, "delayed", delayed);
+        cJSON_AddNumberToObject(stats, "lines", unique_lines);
+
+        int rc = send_json(fd, 200, "OK", root, "max-age=15");
+        cJSON_Delete(root);
+        return rc;
     }
 }
 
@@ -1209,23 +1684,24 @@ static int handle_vehicles(int fd, int line_gid, NetworkKind network)
     cJSON *items;
     cJSON *stats;
 
-    if (network == NETWORK_TLS) {
+    if (network_is_live(network) || network == NETWORK_TLS) {
         ToulouseVehicle vehicles[MAX_VEHICLES];
         ToulouseAlert alerts[MAX_ALERTS];
         int nvehicles;
         int nalerts;
         const ToulouseLine *line;
 
-        if (ensure_toulouse_snapshot() < 0) {
+        if (!network_live_lines(network, NULL)) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");
         }
-        line = find_toulouse_line_by_id(g_tls_lines, g_tls_nlines, line_gid);
-        if (!line) return send_error_json(fd, 404, "line_not_found", "Unknown line.");
-
-        nvehicles = fetch_toulouse_vehicles(line, vehicles, MAX_VEHICLES);
+        line = find_network_live_line_by_id(network, line_gid);
+        if (!line) {
+            return send_error_json(fd, 404, "line_not_found", "Unknown line.");
+        }
+        nvehicles = fetch_network_live_vehicles(network, line, vehicles, MAX_VEHICLES);
         if (nvehicles < 0) return send_error_json(fd, 503, "upstream_unavailable", "Unable to load vehicles.");
 
-        nalerts = fetch_toulouse_alerts(alerts, MAX_ALERTS);
+        nalerts = fetch_network_live_alerts(network, alerts, MAX_ALERTS);
         if (nalerts < 0) nalerts = 0;
 
         root = cJSON_CreateObject();
@@ -1323,6 +1799,12 @@ static int handle_vehicles(int fd, int line_gid, NetworkKind network)
 static int handle_map_boundaries(int fd, NetworkKind network)
 {
     cJSON *root;
+
+    if (!network_supports_boundaries(network)) {
+        return send_error_json(fd, 404, "map_not_available",
+                               "Boundary data is only available for Bordeaux and Toulouse.");
+    }
+
     if (network == NETWORK_TLS) {
         if (ensure_toulouse_metro_map() < 0) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to load Toulouse boundary data.");
@@ -1341,23 +1823,62 @@ static int handle_map_boundaries(int fd, NetworkKind network)
     return rc;
 }
 
-static int handle_mapkit_token(int fd)
+static int handle_line_route(int fd, int line_gid, NetworkKind network)
 {
+    LineRouteMap route;
     cJSON *root;
-    const char *token = getenv("MAPKIT_JS_TOKEN");
-    if (!token || !token[0]) {
-        return send_error_json(fd, 503, "mapkit_not_configured",
-                               "Set MAPKIT_JS_TOKEN before requesting a MapKit token.");
+    int rc;
+
+    if (!network_supports_route(network)) {
+        return send_error_json(fd, 404, "route_not_available",
+                               "Line route geometry is only available for Bordeaux and Toulouse.");
     }
-    root = cJSON_CreateObject();
-    add_generated_at(root);
-    cJSON_AddStringToObject(root, "token", token);
-    int rc = send_json(fd, 200, "OK", root, "no-store");
-    cJSON_Delete(root);
-    return rc;
+
+    if (network == NETWORK_TLS) {
+        const ToulouseLine *line;
+
+        if (ensure_toulouse_snapshot() < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");
+        }
+        line = find_toulouse_line_by_id(g_tls_lines, g_tls_nlines, line_gid);
+        if (!line) return send_error_json(fd, 404, "line_not_found", "Unknown line.");
+        if (fetch_toulouse_line_route(line, &route) < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load route geometry.");
+        }
+
+        root = line_route_to_json(&route);
+        add_generated_at(root);
+        add_network_to_root(root, network);
+        cJSON_AddItemToObject(root, "line", toulouse_line_to_json(line));
+        rc = send_json(fd, 200, "OK", root, "max-age=300");
+        cJSON_Delete(root);
+        return rc;
+    } else {
+        Line lines[MAX_LINES];
+        int nlines = fetch_lines(lines, MAX_LINES);
+        const Line *line;
+
+        if (nlines < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");
+        }
+        qsort(lines, (size_t)nlines, sizeof(Line), cmp_lines);
+        line = find_line_by_gid(lines, nlines, line_gid);
+        if (!line) return send_error_json(fd, 404, "line_not_found", "Unknown line.");
+        if (fetch_line_route(line_gid, &route) < 0) {
+            return send_error_json(fd, 503, "upstream_unavailable", "Unable to load route geometry.");
+        }
+
+        root = line_route_to_json(&route);
+        add_generated_at(root);
+        add_network_to_root(root, network);
+        cJSON_AddItemToObject(root, "line", line_to_json(line));
+        rc = send_json(fd, 200, "OK", root, "max-age=300");
+        cJSON_Delete(root);
+        return rc;
+    }
 }
 
-static int handle_root(int fd)
+static int handle_api_root(int fd)
 {
     cJSON *root = cJSON_CreateObject();
     cJSON *endpoints = cJSON_CreateArray();
@@ -1370,14 +1891,18 @@ static int handle_root(int fd)
     cJSON_AddItemToObject(root, "supportedNetworks", networks);
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_BDX)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_TLS)));
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/health"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/vehicles?network=bdx|tls"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls|idfm|sncf"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls|idfm|sncf"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/vehicles?network=bdx|tls|idfm|sncf"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/route?network=bdx|tls"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups?network=bdx|tls"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups?network=idfm|sncf&line=:gid"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups/:key/passages?network=bdx|tls"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups/:key/passages?network=idfm|sncf&line=:gid"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/map/boundaries?network=bdx|tls"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/mapkit/token"));
     int rc = send_json(fd, 200, "OK", root, "no-store");
     cJSON_Delete(root);
     return rc;
@@ -1391,30 +1916,34 @@ static int route_request(int fd, const HttpRequest *req)
 
     if (strcmp(req->method, "OPTIONS") == 0) return send_response(fd, 204, "No Content", "text/plain", "", "no-store");
     if (strcmp(req->method, "GET") != 0) return send_error_json(fd, 405, "method_not_allowed", "Only GET and OPTIONS are supported.");
+    if (strcmp(req->path, "/") == 0) return handle_api_root(fd);
+    if (strcmp(req->path, "/api") == 0) return handle_api_root(fd);
+    if (strcmp(req->path, "/api/health") == 0) return handle_health(fd);
+
     if (request_network(req, &network) < 0) {
-        return send_error_json(fd, 400, "invalid_network", "Use network=bdx or network=tls.");
+        return send_error_json(fd, 400, "invalid_network", "Use network=bdx, network=tls, network=idfm, or network=sncf.");
     }
 
-    if (strcmp(req->path, "/") == 0) return handle_root(fd);
-    if (strcmp(req->path, "/api/health") == 0) return handle_health(fd);
     if (strcmp(req->path, "/api/lines") == 0) return handle_lines(fd, network);
     if (strcmp(req->path, "/api/alerts") == 0) return handle_alerts(fd, network);
-    if (strcmp(req->path, "/api/stop-groups") == 0) return handle_stop_groups(fd, network);
+    if (strcmp(req->path, "/api/stop-groups") == 0) return handle_stop_groups(fd, req, network);
     if (strcmp(req->path, "/api/map/boundaries") == 0) return handle_map_boundaries(fd, network);
-    if (strcmp(req->path, "/api/mapkit/token") == 0) return handle_mapkit_token(fd);
-    if (sscanf(req->path, "/api/lines/%d/vehicles", &gid) == 1) return handle_vehicles(fd, gid, network);
+    if (match_line_child_path(req->path, "/route", &gid)) return handle_line_route(fd, gid, network);
+    if (match_line_child_path(req->path, "/vehicles", &gid)) return handle_vehicles(fd, gid, network);
 
     prefix = "/api/stop-groups/";
     if (strncmp(req->path, prefix, strlen(prefix)) == 0) {
         const char *rest = req->path + strlen(prefix);
         const char *slash = strstr(rest, "/passages");
         char key[128];
+        char encoded_key[128];
         if (slash && strcmp(slash, "/passages") == 0) {
             size_t len = (size_t)(slash - rest);
-            if (len < sizeof(key)) {
-                memcpy(key, rest, len);
-                key[len] = '\0';
-                return handle_stop_group_passages(fd, key, network);
+            if (len < sizeof(encoded_key)) {
+                memcpy(encoded_key, rest, len);
+                encoded_key[len] = '\0';
+                url_decode_component(encoded_key, key, sizeof(key));
+                return handle_stop_group_passages(fd, key, req, network);
             }
         }
     }
@@ -1459,6 +1988,7 @@ int main(int argc, char **argv)
 
     signal(SIGINT, on_signal);
     signal(SIGTERM, on_signal);
+    signal(SIGPIPE, on_sigpipe);
 
     api_init();
 

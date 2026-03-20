@@ -4,12 +4,15 @@
 #include "data.h"
 #include "filter.h"
 #include "line_colors.h"
+#include "itinerary.h"
 #include "map_math.h"
 #include "network.h"
 #include "ui.h"
 
 #include <ncurses.h>
 #include <locale.h>
+#include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -72,6 +75,7 @@ static const Theme themes[] = {
 /* ── runtime state ───────────────────────────────────────────────── */
 
 static AppState g_app;
+static NvtItineraryState g_itinerary;
 
 #define g_lines (g_app.bdx.lines)
 #define g_nlines (g_app.bdx.nlines)
@@ -797,6 +801,7 @@ static void switch_network(NvtNetwork net)
 {
     if (net == g_network) return;
     nvt_switch_network(&g_app, net);
+    nvt_itinerary_reset(&g_itinerary);
 }
 
 static int refresh_current_network_overview(const char *success_msg)
@@ -930,6 +935,381 @@ static void ensure_toulouse_line_route(void)
     if (strcmp(g_tls_line_route_ref, line->ref) == 0) return;
     snprintf(g_tls_line_route_ref, sizeof(g_tls_line_route_ref), "%s", line->ref);
     g_has_tls_line_route = fetch_toulouse_line_route(line, &g_tls_line_route) > 0;
+}
+
+static void xml_decode_basic_entities(const char *src, char *dst, size_t dst_sz)
+{
+    size_t di = 0;
+
+    if (!dst_sz) return;
+    dst[0] = '\0';
+    if (!src) return;
+
+    for (size_t si = 0; src[si] && di + 1 < dst_sz; ) {
+        if (strncmp(src + si, "&amp;", 5) == 0) {
+            dst[di++] = '&';
+            si += 5;
+        } else if (strncmp(src + si, "&apos;", 6) == 0) {
+            dst[di++] = '\'';
+            si += 6;
+        } else if (strncmp(src + si, "&quot;", 6) == 0) {
+            dst[di++] = '"';
+            si += 6;
+        } else if (strncmp(src + si, "&lt;", 4) == 0) {
+            dst[di++] = '<';
+            si += 4;
+        } else if (strncmp(src + si, "&gt;", 4) == 0) {
+            dst[di++] = '>';
+            si += 4;
+        } else {
+            dst[di++] = src[si++];
+        }
+    }
+    dst[di] = '\0';
+}
+
+static int xml_extract_tag_value(const char *line, const char *tag, char *out, size_t out_sz)
+{
+    char open[64];
+    char close[64];
+    const char *start;
+    const char *end;
+    size_t len;
+    char raw[192];
+
+    if (!line || !tag || !out || !out_sz) return 0;
+    snprintf(open, sizeof(open), "<%s>", tag);
+    snprintf(close, sizeof(close), "</%s>", tag);
+    start = strstr(line, open);
+    if (!start) return 0;
+    start += strlen(open);
+    end = strstr(start, close);
+    if (!end || end <= start) return 0;
+    len = (size_t)(end - start);
+    if (len >= sizeof(raw)) len = sizeof(raw) - 1;
+    memcpy(raw, start, len);
+    raw[len] = '\0';
+    xml_decode_basic_entities(raw, out, out_sz);
+    return 1;
+}
+
+static void itinerary_set_terminal_labels(void)
+{
+    if (g_itinerary.nstops <= 0) return;
+    snprintf(g_itinerary.direction_backward, sizeof(g_itinerary.direction_backward),
+             "%s", g_itinerary.stops[0].name);
+    snprintf(g_itinerary.direction_forward, sizeof(g_itinerary.direction_forward),
+             "%s", g_itinerary.stops[g_itinerary.nstops - 1].name);
+}
+
+static void itinerary_finalize_load(void)
+{
+    nvt_itinerary_sort_by_order(&g_itinerary);
+    itinerary_set_terminal_labels();
+    g_itinerary.ready = g_itinerary.nstops > 0;
+    g_itinerary.origin = g_itinerary.nstops > 0 ? 0 : -1;
+    g_itinerary.destination = g_itinerary.nstops > 1 ? g_itinerary.nstops - 1 : g_itinerary.origin;
+    g_itinerary.cursor = 0;
+    g_itinerary.scroll = 0;
+    nvt_itinerary_rebuild_filter(&g_itinerary);
+}
+
+static int bordeaux_line_file_matches(const char *path, const Line *line, const char *wanted_code)
+{
+    FILE *fp;
+    char row[512];
+    char short_name[32] = "";
+    char public_code[32] = "";
+    char line_name[96] = "";
+    int in_line = 0;
+
+    fp = fopen(path, "r");
+    if (!fp) return 0;
+
+    while (fgets(row, sizeof(row), fp)) {
+        if (!in_line) {
+            if (strstr(row, "<Line ")) in_line = 1;
+            continue;
+        }
+        if (xml_extract_tag_value(row, "ShortName", short_name, sizeof(short_name))) continue;
+        if (xml_extract_tag_value(row, "PublicCode", public_code, sizeof(public_code))) continue;
+        if (!line_name[0]) xml_extract_tag_value(row, "Name", line_name, sizeof(line_name));
+        if (strstr(row, "</Line>")) break;
+    }
+
+    fclose(fp);
+    if (wanted_code[0] && (strcmp(short_name, wanted_code) == 0 || strcmp(public_code, wanted_code) == 0)) return 1;
+    if (line && line->libelle[0] && strcmp(line_name, line->libelle) == 0) return 1;
+    return 0;
+}
+
+static int find_bordeaux_line_file(const Line *line, char *path, size_t path_sz)
+{
+    char code[16];
+    char compact[16];
+    size_t ci = 0;
+    DIR *dir;
+    struct dirent *entry;
+
+    if (!line || !path || !path_sz) return -1;
+    line_code(line, code, sizeof(code));
+
+    snprintf(path, path_sz, "lines/line_%s.xml", code);
+    {
+        FILE *probe = fopen(path, "r");
+        if (probe) {
+            fclose(probe);
+            return 0;
+        }
+    }
+
+    for (size_t i = 0; code[i] && ci + 1 < sizeof(compact); i++) {
+        if (code[i] == ' ' || code[i] == '/') continue;
+        compact[ci++] = code[i];
+    }
+    compact[ci] = '\0';
+    if (compact[0]) {
+        snprintf(path, path_sz, "lines/line_%s.xml", compact);
+        {
+            FILE *probe = fopen(path, "r");
+            if (probe) {
+                fclose(probe);
+                return 0;
+            }
+        }
+    }
+
+    dir = opendir("lines");
+    if (!dir) return -1;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strncmp(entry->d_name, "line_", 5) != 0) continue;
+        if (!strstr(entry->d_name, ".xml")) continue;
+        snprintf(path, path_sz, "lines/%s", entry->d_name);
+        if (bordeaux_line_file_matches(path, line, code)) {
+            closedir(dir);
+            return 0;
+        }
+    }
+
+    closedir(dir);
+    path[0] = '\0';
+    return -1;
+}
+
+static int select_line_for_itinerary(void)
+{
+    switch (g_network) {
+    case NET_TLS:
+        if (g_screen == SCR_LINES && g_ntls_filtered > 0) g_tls_sel_line = g_tls_filtered[g_tls_cursor];
+        else if (g_tls_sel_line < 0 && g_ntls_filtered > 0) g_tls_sel_line = g_tls_filtered[g_tls_cursor];
+        return (g_tls_sel_line >= 0 && g_tls_sel_line < g_ntls_lines) ? 0 : -1;
+    case NET_IDFM:
+    case NET_SNCF:
+        if (g_screen == SCR_LINES && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
+        else if (g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
+        return (g_live_sel_line >= 0 && g_live_sel_line < g_nlive_lines) ? 0 : -1;
+    case NET_BDX:
+    default:
+        if (g_screen == SCR_LINES && g_nfiltered > 0) g_sel_line = g_filtered[g_cursor];
+        return (g_sel_line >= 0 && g_sel_line < g_nlines) ? 0 : -1;
+    }
+}
+
+static int itinerary_matches_current_line(void)
+{
+    char code[16];
+
+    if (!g_itinerary.ready || g_itinerary.network_kind != (int)g_network) return 0;
+
+    switch (g_network) {
+    case NET_TLS: {
+        ToulouseLine *line = selected_toulouse_line();
+        return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
+    }
+    case NET_IDFM:
+    case NET_SNCF: {
+        ToulouseLine *line = selected_idfm_line();
+        return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
+    }
+    case NET_BDX:
+    default: {
+        const Line *line = (g_sel_line >= 0 && g_sel_line < g_nlines) ? &g_lines[g_sel_line] : NULL;
+        if (!line) return 0;
+        line_code(line, code, sizeof(code));
+        return strcmp(g_itinerary.line_code, code) == 0 && strcmp(g_itinerary.line_name, line->libelle) == 0;
+    }
+    }
+}
+
+static int load_bordeaux_itinerary(void)
+{
+    const Line *line = (g_sel_line >= 0 && g_sel_line < g_nlines) ? &g_lines[g_sel_line] : NULL;
+    FILE *fp;
+    char path[256];
+    char row[512];
+    char name[96] = "";
+    char value[64];
+    char code[16];
+    double lon = 0.0;
+    double lat = 0.0;
+    int in_stop = 0;
+    int fallback = 0;
+
+    if (!line) return -1;
+    if (find_bordeaux_line_file(line, path, sizeof(path)) < 0) return -1;
+
+    line_code(line, code, sizeof(code));
+    nvt_itinerary_prepare(&g_itinerary, g_network, "", code, line->libelle);
+    ensure_line_route();
+
+    fp = fopen(path, "r");
+    if (!fp) return -1;
+
+    while (fgets(row, sizeof(row), fp)) {
+        if (strstr(row, "<ScheduledStopPoint ")) {
+            in_stop = 1;
+            name[0] = '\0';
+            lon = 0.0;
+            lat = 0.0;
+            continue;
+        }
+        if (!in_stop) continue;
+        if (xml_extract_tag_value(row, "Name", name, sizeof(name))) continue;
+        if (xml_extract_tag_value(row, "Longitude", value, sizeof(value))) {
+            lon = atof(value);
+            continue;
+        }
+        if (xml_extract_tag_value(row, "Latitude", value, sizeof(value))) {
+            lat = atof(value);
+            continue;
+        }
+        if (strstr(row, "</ScheduledStopPoint>")) {
+            int order = g_has_line_route ? nvt_itinerary_route_progress(&g_line_route, lon, lat) : -1;
+
+            if (order < 0) order = fallback;
+            nvt_itinerary_add_stop_unique(&g_itinerary, "", name, line->vehicule, lon, lat, order, fallback);
+            fallback++;
+            in_stop = 0;
+        }
+    }
+
+    fclose(fp);
+    itinerary_finalize_load();
+    return g_itinerary.nstops;
+}
+
+static int load_toulouse_itinerary(void)
+{
+    ToulouseLine *line = selected_toulouse_line();
+    int fallback = 0;
+
+    if (!line) return -1;
+
+    nvt_itinerary_prepare(&g_itinerary, g_network, line->ref, line->code, line->libelle);
+    ensure_toulouse_line_route();
+
+    for (int i = 0; i < g_ntls_stops; i++) {
+        int order;
+
+        if (!nvt_toulouse_list_has_token(g_tls_stops[i].lignes, line->code)) continue;
+        order = g_has_tls_line_route ? nvt_itinerary_route_progress(&g_tls_line_route, g_tls_stops[i].lon, g_tls_stops[i].lat) : -1;
+        if (order < 0) order = fallback;
+        nvt_itinerary_add_stop_unique(
+            &g_itinerary,
+            g_tls_stops[i].ref,
+            g_tls_stops[i].libelle,
+            g_tls_stops[i].commune,
+            g_tls_stops[i].lon,
+            g_tls_stops[i].lat,
+            order,
+            i
+        );
+        fallback++;
+    }
+
+    itinerary_finalize_load();
+    return g_itinerary.nstops;
+}
+
+static int load_live_itinerary(void)
+{
+    static ToulouseStop loaded_stops[MAX_STOPS];
+    ToulouseLine *line = selected_idfm_line();
+    int nstops;
+
+    if (!line) return -1;
+
+    nvt_itinerary_prepare(&g_itinerary, g_network, line->ref, line->code, line->libelle);
+    nstops = live_network_is_sncf()
+           ? fetch_sncf_line_stops(line, loaded_stops, MAX_STOPS)
+           : fetch_idfm_line_stops(line, loaded_stops, MAX_STOPS);
+    if (nstops < 0) return -1;
+
+    for (int i = 0; i < nstops; i++) {
+        nvt_itinerary_add_stop_unique(
+            &g_itinerary,
+            loaded_stops[i].ref,
+            loaded_stops[i].libelle,
+            loaded_stops[i].commune[0] ? loaded_stops[i].commune : loaded_stops[i].adresse,
+            loaded_stops[i].lon,
+            loaded_stops[i].lat,
+            i,
+            i
+        );
+    }
+
+    itinerary_finalize_load();
+    return g_itinerary.nstops;
+}
+
+static int load_current_network_itinerary(int force_reload)
+{
+    int count;
+
+    if (select_line_for_itinerary() < 0) {
+        toast("Selectionnez d'abord une ligne");
+        return -1;
+    }
+    if (!force_reload && itinerary_matches_current_line()) return g_itinerary.nstops;
+
+    switch (g_network) {
+    case NET_TLS:
+        count = load_toulouse_itinerary();
+        break;
+    case NET_IDFM:
+    case NET_SNCF:
+        count = load_live_itinerary();
+        break;
+    case NET_BDX:
+    default:
+        count = load_bordeaux_itinerary();
+        break;
+    }
+
+    if (count <= 0) {
+        nvt_itinerary_reset(&g_itinerary);
+        toast("Impossible de calculer l'itineraire pour cette ligne");
+        return -1;
+    }
+
+    toast("%d arrets charges pour %s", count,
+          g_itinerary.line_code[0] ? g_itinerary.line_code : g_itinerary.line_name);
+    return count;
+}
+
+static int open_current_network_itinerary(int force_reload)
+{
+    if (load_current_network_itinerary(force_reload) < 0) return -1;
+    g_screen = SCR_ITINERARY;
+    return 0;
+}
+
+static void swap_itinerary_endpoints(void)
+{
+    int tmp = g_itinerary.origin;
+    g_itinerary.origin = g_itinerary.destination;
+    g_itinerary.destination = tmp;
 }
 
 static void reset_atlas_map(void)
@@ -1266,8 +1646,8 @@ static void draw_header(const char *title, const char *bc)
 
 static void draw_tabs(void)
 {
-    static const char *lb[]={"Lignes","Vehicules","Alertes","Arrets","Passages"};
-    static const NvtScreen sc[]={SCR_LINES,SCR_VEHICLES,SCR_ALERTS,SCR_STOP_SEARCH,SCR_PASSAGES};
+    static const char *lb[]={"Lignes","Vehicules","Alertes","Arrets","Passages","Itineraire"};
+    static const NvtScreen sc[]={SCR_LINES,SCR_VEHICLES,SCR_ALERTS,SCR_STOP_SEARCH,SCR_PASSAGES,SCR_ITINERARY};
     int alert_count;
 
     if (g_network == NET_TLS) alert_count = g_ntls_alerts;
@@ -1278,7 +1658,7 @@ static void draw_tabs(void)
     attron(COLOR_PAIR(CP_TAB_BG)); mvhline(1,0,' ',COLS); attroff(COLOR_PAIR(CP_TAB_BG));
 
     int x=0;
-    for(int i=0;i<5;i++){
+    for(int i=0;i<6;i++){
         int act=(sc[i]==g_screen);
         if(act){
             /* dark→accent transition */
@@ -1375,9 +1755,11 @@ static void draw_help(void)
            {"Ctrl+U / Ctrl+D","Demi-page"},{"g / G","Debut / Fin"}},
     act[]={{"Enter","Selectionner / ouvrir ligne"},{"/ ","Rechercher"},
            {"Esc","Effacer filtre / Retour"},{"r / F5","Rafraichir"},
-           {"+ / - / 0","Zoom carte + detail"},{"n","Menu reseaux"}},
+           {"+ / - / 0","Zoom carte + detail"},{"i / 6","Calculateur d'itineraire"},
+           {"o / d / x","Depart, arrivee, inversion"},{"n","Menu reseaux"}},
     scr[]={{"1","Lignes"},{"2","Vehicules"},{"3 / a","Alertes"},
-           {"4 / p","Arrets"},{"5","Passages"},{"q","Retour / Quitter"}};
+           {"4 / p","Arrets"},{"5","Passages"},{"6 / i","Itineraire"},
+           {"q","Retour / Quitter"}};
     int nnav=(int)(sizeof(nav)/sizeof(nav[0]));
     int nact=(int)(sizeof(act)/sizeof(act[0]));
     int nscr=(int)(sizeof(scr)/sizeof(scr[0]));
@@ -3313,6 +3695,245 @@ static void draw_passages(void)
     draw_toast_msg();
     char r[32]; snprintf(r,sizeof(r),"%d pass.",g_npassages);
     draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme",r);
+}
+
+/* ── Screen: Itinerary ───────────────────────────────────────────── */
+
+static void draw_itinerary_line_badge(int y, int x)
+{
+    if (g_network == NET_TLS) {
+        ToulouseLine *line = selected_toulouse_line();
+        if (line) draw_toulouse_badge(y, x, line);
+    } else if (g_network == NET_IDFM || g_network == NET_SNCF) {
+        ToulouseLine *line = selected_idfm_line();
+        if (line) draw_idfm_badge(y, x, line);
+    } else if (g_sel_line >= 0 && g_sel_line < g_nlines) {
+        draw_line_badge(y, x, &g_lines[g_sel_line]);
+    }
+}
+
+static const char *itinerary_direction_target(void)
+{
+    int dir = nvt_itinerary_direction(&g_itinerary);
+
+    if (dir > 0) return g_itinerary.direction_forward[0] ? g_itinerary.direction_forward : "--";
+    if (dir < 0) return g_itinerary.direction_backward[0] ? g_itinerary.direction_backward : "--";
+    return "--";
+}
+
+static void draw_itinerary(void)
+{
+    const NvtItineraryStop *origin = (g_itinerary.origin >= 0 && g_itinerary.origin < g_itinerary.nstops)
+                                   ? &g_itinerary.stops[g_itinerary.origin] : NULL;
+    const NvtItineraryStop *destination = (g_itinerary.destination >= 0 && g_itinerary.destination < g_itinerary.nstops)
+                                        ? &g_itinerary.stops[g_itinerary.destination] : NULL;
+    int hops = nvt_itinerary_hops(&g_itinerary);
+    int top = 3;
+    char title[128];
+    char crumb[128];
+    char buf[32];
+
+    snprintf(title, sizeof(title), "Itinerary // %s", network_name());
+    if (g_itinerary.line_name[0]) {
+        snprintf(crumb, sizeof(crumb), "%s%s%s",
+                 g_itinerary.line_code[0] ? g_itinerary.line_code : "",
+                 g_itinerary.line_code[0] && g_itinerary.line_name[0] ? " " U_ARROW " " : "",
+                 g_itinerary.line_name);
+    } else {
+        snprintf(crumb, sizeof(crumb), "selectionnez une ligne");
+    }
+
+    draw_header(title, crumb);
+    draw_tabs();
+
+    if (COLS >= 94 && LINES >= 24) {
+        int gap = 1;
+        int cw = (COLS - 5 - gap * 3) / 4;
+
+        snprintf(buf, sizeof(buf), "%d", g_itinerary.nstops);
+        stat_card(top, 2, cw, "STOPS", buf, "sequence chargee", g_itinerary.ready ? CP_ACCENT : CP_YELLOW);
+        snprintf(buf, sizeof(buf), "%s", origin ? "SET" : "--");
+        stat_card(top, 2 + cw + gap, cw, "FROM", buf, origin ? origin->name : "choisissez avec o", origin ? CP_GREEN : CP_YELLOW);
+        snprintf(buf, sizeof(buf), "%s", destination ? "SET" : "--");
+        stat_card(top, 2 + (cw + gap) * 2, cw, "TO", buf, destination ? destination->name : "choisissez avec d", destination ? CP_RED : CP_YELLOW);
+        if (!origin || !destination) snprintf(buf, sizeof(buf), "--");
+        else if (hops == 0) snprintf(buf, sizeof(buf), "same");
+        else snprintf(buf, sizeof(buf), "%d", hops);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "HOPS", buf, "nombre d'arrets", hops ? CP_CYAN_T : CP_GREEN);
+        top += 5;
+    }
+
+    if (!g_itinerary.ready) {
+        panel_box(top, 1, LINES - 3, COLS - 2, "Route Calculator", "idle");
+        attron(A_DIM);
+        mvprintw(top + 3, 4, U_INFO" aucune ligne chargee pour l'itineraire");
+        mvprintw(top + 5, 4, "Ouvrez d'abord une ligne puis appuyez sur i ou 6.");
+        attroff(A_DIM);
+        draw_toast_msg();
+        draw_status(" 6/i:ouvrir"U_MDOT"1:lignes"U_MDOT"n:reseaux"U_MDOT"t:theme", "n/a");
+        return;
+    }
+
+    if (COLS >= 108 && LINES - top >= 16) {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int left_w = COLS * 52 / 100;
+        int lx1 = 1;
+        int lx2;
+        int rx1;
+        int rx2 = COLS - 2;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr;
+        int name_w;
+
+        if (left_w < 48) left_w = 48;
+        if (left_w > COLS - 34) left_w = COLS - 34;
+        lx2 = lx1 + left_w - 1;
+        rx1 = lx2 + 1;
+        mr = y2 - list_y;
+        name_w = lx2 - lx1 - 13;
+        if (mr < 1) mr = 1;
+        if (name_w < 18) name_w = 18;
+
+        panel_box(y1, lx1, y2, lx2, "Stop Sequence", g_itinerary.search[0] ? g_itinerary.search : "line order");
+        panel_box(y1, rx1, y2, rx2, "Trip Preview", g_itinerary.line_name);
+
+        attron(A_DIM);
+        mvprintw(head_y, lx1 + 3, "TAG");
+        mvprintw(head_y, lx1 + 9, "STOP");
+        attroff(A_DIM);
+
+        if (g_itinerary.cursor < g_itinerary.scroll) g_itinerary.scroll = g_itinerary.cursor;
+        if (g_itinerary.cursor >= g_itinerary.scroll + mr) g_itinerary.scroll = g_itinerary.cursor - mr + 1;
+
+        for (int i = 0; i < mr && g_itinerary.scroll + i < g_itinerary.nfiltered; i++) {
+            int idx = g_itinerary.filtered[g_itinerary.scroll + i];
+            int row = list_y + i;
+            int selected = (g_itinerary.scroll + i == g_itinerary.cursor);
+            const char *tag = "   ";
+
+            if (selected) {
+                fill_span(row, lx1 + 1, lx2 - 1, CP_SEL, 0);
+                attron(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+                mvaddstr(row, lx1 + 1, U_CBAR);
+                attroff(COLOR_PAIR(CP_CURSOR) | A_BOLD);
+            }
+            if (idx == g_itinerary.origin && idx == g_itinerary.destination) tag = "OD ";
+            else if (idx == g_itinerary.origin) tag = "DEP";
+            else if (idx == g_itinerary.destination) tag = "ARR";
+
+            if (idx == g_itinerary.origin) attron(COLOR_PAIR(CP_GREEN) | A_BOLD);
+            else if (idx == g_itinerary.destination) attron(COLOR_PAIR(CP_RED) | A_BOLD);
+            mvprintw(row, lx1 + 3, "%-3s", tag);
+            if (idx == g_itinerary.origin) attroff(COLOR_PAIR(CP_GREEN) | A_BOLD);
+            else if (idx == g_itinerary.destination) attroff(COLOR_PAIR(CP_RED) | A_BOLD);
+            print_hl(row, lx1 + 9, g_itinerary.stops[idx].name, g_itinerary.search, name_w);
+            if (g_itinerary.stops[idx].meta[0]) {
+                attron(A_DIM);
+                print_fit(row, lx2 - 18, 16, g_itinerary.stops[idx].meta);
+                attroff(A_DIM);
+            }
+        }
+        scrollbar(list_y, mr, g_itinerary.scroll, g_itinerary.nfiltered);
+
+        {
+            int y = y1 + 2;
+            int px = rx1 + 2;
+            int pw = rx2 - rx1 - 3;
+
+            draw_itinerary_line_badge(y, px);
+            attron(A_BOLD);
+            print_fit(y, px + 8, pw - 9, g_itinerary.line_name[0] ? g_itinerary.line_name : g_itinerary.line_code);
+            attroff(A_BOLD);
+            attron(A_DIM);
+            mvprintw(y + 1, px, "Ligne %s", g_itinerary.line_code[0] ? g_itinerary.line_code : "--");
+            attroff(A_DIM);
+
+            kv_line(y + 3, px, 12, "depart", origin ? origin->name : "--", origin ? CP_GREEN : CP_YELLOW);
+            kv_line(y + 4, px, 12, "arrivee", destination ? destination->name : "--", destination ? CP_RED : CP_YELLOW);
+            kv_line(y + 5, px, 12, "direction", itinerary_direction_target(), CP_ACCENT);
+            if (!origin || !destination) snprintf(buf, sizeof(buf), "--");
+            else snprintf(buf, sizeof(buf), "%d", hops);
+            kv_line(y + 6, px, 12, "arrets", buf, CP_ACCENT);
+
+            y += 8;
+            attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
+            mvprintw(y++, px, "Segment");
+            attroff(COLOR_PAIR(CP_SECTION) | A_BOLD);
+
+            if (!origin || !destination) {
+                attron(A_DIM);
+                mvprintw(y++, px, "o definit le depart, d definit l'arrivee.");
+                mvprintw(y++, px, "x inverse les deux bornes.");
+                attroff(A_DIM);
+            } else {
+                int step = g_itinerary.destination >= g_itinerary.origin ? 1 : -1;
+                int idx = g_itinerary.origin;
+
+                while (y < y2 - 1) {
+                    const char *tag = idx == g_itinerary.origin ? "DEP" : (idx == g_itinerary.destination ? "ARR" : U_ARROW);
+
+                    if (idx == g_itinerary.origin) attron(COLOR_PAIR(CP_GREEN) | A_BOLD);
+                    else if (idx == g_itinerary.destination) attron(COLOR_PAIR(CP_RED) | A_BOLD);
+                    else attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    mvprintw(y, px, "%-3s", tag);
+                    if (idx == g_itinerary.origin) attroff(COLOR_PAIR(CP_GREEN) | A_BOLD);
+                    else if (idx == g_itinerary.destination) attroff(COLOR_PAIR(CP_RED) | A_BOLD);
+                    else attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    print_fit(y, px + 5, pw - 6, g_itinerary.stops[idx].name);
+                    y++;
+                    if (idx == g_itinerary.destination) break;
+                    idx += step;
+                }
+            }
+        }
+    } else {
+        int y1 = top;
+        int y2 = LINES - 3;
+        int head_y = y1 + 1;
+        int list_y = head_y + 2;
+        int mr = y2 - list_y;
+        int cw = COLS - 14;
+
+        if (mr < 1) mr = 1;
+        if (cw < 18) cw = 18;
+        panel_box(y1, 1, y2, COLS - 2, "Stop Sequence", g_itinerary.search[0] ? g_itinerary.search : g_itinerary.line_name);
+        attron(A_DIM);
+        mvprintw(head_y, 3, "TAG");
+        mvprintw(head_y, 9, "STOP");
+        attroff(A_DIM);
+
+        if (g_itinerary.cursor < g_itinerary.scroll) g_itinerary.scroll = g_itinerary.cursor;
+        if (g_itinerary.cursor >= g_itinerary.scroll + mr) g_itinerary.scroll = g_itinerary.cursor - mr + 1;
+
+        for (int i = 0; i < mr && g_itinerary.scroll + i < g_itinerary.nfiltered; i++) {
+            int idx = g_itinerary.filtered[g_itinerary.scroll + i];
+            int row = list_y + i;
+
+            if (idx == g_itinerary.origin) {
+                attron(COLOR_PAIR(CP_GREEN) | A_BOLD);
+                mvprintw(row, 3, "DEP");
+                attroff(COLOR_PAIR(CP_GREEN) | A_BOLD);
+            } else if (idx == g_itinerary.destination) {
+                attron(COLOR_PAIR(CP_RED) | A_BOLD);
+                mvprintw(row, 3, "ARR");
+                attroff(COLOR_PAIR(CP_RED) | A_BOLD);
+            }
+            print_hl(row, 9, g_itinerary.stops[idx].name, g_itinerary.search, cw);
+        }
+        scrollbar(list_y, mr, g_itinerary.scroll, g_itinerary.nfiltered);
+    }
+
+    if (g_itinerary.search[0]) {
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s   %d hits", g_itinerary.search, g_itinerary.nfiltered);
+        attroff(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+    }
+    draw_toast_msg();
+    snprintf(buf, sizeof(buf), "%d/%d", g_itinerary.nfiltered > 0 ? g_itinerary.cursor + 1 : 0, g_itinerary.nfiltered);
+    draw_status(" j/k"U_MDOT"o:depart"U_MDOT"d:arrivee"U_MDOT"x:swap"U_MDOT"/:filtre"U_MDOT"q:back"U_MDOT"t:theme", buf);
 }
 
 /* ── Screen: Toulouse ────────────────────────────────────────────── */
@@ -5311,6 +5932,43 @@ static void do_atlas_search(void)
     curs_set(0); timeout(1000);
 }
 
+static void do_itinerary_search(void)
+{
+    int len = (int)strlen(g_itinerary.search);
+
+    curs_set(1);
+    timeout(-1);
+    for (;;) {
+        erase();
+        draw_itinerary();
+        attron(COLOR_PAIR(CP_SEARCH) | A_BOLD);
+        mvhline(LINES - 2, 0, ' ', COLS);
+        mvprintw(LINES - 2, 1, " / %s", g_itinerary.search);
+        attroff(A_BOLD);
+        printw("   (%d)", g_itinerary.nfiltered);
+        attroff(COLOR_PAIR(CP_SEARCH));
+        move(LINES - 2, 3 + len);
+        refresh();
+
+        {
+            int ch = getch();
+
+            if (ch == '\n' || ch == 27) break;
+            if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8) && len > 0) g_itinerary.search[--len] = '\0';
+            else if (len < (int)sizeof(g_itinerary.search) - 1 && ch >= 32 && ch < 127) {
+                g_itinerary.search[len++] = (char)ch;
+                g_itinerary.search[len] = '\0';
+            }
+        }
+
+        nvt_itinerary_rebuild_filter(&g_itinerary);
+        g_itinerary.cursor = 0;
+        g_itinerary.scroll = 0;
+    }
+    curs_set(0);
+    timeout(1000);
+}
+
 /* ── loading screen ──────────────────────────────────────────────── */
 
 static void draw_load(int step,int tot,const char *name,int fr)
@@ -5593,6 +6251,7 @@ int main(void)
 {
     setlocale(LC_ALL,""); setlocale(LC_NUMERIC,"C");
     nvt_app_init(&g_app);
+    nvt_itinerary_reset(&g_itinerary);
     api_init();
     initscr(); cbreak(); noecho(); keypad(stdscr,TRUE); curs_set(0); timeout(1000);
     init_colors();
@@ -5645,6 +6304,9 @@ int main(void)
             else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_passages();
             else draw_passages();
             break;
+        case SCR_ITINERARY:
+            draw_itinerary();
+            break;
         case SCR_ATLAS: draw_atlas(); break;
         }
         if(g_show_help) draw_help();
@@ -5654,6 +6316,7 @@ int main(void)
         if(ch=='?'||ch==KEY_F(1)){g_show_help=1;continue;}
         if(ch=='t'&&g_256){g_theme=(g_theme+1)%N_THEMES;apply_theme();toast("Theme: %s",themes[g_theme].name);continue;}
         if(ch=='n'){open_network_menu(1);continue;}
+        if(ch=='6'||ch=='i'){open_current_network_itinerary(g_screen==SCR_ITINERARY);continue;}
 
         int mr=LINES-8,hp=mr/2; if(mr<1)mr=1; if(hp<1)hp=1;
 
@@ -5898,6 +6561,35 @@ int main(void)
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
                 case '4': case 'p': g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();break;
                 }
+            }
+            break;
+        case SCR_ITINERARY:
+            switch(ch){
+            case 'q': case 27: case '1': g_screen=SCR_LINES; break;
+            case 'j': case KEY_DOWN: if(g_itinerary.cursor<g_itinerary.nfiltered-1) g_itinerary.cursor++; break;
+            case 'k': case KEY_UP: if(g_itinerary.cursor>0) g_itinerary.cursor--; break;
+            case KEY_NPAGE: g_itinerary.cursor+=mr; if(g_itinerary.cursor>=g_itinerary.nfiltered) g_itinerary.cursor=g_itinerary.nfiltered>0?g_itinerary.nfiltered-1:0; break;
+            case KEY_PPAGE: g_itinerary.cursor-=mr; if(g_itinerary.cursor<0) g_itinerary.cursor=0; break;
+            case 4: g_itinerary.cursor+=hp; if(g_itinerary.cursor>=g_itinerary.nfiltered) g_itinerary.cursor=g_itinerary.nfiltered>0?g_itinerary.nfiltered-1:0; break;
+            case 21: g_itinerary.cursor-=hp; if(g_itinerary.cursor<0) g_itinerary.cursor=0; break;
+            case 'g': case KEY_HOME: g_itinerary.cursor=0; g_itinerary.scroll=0; break;
+            case 'G': case KEY_END: g_itinerary.cursor=g_itinerary.nfiltered>0?g_itinerary.nfiltered-1:0; break;
+            case 'o':
+                if(g_itinerary.nfiltered>0) g_itinerary.origin=g_itinerary.filtered[g_itinerary.cursor];
+                break;
+            case 'd':
+                if(g_itinerary.nfiltered>0) g_itinerary.destination=g_itinerary.filtered[g_itinerary.cursor];
+                break;
+            case 'x':
+                if(g_itinerary.origin>=0&&g_itinerary.destination>=0) swap_itinerary_endpoints();
+                break;
+            case '/':
+                memset(g_itinerary.search,0,sizeof(g_itinerary.search));
+                do_itinerary_search();
+                break;
+            case 'r': case KEY_F(5):
+                open_current_network_itinerary(1);
+                break;
             }
             break;
         case SCR_ATLAS: switch(ch){
