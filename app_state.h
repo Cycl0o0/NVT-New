@@ -138,6 +138,7 @@ typedef struct {
     NvtScreen screen;
     NvtNetwork network;
     int theme;
+    int lang;        /* 0=FR, 1=EN */
     int use_256;
     int vehicle_zoom;
     int show_help;

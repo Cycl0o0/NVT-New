@@ -19,7 +19,7 @@ CURSES_LDFLAGS = $(NCURSES_LIBS) $(CURL_LDFLAGS)
 BACKEND_LDFLAGS = $(CURL_LDFLAGS)
 
 COMMON_SRCS = api.c cJSON.c
-TUI_SRCS = nvt.c app_state.c data.c filter.c itinerary.c map_math.c network.c ui.c $(COMMON_SRCS)
+TUI_SRCS = nvt.c app_state.c config_file.c data.c filter.c itinerary.c map_math.c network.c ui.c $(COMMON_SRCS)
 BACKEND_SRCS = backend.c api.c cJSON.c
 TEST_FILTER_SRCS = tests/test_filter.c filter.c
 TEST_ITINERARY_SRCS = tests/test_itinerary.c itinerary.c filter.c
@@ -47,6 +47,9 @@ backend-run: nvt-backend
 mcp-run: nvt-backend
 	python3 ./mcp/nvt_mcp_server.py
 
+apple-project:
+	cd Apple && xcodegen generate
+
 nvt: $(TUI_SRCS) api.h config.h cJSON.h line_colors.h
 	$(CC) $(CFLAGS) $(NCURSES_CFLAGS) -o $@ $(TUI_SRCS) $(CURSES_LDFLAGS)
 
@@ -65,4 +68,4 @@ tests/test_map_math: $(TEST_MAP_SRCS) map_math.h
 clean:
 	rm -f nvt nvt-backend tests/test_filter tests/test_itinerary tests/test_map_math
 
-.PHONY: all tui backend test backend-run mcp-run clean
+.PHONY: all tui backend test backend-run mcp-run apple-project clean

@@ -944,8 +944,8 @@ int fetch_stops(StopMap *map)
         cJSON *p = cJSON_GetObjectItemCaseSensitive(feat, "properties");
         cJSON *geom = cJSON_GetObjectItemCaseSensitive(feat, "geometry");
         cJSON *coords = geom ? cJSON_GetObjectItemCaseSensitive(geom, "coordinates") : NULL;
-        double lon = coords ? cJSON_GetArrayItem(coords, 0)->valuedouble : 0;
-        double lat = coords ? cJSON_GetArrayItem(coords, 1)->valuedouble : 0;
+        double lon = jcoord_double(coords, 0, "lon");
+        double lat = jcoord_double(coords, 1, "lat");
         if (!p) continue;
         stopmap_insert(map, jint(p, "gid"), jstr(p, "libelle"), lon, lat);
         n++;
@@ -2852,8 +2852,8 @@ int fetch_vehicles(int line_gid, Vehicle *out, int max)
 
         Vehicle *v = &out[n];
         v->gid       = jint(p, "gid");
-        v->lon       = coords ? cJSON_GetArrayItem(coords, 0)->valuedouble : 0;
-        v->lat       = coords ? cJSON_GetArrayItem(coords, 1)->valuedouble : 0;
+        v->lon       = jcoord_double(coords, 0, "lon");
+        v->lat       = jcoord_double(coords, 1, "lat");
         SCOPY(v->etat, jstr(p, "etat"));
         v->retard    = jint(p, "retard");
         v->vitesse   = jint(p, "vitesse");

@@ -20,7 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BACKEND_VERSION "1.0"
+#define BACKEND_VERSION "V2.0"
 #define DEFAULT_PORT 8080
 #define REQ_BUF_SIZE 8192
 
@@ -47,7 +47,6 @@ static CourseCache g_course_cache;
 static int g_course_cache_ready = 0;
 static MetroMap g_metro_map;
 static int g_has_metro_map = 0;
-static int g_map_attempted = 0;
 static ToulouseSnapshot g_tls_snapshot;
 static ToulouseLine g_tls_lines[MAX_LINES];
 static int g_tls_nlines = -1;
@@ -55,7 +54,6 @@ static ToulouseStop g_tls_stops[MAX_STOPS];
 static int g_tls_nstops = -1;
 static MetroMap g_tls_metro_map;
 static int g_tls_has_metro_map = 0;
-static int g_tls_map_attempted = 0;
 static IdfmSnapshot g_idfm_snapshot;
 static ToulouseLine g_idfm_lines[MAX_LINES];
 static int g_idfm_nlines = -1;
@@ -623,10 +621,12 @@ static int ensure_course_cache(void)
 
 static int ensure_metro_map(void)
 {
-    if (g_map_attempted) return g_has_metro_map ? 0 : -1;
-    g_map_attempted = 1;
-    g_has_metro_map = fetch_metro_map(&g_metro_map) > 0;
-    return g_has_metro_map ? 0 : -1;
+    if (g_has_metro_map) return 0;
+    if (fetch_metro_map(&g_metro_map) > 0) {
+        g_has_metro_map = 1;
+        return 0;
+    }
+    return -1;
 }
 
 static int ensure_toulouse_snapshot(void)
@@ -644,10 +644,12 @@ static int ensure_toulouse_snapshot(void)
 
 static int ensure_toulouse_metro_map(void)
 {
-    if (g_tls_map_attempted) return g_tls_has_metro_map ? 0 : -1;
-    g_tls_map_attempted = 1;
-    g_tls_has_metro_map = fetch_toulouse_metro_map(&g_tls_metro_map) > 0;
-    return g_tls_has_metro_map ? 0 : -1;
+    if (g_tls_has_metro_map) return 0;
+    if (fetch_toulouse_metro_map(&g_tls_metro_map) > 0) {
+        g_tls_has_metro_map = 1;
+        return 0;
+    }
+    return -1;
 }
 
 static int ensure_idfm_snapshot(void)
@@ -1417,9 +1419,10 @@ static int handle_stop_groups(int fd, const HttpRequest *req, NetworkKind networ
         cJSON_Delete(root);
         return rc;
     } else if (network == NETWORK_BDX) {
-        if (ensure_stop_groups() < 0 || ensure_stop_map() < 0) {
+        if (ensure_stop_groups() < 0) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to load stop groups.");
         }
+        ensure_stop_map();
 
         root = cJSON_CreateObject();
         items = cJSON_CreateArray();
@@ -1546,9 +1549,10 @@ static int handle_stop_group_passages(int fd, const char *key, const HttpRequest
         int nlines;
         int npassages = 0;
 
-        if (ensure_stop_groups() < 0 || ensure_stop_map() < 0 || ensure_course_cache() < 0) {
+        if (ensure_stop_groups() < 0 || ensure_course_cache() < 0) {
             return send_error_json(fd, 503, "upstream_unavailable", "Unable to prepare passage data.");
         }
+        ensure_stop_map();
 
         group = find_stop_group_by_key(key);
         if (!group) return send_error_json(fd, 404, "stop_group_not_found", "Unknown stop group.");
@@ -1746,7 +1750,7 @@ static int handle_vehicles(int fd, int line_gid, NetworkKind network)
         int nalerts;
         const Line *line;
 
-        if (ensure_stop_map() < 0) return send_error_json(fd, 503, "upstream_unavailable", "Unable to load stop lookup data.");
+        ensure_stop_map();
 
         nlines = fetch_lines(lines, MAX_LINES);
         if (nlines < 0) return send_error_json(fd, 503, "upstream_unavailable", "Unable to load line metadata.");

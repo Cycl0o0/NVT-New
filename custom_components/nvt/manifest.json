@@ -1,7 +1,7 @@
 {
   "domain": "nvt",
   "name": "NVT",
-  "version": "0.3.0",
+  "version": "2.0.0",
   "config_flow": true,
   "integration_type": "service",
   "iot_class": "local_polling",

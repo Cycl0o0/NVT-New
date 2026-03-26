@@ -32,7 +32,7 @@ static int fetch_bordeaux_init_once(void *ctx)
     course_cache_free(&app->map.course_cache);
     stopmap_init(&app->bdx.stops);
     course_cache_init(&app->map.course_cache);
-    if (fetch_stops(&app->bdx.stops) < 0) return -1;
+    fetch_stops(&app->bdx.stops);
 
     app->bdx.nstop_groups = fetch_stop_groups(app->bdx.stop_groups, MAX_STOP_GROUPS);
     if (app->bdx.nstop_groups < 0) return -1;

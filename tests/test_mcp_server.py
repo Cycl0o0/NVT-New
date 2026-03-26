@@ -19,7 +19,7 @@ class FakeBackendClient:
         return {
             "status": "ok",
             "backend": "nvt-backend",
-            "version": "1.0",
+            "version": "V2.0",
             "supportedNetworks": ["bordeaux", "toulouse", "idfm", "sncf"],
         }
 

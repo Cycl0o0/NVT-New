@@ -8,6 +8,7 @@
 #include "map_math.h"
 #include "network.h"
 #include "ui.h"
+#include "config_file.h"
 
 #include <ncurses.h>
 #include <locale.h>
@@ -25,22 +26,46 @@
 
 #define U_BLOCK     "\xe2\x96\x88"   /* █ */
 #define U_BLIGHT    "\xe2\x96\x91"   /* ░ */
+#define U_BMED      "\xe2\x96\x92"   /* ▒ */
+#define U_BDARK     "\xe2\x96\x93"   /* ▓ */
 #define U_CBAR      "\xe2\x96\x8c"   /* ▌ */
+#define U_CBAR_R    "\xe2\x96\x90"   /* ▐ */
 #define U_BULLET    "\xe2\x97\x8f"   /* ● */
 #define U_BULLETO   "\xe2\x97\x8b"   /* ○ */
 #define U_ARROW     "\xe2\x86\x92"   /* → */
+#define U_ARROW_D   "\xe2\x86\x93"   /* ↓ */
+#define U_ARROW_U   "\xe2\x86\x91"   /* ↑ */
+#define U_DARROW    "\xe2\x87\x92"   /* ⇒ double arrow */
 #define U_CHECK     "\xe2\x9c\x93"   /* ✓ */
+#define U_XMARK     "\xe2\x9c\x97"   /* ✗ */
 #define U_WARN      "\xe2\x9a\xa0"   /* ⚠ */
 #define U_INFO      "\xe2\x84\xb9"   /* ℹ */
 #define U_DIAMOND   "\xe2\x97\x86"   /* ◆ */
+#define U_DIAMONDO  "\xe2\x97\x87"   /* ◇ */
 #define U_MDOT      "\xc2\xb7"       /* · */
 #define U_ELLIP     "\xe2\x80\xa6"   /* … */
 #define U_EMDASH    "\xe2\x80\x94"   /* — */
+#define U_STAR      "\xe2\x98\x85"   /* ★ */
+#define U_STARO     "\xe2\x98\x86"   /* ☆ */
+#define U_THUNDER   "\xe2\x9a\xa1"   /* ⚡ */
+#define U_FIRE      "\xe2\x97\x89"   /* ◉ (visual placeholder) */
+#define U_WAVE      "\xe2\x89\x88"   /* ≈ */
+#define U_TRIUP     "\xe2\x96\xb2"   /* ▲ */
+#define U_TRIDN     "\xe2\x96\xbc"   /* ▼ */
+#define U_TRIRIGHT  "\xe2\x96\xb6"   /* ▶ */
+#define U_TRILEFT   "\xe2\x97\x80"   /* ◀ */
+#define U_SQUARE    "\xe2\x96\xa0"   /* ■ */
+#define U_SQUAREO   "\xe2\x96\xa1"   /* □ */
+#define U_CIRCLE    "\xe2\x97\x8c"   /* ◌ */
+#define U_TARGET    "\xe2\x97\x8e"   /* ◎ */
+#define U_LIVE      "\xe2\x97\x89"   /* ◉ */
+#define U_SPARKLE   "\xe2\x9c\xa8"   /* ✨ (multi-char, use carefully) */
 
 /* Powerline glyphs (Nerd Font required for best look) */
 #define PL_R        "\xee\x82\xb0"   /*  */
 #define PL_RS       "\xee\x82\xb1"   /*  */
 #define PL_L        "\xee\x82\xb2"   /*  */
+#define PL_LS       "\xee\x82\xb3"   /*  thin separator */
 
 /* Rounded box drawing */
 #define RB_TL       "\xe2\x95\xad"   /* ╭ */
@@ -50,27 +75,105 @@
 #define RB_H        "\xe2\x94\x80"   /* ─ */
 #define RB_V        "\xe2\x94\x82"   /* │ */
 
+/* Heavy box drawing for emphasis */
+#define HB_TL       "\xe2\x94\x8f"   /* ┏ */
+#define HB_TR       "\xe2\x94\x93"   /* ┓ */
+#define HB_BL       "\xe2\x94\x97"   /* ┗ */
+#define HB_BR       "\xe2\x94\x9b"   /* ┛ */
+#define HB_H        "\xe2\x94\x81"   /* ━ */
+#define HB_V        "\xe2\x94\x83"   /* ┃ */
+
+/* Double-line box (for focus panels) */
+#define DB_TL       "\xe2\x95\x94"   /* ╔ */
+#define DB_TR       "\xe2\x95\x97"   /* ╗ */
+#define DB_BL       "\xe2\x95\x9a"   /* ╚ */
+#define DB_BR       "\xe2\x95\x9d"   /* ╝ */
+#define DB_H        "\xe2\x95\x90"   /* ═ */
+#define DB_V        "\xe2\x95\x91"   /* ║ */
+
+/* Half-block + clock */
+#define U_HTOP      "\xe2\x96\x80"   /* ▀ upper half block */
+#define U_HBOT      "\xe2\x96\x84"   /* ▄ lower half block */
+#define U_CLOCK     "\xe2\x97\xb7"   /* ◷ clock icon      */
+
+/* Braille patterns for smooth scrollbars */
+#define BR_FULL     "\xe2\xa3\xbf"   /* ⣿ full */
+#define BR_TOP      "\xe2\xa0\x9b"   /* ⠛ top half */
+#define BR_BOT      "\xe2\xa3\xa4"   /* ⣤ bottom half */
+#define BR_DOT      "\xe2\xa0\x80"   /* ⠀ blank */
+
+/* Fancy separators */
+#define SEP_WAVE    "\xe2\x88\xbf"   /* ∿ */
+#define SEP_ZIGZAG  "\xe2\x8c\x93"   /* ⌓ */
+#define SEP_DOTS    "\xe2\x8b\xaf"   /* ⋯ */
+
+/* Spinners for loading animation */
+#define SPIN_0      "\xe2\xa0\x8b"   /* ⠋ */
+#define SPIN_1      "\xe2\xa0\x99"   /* ⠙ */
+#define SPIN_2      "\xe2\xa0\xb9"   /* ⠹ */
+#define SPIN_3      "\xe2\xa0\xb8"   /* ⠸ */
+#define SPIN_4      "\xe2\xa0\xbc"   /* ⠼ */
+#define SPIN_5      "\xe2\xa0\xb4"   /* ⠴ */
+#define SPIN_6      "\xe2\xa0\xa6"   /* ⠦ */
+#define SPIN_7      "\xe2\xa0\xa7"   /* ⠧ */
+#define SPIN_8      "\xe2\xa0\x87"   /* ⠇ */
+#define SPIN_9      "\xe2\xa0\x8f"   /* ⠏ */
+
+static const char *g_spinner[] = {
+    SPIN_0, SPIN_1, SPIN_2, SPIN_3, SPIN_4,
+    SPIN_5, SPIN_6, SPIN_7, SPIN_8, SPIN_9
+};
+#define N_SPINNER 10
+
 /* ── Theme system ────────────────────────────────────────────────── */
 
 typedef struct {
     const char *name;
     int accent;      /* 256-color fg/bg accent */
+    int accent2;     /* secondary accent for gradients/highlights */
     int header_bg;   /* dark bg for header/tabs/status */
     int sel_bg;      /* selected row bg */
     int dim_fg;      /* dimmed text fg on header_bg */
+    int glow;        /* glow/highlight color for focused items */
+    int success;     /* success indicator color */
+    int warning;     /* warning indicator color */
 } Theme;
 
 static const Theme themes[] = {
-    { "Lagoon",     51,  236, 237, 245 },
-    { "Nord",       110, 236, 238, 245 },
-    { "Rose",       211, 235, 237, 246 },
-    { "Ayu",        214, 235, 237, 246 },
-    { "Jade",       84,  236, 238, 245 },
-    { "Matrix",     47,  232, 236, 242 },
-    { "Mono",       250, 237, 240, 246 },
+    /* name          accent acc2  hdr_bg sel_bg dim_fg glow   success warning */
+    { "Lagoon",      51,    45,   236,   237,   245,   123,   48,     220 },
+    { "Nord",        110,   67,   236,   238,   245,   153,   108,    222 },
+    { "Rose",        211,   218,  235,   237,   246,   225,   157,    221 },
+    { "Ayu",         214,   215,  235,   237,   246,   222,   114,    208 },
+    { "Jade",        84,    120,  236,   238,   245,   158,   83,     220 },
+    { "Matrix",      47,    48,   232,   236,   242,   82,    46,     226 },
+    { "Mono",        250,   254,  237,   240,   246,   255,   252,    229 },
+    { "Dracula",     141,   212,  234,   236,   244,   183,   84,     215 },
+    { "Gruvbox",     214,   208,  234,   236,   243,   223,   142,    214 },
+    { "Tokyo",       99,    147,  234,   236,   244,   189,   158,    221 },
+    { "Catppuccin",  183,   225,  234,   236,   245,   219,   158,    222 },
+    /* New premium themes */
+    { "Synthwave",   201,   165,  233,   235,   243,   213,   87,     227 },  /* Retro cyberpunk */
+    { "Ocean",       39,    75,   233,   235,   245,   117,   50,     221 },  /* Deep sea blue */
+    { "Sunset",      209,   216,  234,   236,   244,   223,   156,    214 },  /* Warm sunset */
+    { "Neon",        199,   51,   232,   234,   242,   207,   46,     226 },  /* Bright neon pink */
+    { "Forest",      71,    107,  234,   236,   244,   157,   83,     220 },  /* Deep forest green */
+    { "Amber",       214,   208,  233,   235,   243,   221,   156,    208 },  /* Warm amber */
+    { "Frost",       159,   195,  235,   237,   246,   231,   158,    222 },  /* Ice cold blue */
+    { "Ember",       202,   196,  232,   234,   241,   209,   156,    214 },  /* Fiery red-orange */
+    { "Violet",      135,   177,  233,   235,   244,   183,   120,    220 },  /* Deep purple */
+    { "Sakura",      218,   225,  235,   237,   246,   224,   157,    221 },  /* Cherry blossom pink */
+    { "Kanagawa",    109,   108,  235,   237,   245,   143,   107,    214 },  /* Earthy greens and muted colors */
+    { "Everforest",  142,   107,  235,   237,   246,   175,   142,    214 },  /* Green/warm nature */
+    { "Cyberpunk",   201,   51,   232,   234,   242,   46,    155,    226 },  /* Neon pink/cyan/yellow */
+    { "Monokai Pro", 208,   197,  235,   237,   245,   81,    148,    220 },  /* Professional dark */
 };
 #define N_THEMES ((int)(sizeof(themes)/sizeof(themes[0])))
 #define MAX_VEHICLE_ZOOM 5
+static int g_nerd = 0;  /* Nerd Font icons on/off — toggle with f key */
+/* Bilingual string selector */
+#define g_lang (g_app.ui.lang)
+#define T(fr,en) (g_lang ? (en) : (fr))
 
 /* ── runtime state ───────────────────────────────────────────────── */
 
@@ -666,7 +769,7 @@ static void open_idfm_stop_search(int line_index, int clear_query)
     NvtIdfmState *st = current_live_state();
 
     if (line_index < 0 || line_index >= st->nlines) {
-        toast("Selectionnez d'abord une ligne");
+        toast(T("Selectionnez d'abord une ligne","Select a line first"));
         return;
     }
     st->sel_line = line_index;
@@ -1268,7 +1371,7 @@ static int load_current_network_itinerary(int force_reload)
     int count;
 
     if (select_line_for_itinerary() < 0) {
-        toast("Selectionnez d'abord une ligne");
+        toast(T("Selectionnez d'abord une ligne","Select a line first"));
         return -1;
     }
     if (!force_reload && itinerary_matches_current_line()) return g_itinerary.nstops;
@@ -1289,11 +1392,12 @@ static int load_current_network_itinerary(int force_reload)
 
     if (count <= 0) {
         nvt_itinerary_reset(&g_itinerary);
-        toast("Impossible de calculer l'itineraire pour cette ligne");
+        toast(T("Impossible de calculer l'itineraire pour cette ligne",
+                "Cannot build an itinerary for this line"));
         return -1;
     }
 
-    toast("%d arrets charges pour %s", count,
+    toast(T("%d arrets charges pour %s","%d stops loaded for %s"), count,
           g_itinerary.line_code[0] ? g_itinerary.line_code : g_itinerary.line_name);
     return count;
 }
@@ -1340,6 +1444,19 @@ enum {
     CP_SEL, CP_ACCENT, CP_BORDER, CP_CURSOR, CP_SECTION,
     /* powerline transitions */
     CP_PL_DA, CP_PL_AD, CP_PL_DN, CP_PL_AN,
+    /* enhanced theme colors */
+    CP_ACCENT2,      /* secondary accent for gradients */
+    CP_GLOW,         /* glow/highlight effect */
+    CP_GLOW_BG,      /* glow with background */
+    CP_SUCCESS,      /* success indicator */
+    CP_WARNING,      /* warning indicator */
+    CP_CARD_BG,      /* card background */
+    CP_CARD_BORDER,  /* card border */
+    CP_LIVE,         /* live indicator */
+    CP_SHADOW,       /* shadow effect */
+    CP_GRADIENT_1,   /* gradient step 1 */
+    CP_GRADIENT_2,   /* gradient step 2 */
+    CP_GRADIENT_3,   /* gradient step 3 */
     /* line colors base */
     CP_LINE_BASE
 };
@@ -1377,6 +1494,19 @@ static void apply_theme(void)
         init_pair(CP_PL_AD,     t->accent, t->header_bg);
         init_pair(CP_PL_DN,     t->header_bg, -1);
         init_pair(CP_PL_AN,     t->accent, -1);
+        /* enhanced theme colors */
+        init_pair(CP_ACCENT2,   t->accent2, -1);
+        init_pair(CP_GLOW,      t->glow, -1);
+        init_pair(CP_GLOW_BG,   16, t->glow);
+        init_pair(CP_SUCCESS,   t->success, -1);
+        init_pair(CP_WARNING,   t->warning, -1);
+        init_pair(CP_CARD_BG,   255, t->header_bg + 1);
+        init_pair(CP_CARD_BORDER, t->accent, t->header_bg + 1);
+        init_pair(CP_LIVE,      t->success, -1);
+        init_pair(CP_SHADOW,    240, -1);
+        init_pair(CP_GRADIENT_1, t->accent, -1);
+        init_pair(CP_GRADIENT_2, t->accent2, -1);
+        init_pair(CP_GRADIENT_3, t->glow, -1);
     } else {
         init_pair(CP_HDR,       COLOR_BLACK, COLOR_WHITE);
         init_pair(CP_TAB_ACT,   COLOR_BLACK, COLOR_CYAN);
@@ -1393,6 +1523,19 @@ static void apply_theme(void)
         init_pair(CP_PL_AD,     COLOR_CYAN, -1);
         init_pair(CP_PL_DN,     -1, -1);
         init_pair(CP_PL_AN,     COLOR_CYAN, -1);
+        /* fallback for enhanced colors in 8-color mode */
+        init_pair(CP_ACCENT2,   COLOR_CYAN, -1);
+        init_pair(CP_GLOW,      COLOR_WHITE, -1);
+        init_pair(CP_GLOW_BG,   COLOR_BLACK, COLOR_WHITE);
+        init_pair(CP_SUCCESS,   COLOR_GREEN, -1);
+        init_pair(CP_WARNING,   COLOR_YELLOW, -1);
+        init_pair(CP_CARD_BG,   COLOR_WHITE, -1);
+        init_pair(CP_CARD_BORDER, COLOR_CYAN, -1);
+        init_pair(CP_LIVE,      COLOR_GREEN, -1);
+        init_pair(CP_SHADOW,    COLOR_BLACK, -1);
+        init_pair(CP_GRADIENT_1, COLOR_CYAN, -1);
+        init_pair(CP_GRADIENT_2, COLOR_CYAN, -1);
+        init_pair(CP_GRADIENT_3, COLOR_WHITE, -1);
     }
 }
 
@@ -1575,6 +1718,103 @@ static void panel_box(int y1,int x1,int y2,int x2,const char *title,const char *
     nvt_ui_panel_box(y1, x1, y2, x2, title, meta, CP_BORDER, CP_SECTION);
 }
 
+static void shadow_box(int y1,int x1,int y2,int x2,const char *title,const char *meta)
+{
+    nvt_ui_shadow_box(y1, x1, y2, x2, title, meta, CP_BORDER, CP_SECTION);
+}
+
+/* ── double-line focus panel ─────────────────────────────────────── */
+
+static void dbox_panel(int y1,int x1,int y2,int x2,const char *title,const char *meta)
+{
+    if(y2<=y1||x2<=x1) return;
+
+    /* Clear interior */
+    for(int y=y1+1;y<y2;y++) mvhline(y,x1+1,' ',x2-x1-1);
+
+    if(g_256){
+        /* Glow effect on outer edge using secondary accent */
+        attron(COLOR_PAIR(CP_GLOW)|A_DIM);
+        /* Top glow */
+        if(y1>0) for(int x=x1;x<=x2;x++) mvaddstr(y1-1,x,U_HBOT);
+        attroff(COLOR_PAIR(CP_GLOW)|A_DIM);
+    }
+
+    /* Main double-line border */
+    attron(COLOR_PAIR(CP_ACCENT)|A_BOLD);
+    mvaddstr(y1,x1,DB_TL); mvaddstr(y1,x2,DB_TR);
+    mvaddstr(y2,x1,DB_BL); mvaddstr(y2,x2,DB_BR);
+    for(int x=x1+1;x<x2;x++){mvaddstr(y1,x,DB_H);mvaddstr(y2,x,DB_H);}
+    for(int y=y1+1;y<y2;y++){mvaddstr(y,x1,DB_V);mvaddstr(y,x2,DB_V);}
+    attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);
+
+    /* Title with decorative elements */
+    if(title&&title[0]){
+        attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
+        if(g_256 && g_nerd)
+            mvprintw(y1,x1+2," "U_STAR" %s ",title);
+        else
+            mvprintw(y1,x1+2," %s ",title);
+        attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    }
+
+    /* Meta with live indicator */
+    if(meta&&meta[0]){
+        int ml=(int)strlen(meta)+4, mx=x2-ml;
+        if(mx>x1+12){
+            if(g_256){
+                attron(COLOR_PAIR(CP_LIVE)|A_BOLD);
+                mvaddstr(y1,mx,U_LIVE);
+                attroff(COLOR_PAIR(CP_LIVE)|A_BOLD);
+                attron(A_DIM);
+                printw(" %s ",meta);
+                attroff(A_DIM);
+            } else {
+                attron(A_DIM);
+                mvprintw(y1,mx," %s ",meta);
+                attroff(A_DIM);
+            }
+        }
+    }
+}
+
+/* ── transport type pills ────────────────────────────────────────── */
+
+static int type_cp(const char *type)
+{
+    if(!type) return CP_GREEN;
+    if(strcmp(type,"TRAM")==0) return CP_CYAN_T;
+    if(strcmp(type,"METRO")==0||strcmp(type,"RER")==0) return CP_BLUE;
+    if(strcmp(type,"TRAIN")==0) return CP_BLUE;
+    if(strcmp(type,"TAD")==0||strcmp(type,"TELE")==0) return CP_MAGENTA;
+    return CP_GREEN; /* BUS and anything else */
+}
+
+/* Nerd Font glyph per type (private-use BMP range, requires Nerd Font v2+) */
+static const char *type_nf_icon(const char *type)
+{
+    if(!type) return "\xef\x88\x87";          /* 0xF207 bus    */
+    if(strcmp(type,"TRAM")==0)  return "\xef\x88\x9f"; /* 0xF21F tram  */
+    if(strcmp(type,"METRO")==0) return "\xef\x88\xb9"; /* 0xF239 metro */
+    if(strcmp(type,"TRAIN")==0||strcmp(type,"RER")==0)
+                                return "\xef\x88\xb8"; /* 0xF238 train */
+    if(strcmp(type,"TAD")==0)   return "\xef\x86\xba"; /* 0xF1BA taxi  */
+    return "\xef\x88\x87";                             /* 0xF207 bus   */
+}
+
+static void draw_type_pill(int y, int x, const char *type, int is_selected)
+{
+    int cp = type_cp(type);
+    if(is_selected) attroff(COLOR_PAIR(CP_SEL));
+    attron(COLOR_PAIR(cp)|A_REVERSE|A_BOLD);
+    if(g_nerd&&g_256)
+        mvprintw(y,x," %s ",type_nf_icon(type));
+    else
+        mvprintw(y,x," %-4.4s ",type?type:"");
+    attroff(COLOR_PAIR(cp)|A_REVERSE|A_BOLD);
+    if(is_selected) attron(COLOR_PAIR(CP_SEL));
+}
+
 static void print_fit(int y,int x,int w,const char *text)
 {
     nvt_ui_print_fit(y, x, w, text);
@@ -1613,40 +1853,90 @@ static int draw_wrapped_block(int y,int x,int w,int max_lines,const char *text,i
 
 /* ── Powerline header / tabs / status ────────────────────────────── */
 
+/* Get spinner frame based on current time */
+static const char *get_spinner_frame(void) __attribute__((unused));
+static const char *get_spinner_frame(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    int frame = (ts.tv_nsec / 100000000) % N_SPINNER;
+    return g_spinner[frame];
+}
+
 static void draw_header(const char *title, const char *bc)
 {
-    /* left accent segment */
+    /* left accent segment with icon */
     attron(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
     mvhline(0,0,' ',COLS);
-    mvprintw(0,1," %s ",title);
+    if(g_nerd && g_256)
+        mvprintw(0,1," "U_THUNDER" %s ",title);
+    else
+        mvprintw(0,1," %s ",title);
     attroff(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
     int lx=getcurx(stdscr);
 
     /* powerline: accent → dark */
     attron(COLOR_PAIR(CP_PL_AD)); mvaddstr(0,lx,PL_R); attroff(COLOR_PAIR(CP_PL_AD));
 
-    /* middle dark segment */
+    /* middle dark segment with gradient-style breadcrumb */
     attron(COLOR_PAIR(CP_HDR));
     int mx=lx+1;
     mvhline(0,mx,' ',COLS-mx);
-    if(bc&&bc[0]) mvprintw(0,mx+1," %s",bc);
+    if(bc&&bc[0]) {
+        attron(COLOR_PAIR(CP_HDR)|A_DIM);
+        if(g_256) mvprintw(0,mx+1," "U_DIAMONDO" ");
+        mvprintw(0,getcurx(stdscr),"%s",bc);
+        attroff(COLOR_PAIR(CP_HDR)|A_DIM);
+    }
 
-    /* clock on right */
+    /* clock on right — with date and live indicator */
     time_t now=time(NULL); struct tm *tm=localtime(&now);
-    char clk[16]; snprintf(clk,sizeof(clk),"%02d:%02d:%02d",tm->tm_hour,tm->tm_min,tm->tm_sec);
-    int cx=COLS-(int)strlen(clk)-4;
+    char clk[32];
+    if (COLS > 100)
+        strftime(clk, sizeof(clk), "%a %d %b %H:%M:%S", tm);
+    else
+        strftime(clk, sizeof(clk), "%H:%M:%S", tm);
+
+    int cx=COLS-(int)strlen(clk)-(g_256?8:4);
 
     /* powerline: dark → accent (right segment) */
     mvaddstr(0,cx-1," "); attroff(COLOR_PAIR(CP_HDR));
     attron(COLOR_PAIR(CP_PL_DA)); mvaddstr(0,cx,PL_R); attroff(COLOR_PAIR(CP_PL_DA));
     attron(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
-    mvprintw(0,cx+1," %s ",clk);
+    if(g_256) {
+        /* Live pulsing indicator */
+        mvprintw(0,cx+1," ");
+        attroff(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
+        attron(COLOR_PAIR(CP_LIVE)|A_BOLD);
+        addstr(U_LIVE);
+        attroff(COLOR_PAIR(CP_LIVE)|A_BOLD);
+        attron(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
+        printw(" %s ",clk);
+    } else {
+        mvprintw(0,cx+1," %s ",clk);
+    }
     attroff(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
+}
+
+/* Nerd Font icons for tabs */
+static const char *tab_nf_icon(int idx)
+{
+    static const char *icons[] = {
+        "\xef\x83\x8b",  /* 0xF0CB - list (Lines) */
+        "\xef\x88\x87",  /* 0xF207 - bus (Vehicles) */
+        "\xef\x81\xb1",  /* 0xF071 - warning (Alerts) */
+        "\xef\x80\xb5",  /* 0xF035 - map-pin (Stops) */
+        "\xef\x80\x97",  /* 0xF017 - clock (Departures) */
+        "\xef\x80\xa9",  /* 0xF029 - route (Journey) */
+    };
+    return (idx >= 0 && idx < 6) ? icons[idx] : "";
 }
 
 static void draw_tabs(void)
 {
-    static const char *lb[]={"Lignes","Vehicules","Alertes","Arrets","Passages","Itineraire"};
+    static const char *lb_fr[]={"Lignes","Vehicules","Alertes","Arrets","Passages","Itineraire"};
+    static const char *lb_en[]={"Lines","Vehicles","Alerts","Stops","Departures","Journey"};
+    const char **lb = g_lang ? lb_en : lb_fr;
     static const NvtScreen sc[]={SCR_LINES,SCR_VEHICLES,SCR_ALERTS,SCR_STOP_SEARCH,SCR_PASSAGES,SCR_ITINERARY};
     int alert_count;
 
@@ -1664,15 +1954,29 @@ static void draw_tabs(void)
             /* dark→accent transition */
             if(g_256){attron(COLOR_PAIR(CP_PL_DA));mvaddstr(1,x,PL_R);attroff(COLOR_PAIR(CP_PL_DA));x++;}
             attron(COLOR_PAIR(CP_TAB_ACT)|A_BOLD);
-            mvprintw(1,x," %d"U_MDOT"%s ",i+1,lb[i]);
-            if(i==2&&alert_count>0) printw("(%d) ",alert_count);
+            if(g_nerd && g_256)
+                mvprintw(1,x," %s %s ",tab_nf_icon(i),lb[i]);
+            else
+                mvprintw(1,x," %d"U_MDOT"%s ",i+1,lb[i]);
+            if(i==2&&alert_count>0) {
+                printw("(");
+                attroff(COLOR_PAIR(CP_TAB_ACT)|A_BOLD);
+                attron(COLOR_PAIR(CP_ALERT_HI)|A_BOLD|A_BLINK);
+                printw("%d",alert_count);
+                attroff(COLOR_PAIR(CP_ALERT_HI)|A_BOLD|A_BLINK);
+                attron(COLOR_PAIR(CP_TAB_ACT)|A_BOLD);
+                printw(") ");
+            }
             x=getcurx(stdscr);
             attroff(COLOR_PAIR(CP_TAB_ACT)|A_BOLD);
             /* accent→dark transition */
             if(g_256){attron(COLOR_PAIR(CP_PL_AD));mvaddstr(1,x,PL_R);attroff(COLOR_PAIR(CP_PL_AD));x++;}
         } else {
             attron(COLOR_PAIR(CP_TAB_INACT));
-            mvprintw(1,x," %d"U_MDOT"%s",i+1,lb[i]);
+            if(g_nerd && g_256)
+                mvprintw(1,x," %s %s",tab_nf_icon(i),lb[i]);
+            else
+                mvprintw(1,x," %d"U_MDOT"%s",i+1,lb[i]);
             if(i==2&&alert_count>0){
                 attroff(COLOR_PAIR(CP_TAB_INACT));
                 attron(COLOR_PAIR(CP_ALERT_HI)|A_BOLD);
@@ -1685,23 +1989,38 @@ static void draw_tabs(void)
             attroff(COLOR_PAIR(CP_TAB_INACT));
         }
     }
-    /* theme indicator on far right */
+    /* theme indicator on far right with decorative icon */
     if(g_256){
         attron(COLOR_PAIR(CP_TAB_INACT));
-        mvprintw(1,COLS-(int)strlen(themes[g_theme].name)-(int)strlen(network_name())-8,
-                 " [%s/%s]", network_name(), themes[g_theme].name);
+        int info_len = (int)strlen(themes[g_theme].name)+(int)strlen(network_name())+13;
+        if(g_nerd)
+            mvprintw(1,COLS-info_len-2," "U_DIAMONDO" %s"U_MDOT"%s"U_MDOT"%s ",
+                     network_name(), themes[g_theme].name, g_lang?"EN":"FR");
+        else
+            mvprintw(1,COLS-info_len," [%s/%s/%s]",
+                     network_name(), themes[g_theme].name, g_lang?"EN":"FR");
         attroff(COLOR_PAIR(CP_TAB_INACT));
     }
-    hbar(2,0,COLS);
+    /* half-block shadow row: upper half = tab_bg dark, lower half = default bg */
+    if(g_256){
+        attron(COLOR_PAIR(CP_PL_DN));
+        for(int x=0;x<COLS;x++) mvaddstr(2,x,U_HTOP);
+        attroff(COLOR_PAIR(CP_PL_DN));
+    } else {
+        hbar(2,0,COLS);
+    }
 }
 
 static void draw_status(const char *mid, const char *right)
 {
     int y=LINES-1;
-    /* left accent: NVT */
+    /* left accent: NVT with icon */
     attron(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
     mvhline(y,0,' ',COLS);
-    mvprintw(y,0," NVT ");
+    if(g_nerd && g_256)
+        mvprintw(0,1," "U_SPARKLE" NVT ");
+    else
+        mvprintw(0,1," NVT ");
     attroff(COLOR_PAIR(CP_STAT_ACC)|A_BOLD);
     int lx=getcurx(stdscr);
 
@@ -1728,52 +2047,147 @@ static void draw_toast_msg(void)
 {
     if(!g_toast[0]) return;
     if(time(NULL)-g_toast_time>2){g_toast[0]='\0';return;}
-    int l=(int)strlen(g_toast), w=l+6, x=(COLS-w)/2, y=LINES-2;
+    int l=(int)strlen(g_toast), w=l+8, x=(COLS-w)/2, y=LINES-2;
     if(x<0)x=0;
-    attron(COLOR_PAIR(CP_TOAST)|A_BOLD);
-    mvhline(y,x,' ',w);
-    mvprintw(y,x+1," "U_CHECK" %s ",g_toast);
-    attroff(COLOR_PAIR(CP_TOAST)|A_BOLD);
+
+    if(g_256){
+        /* Draw toast with fancy rounded corners and shadow effect */
+        /* Shadow */
+        attron(COLOR_PAIR(CP_SHADOW)|A_DIM);
+        mvhline(y+1,x+1,' ',w);
+        attroff(COLOR_PAIR(CP_SHADOW)|A_DIM);
+        /* Main toast */
+        attron(COLOR_PAIR(CP_TOAST)|A_BOLD);
+        mvaddstr(y,x,RB_TL);
+        for(int i=1;i<w-1;i++) mvaddstr(y,x+i,RB_H);
+        mvaddstr(y,x+w-1,RB_TR);
+        mvhline(y,x+1,' ',w-2);
+        mvprintw(y,x+2," "U_CHECK" %s ",g_toast);
+        attroff(COLOR_PAIR(CP_TOAST)|A_BOLD);
+    } else {
+        attron(COLOR_PAIR(CP_TOAST)|A_BOLD);
+        mvhline(y,x,' ',w);
+        mvprintw(y,x+1," "U_CHECK" %s ",g_toast);
+        attroff(COLOR_PAIR(CP_TOAST)|A_BOLD);
+    }
 }
 
 /* ── help overlay ────────────────────────────────────────────────── */
 
 static void draw_help(void)
 {
-    int h=24,w=54,y0=(LINES-h)/2,x0=(COLS-w)/2;
+    int h=26,w=58,y0=(LINES-h)/2,x0=(COLS-w)/2;
     if(y0<0)y0=0; if(x0<0)x0=0;
-    for(int y=y0;y<=y0+h;y++) mvhline(y,x0,' ',w+1);
-    rbox(y0,x0,y0+h,x0+w);
 
-    attron(COLOR_PAIR(CP_BORDER)|A_BOLD);
-    mvprintw(y0,x0+(w-22)/2," "U_INFO" Raccourcis clavier ");
-    attroff(COLOR_PAIR(CP_BORDER)|A_BOLD);
+    /* Draw fancy shadow box with gradient border effect */
+    shadow_box(y0,x0,y0+h,x0+w,
+               g_nerd ? T(U_STAR" Raccourcis clavier", U_STAR" Keyboard Shortcuts")
+                      : T(U_INFO" Raccourcis clavier", U_INFO" Keyboard Shortcuts"),
+               g_256 ? themes[g_theme].name : NULL);
 
     int y=y0+2;
     struct{const char*k,*d;}
-    nav[]={{"j / k","Naviguer haut/bas"},{"PgUp / PgDn","Page haut/bas"},
-           {"Ctrl+U / Ctrl+D","Demi-page"},{"g / G","Debut / Fin"}},
-    act[]={{"Enter","Selectionner / ouvrir ligne"},{"/ ","Rechercher"},
-           {"Esc","Effacer filtre / Retour"},{"r / F5","Rafraichir"},
-           {"+ / - / 0","Zoom carte + detail"},{"i / 6","Calculateur d'itineraire"},
-           {"o / d / x","Depart, arrivee, inversion"},{"n","Menu reseaux"}},
-    scr[]={{"1","Lignes"},{"2","Vehicules"},{"3 / a","Alertes"},
-           {"4 / p","Arrets"},{"5","Passages"},{"6 / i","Itineraire"},
-           {"q","Retour / Quitter"}};
+    nav[]={
+        {"j / k",          T("Naviguer haut/bas",        "Navigate up/down")},
+        {"PgUp / PgDn",    T("Page haut/bas",            "Page up/down")},
+        {"Ctrl+U / Ctrl+D",T("Demi-page",                "Half page")},
+        {"g / G",          T("Debut / Fin",              "Top / Bottom")}
+    },
+    act[]={
+        {"Enter",          T("Selectionner / ouvrir",    "Select / open")},
+        {"/ ",             T("Rechercher",               "Search / filter")},
+        {"Esc",            T("Effacer filtre / Retour",  "Clear filter / Back")},
+        {"r / F5",         T("Rafraichir",               "Refresh")},
+        {"+ / - / 0",      T("Zoom carte + detail",      "Map zoom + detail")},
+        {"i / 6",          T("Calculateur itineraire",   "Journey planner")},
+        {"o / d / x",      T("Depart, arrivee, inversion","Origin, dest, swap")},
+        {"n",              T("Menu reseaux",             "Network menu")},
+        {"t",              T("Theme suivant",            "Next theme")},
+        {"f",              T("Icones Nerd Font",         "Nerd Font icons")},
+        {"L",              T("Basculer langue FR/EN",    "Toggle language FR/EN")}
+    },
+    scr[]={
+        {"1",              T("Lignes",                   "Lines")},
+        {"2",              T("Vehicules",                "Vehicles")},
+        {"3 / a",          T("Alertes",                  "Alerts")},
+        {"4 / p",          T("Arrets",                   "Stops")},
+        {"5",              T("Passages",                 "Departures")},
+        {"6 / i",          T("Itineraire",               "Journey")},
+        {"?",              T("Cette aide",               "This help")},
+        {"q",              T("Retour / Quitter",         "Back / Quit")}
+    };
     int nnav=(int)(sizeof(nav)/sizeof(nav[0]));
     int nact=(int)(sizeof(act)/sizeof(act[0]));
     int nscr=(int)(sizeof(scr)/sizeof(scr[0]));
 
-    attron(COLOR_PAIR(CP_SECTION)|A_BOLD); mvprintw(y++,x0+3,"Navigation"); attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
-    for(int i=0;i<nnav;i++){attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);mvprintw(y,x0+4,"%-18s",nav[i].k);attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);printw(" %s",nav[i].d);y++;}
+    /* Section: Navigation with decorative header */
+    if(g_256){
+        attron(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+        mvaddstr(y,x0+3,U_TRIRIGHT);
+        attroff(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+    }
+    attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    mvprintw(y,x0+5,T("Navigation","Navigation"));
+    attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
     y++;
-    attron(COLOR_PAIR(CP_SECTION)|A_BOLD); mvprintw(y++,x0+3,"Actions"); attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
-    for(int i=0;i<nact;i++){attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);mvprintw(y,x0+4,"%-18s",act[i].k);attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);printw(" %s",act[i].d);y++;}
+    for(int i=0;i<nnav;i++){
+        if(g_256){attron(COLOR_PAIR(CP_GLOW)|A_DIM);mvaddstr(y,x0+4,U_MDOT);attroff(COLOR_PAIR(CP_GLOW)|A_DIM);}
+        attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        mvprintw(y,x0+6,"%-18s",nav[i].k);
+        attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        printw(" %s",nav[i].d);
+        y++;
+    }
     y++;
-    attron(COLOR_PAIR(CP_SECTION)|A_BOLD); mvprintw(y++,x0+3,"Ecrans"); attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
-    for(int i=0;i<nscr;i++){attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);mvprintw(y,x0+4,"%-18s",scr[i].k);attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);printw(" %s",scr[i].d);y++;}
 
-    attron(A_DIM); mvprintw(y0+h-1,x0+(w-28)/2,"Appuyer sur une touche"U_ELLIP); attroff(A_DIM);
+    /* Section: Actions */
+    if(g_256){
+        attron(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+        mvaddstr(y,x0+3,U_TRIRIGHT);
+        attroff(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+    }
+    attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    mvprintw(y,x0+5,T("Actions","Actions"));
+    attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    y++;
+    for(int i=0;i<nact;i++){
+        if(g_256){attron(COLOR_PAIR(CP_GLOW)|A_DIM);mvaddstr(y,x0+4,U_MDOT);attroff(COLOR_PAIR(CP_GLOW)|A_DIM);}
+        attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        mvprintw(y,x0+6,"%-18s",act[i].k);
+        attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        printw(" %s",act[i].d);
+        y++;
+    }
+    y++;
+
+    /* Section: Screens */
+    if(g_256){
+        attron(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+        mvaddstr(y,x0+3,U_TRIRIGHT);
+        attroff(COLOR_PAIR(CP_ACCENT2)|A_BOLD);
+    }
+    attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    mvprintw(y,x0+5,T("Ecrans","Screens"));
+    attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
+    y++;
+    for(int i=0;i<nscr;i++){
+        if(g_256){attron(COLOR_PAIR(CP_GLOW)|A_DIM);mvaddstr(y,x0+4,U_MDOT);attroff(COLOR_PAIR(CP_GLOW)|A_DIM);}
+        attron(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        mvprintw(y,x0+6,"%-18s",scr[i].k);
+        attroff(COLOR_PAIR(CP_HELP_KEY)|A_BOLD);
+        printw(" %s",scr[i].d);
+        y++;
+    }
+
+    /* Footer prompt with pulsing hint */
+    if(g_256){
+        attron(COLOR_PAIR(CP_ACCENT)|A_DIM);
+        nvt_ui_fancy_separator(y0+h-2,x0+2,x0+w-2,CP_BORDER);
+        attroff(COLOR_PAIR(CP_ACCENT)|A_DIM);
+    }
+    attron(COLOR_PAIR(CP_ACCENT2)|A_DIM);
+    mvprintw(y0+h-1,x0+4,T("Appuyer sur une touche"U_ELLIP,"Press any key"U_ELLIP));
+    attroff(COLOR_PAIR(CP_ACCENT2)|A_DIM);
 }
 
 /* ── Screen: Lines ───────────────────────────────────────────────── */
@@ -1786,7 +2200,7 @@ static void draw_lines(void)
     int alert_lines=count_alerted_lines();
     int top=3;
 
-    draw_header("NVT // Bordeaux",g_search[0]?"reseau filtre":"reseau live");
+    draw_header("NVT // Bordeaux",g_search[0]?T("reseau filtre","filtered network"):T("reseau en direct","live network"));
     draw_tabs();
 
     if(COLS>=94&&LINES>=24){
@@ -1794,13 +2208,13 @@ static void draw_lines(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",total);
-        stat_card(top,2,cw,"ACTIVE",buf,"lignes actives",CP_ACCENT);
+        stat_card(top,2,cw,"ACTIVE",buf,T("lignes actives","active lines"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",trams);
-	stat_card(top,2+cw+gap,cw,"TRAM",buf,"couloirs ferres",CP_CYAN_T);
+        stat_card(top,2+cw+gap,cw,"TRAM",buf,T("couloirs ferres","rail corridors"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",buses);
-        stat_card(top,2+(cw+gap)*2,cw,"BUS",buf,"reseau bus",CP_GREEN);
+        stat_card(top,2+(cw+gap)*2,cw,"BUS",buf,T("reseau bus","bus network"),CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",alert_lines);
-        stat_card(top,2+(cw+gap)*3,cw,"ALERTS",buf,"lignes impactees",alert_lines?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2+(cw+gap)*3,cw,"ALERTS",buf,T("lignes impactees","lines impacted"),alert_lines?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -1817,7 +2231,7 @@ static void draw_lines(void)
         if(mr<1) mr=1;
 
         panel_box(y1,lx1,y2,lx2,"Network Index",g_search[0]?g_search:"all active");
-        panel_box(y1,rx1,y2,rx2,"Line Focus",g_nfiltered>0?g_lines[g_filtered[g_cursor]].vehicule:"idle");
+        dbox_panel(y1,rx1,y2,rx2,"Line Focus",g_nfiltered>0?g_lines[g_filtered[g_cursor]].vehicule:"idle");
 
         if(g_cursor<g_scroll) g_scroll=g_cursor;
         if(g_cursor>=g_scroll+mr) g_scroll=g_cursor-mr+1;
@@ -1853,7 +2267,8 @@ static void draw_lines(void)
             draw_line_badge(row,lx1+3,l);
             if(selected) attron(COLOR_PAIR(CP_SEL));
             print_hl(row,lx1+10,l->libelle,g_search,name_w);
-            mvprintw(row,lx2-16,"%-5s",l->vehicule);
+            draw_type_pill(row,lx2-17,l->vehicule,selected);
+            if(selected) attron(COLOR_PAIR(CP_SEL));
             mvprintw(row,lx2-9," %s ",l->sae?U_CHECK:U_MDOT);
             if(alerts>0){
                 attroff(selected?COLOR_PAIR(CP_SEL):0);
@@ -1886,26 +2301,27 @@ static void draw_lines(void)
             if(pw>=28){
                 int sw=(pw-1)/2;
                 snprintf(buf,sizeof(buf),"%s",sel->sae?U_CHECK" live":"-");
-                stat_card(yy+3,px,sw,"SAE",buf,sel->sae?"temps reel et prediction":"telemetrie limitee",sel->sae?CP_GREEN:CP_YELLOW);
+                stat_card(yy+3,px,sw,"SAE",buf,sel->sae?T("temps reel et prediction","real-time & prediction"):T("telemetrie limitee","limited telemetry"),sel->sae?CP_GREEN:CP_YELLOW);
                 snprintf(buf,sizeof(buf),"%d",alerts);
-                stat_card(yy+3,px+sw+1,pw-sw,"ALERTS",buf,alerts?"messages actifs":"ligne stable",alerts?CP_ALERT_MED:CP_GREEN);
+                stat_card(yy+3,px+sw+1,pw-sw,"ALERTS",buf,alerts?T("messages actifs","active messages"):T("ligne stable","stable line"),alerts?CP_ALERT_MED:CP_GREEN);
             }
 
             yy+=9;
             attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
-            mvprintw(yy,px,"Telemetry");
+            mvprintw(yy,px,T("Telemetrie","Telemetry"));
             attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
             yy++;
             snprintf(buf,sizeof(buf),"%d",sel->gid);
             kv_line(yy++,px,10,"gid",buf,CP_ACCENT);
             kv_line(yy++,px,10,"type",sel->vehicule,CP_ACCENT);
-            kv_line(yy++,px,10,"filter",g_search[0]?g_search:"none",CP_ACCENT);
+
+            kv_line(yy++,px,10,T("filtre","filter"),g_search[0]?g_search:"none",CP_ACCENT);
             snprintf(buf,sizeof(buf),"%d / %d",g_nfiltered?g_cursor+1:0,g_nfiltered);
-            kv_line(yy++,px,10,"focus",buf,CP_ACCENT);
+            kv_line(yy++,px,10,T("cible","focus"),buf,CP_ACCENT);
 
             yy++;
             attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
-            mvprintw(yy++,px,"Signal");
+            mvprintw(yy++,px,T("Signal","Signal"));
             attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
             if(alerts){
                 int shown=0;
@@ -1915,7 +2331,7 @@ static void draw_lines(void)
                     mvprintw(yy,px,"%s ",shown==0?U_WARN:U_DIAMOND);
                     attroff(COLOR_PAIR(CP_ALERT_MED)|A_BOLD);
                     attron(A_BOLD);
-                    print_fit(yy,px+2,pw-4,g_alerts[i].titre[0]?g_alerts[i].titre:"Message reseau");
+                    print_fit(yy,px+2,pw-4,g_alerts[i].titre[0]?g_alerts[i].titre:T("Message reseau","Network message"));
                     attroff(A_BOLD);
                     yy++;
                     yy+=draw_wrapped_block(yy,px+2,pw-4,2,g_alerts[i].message,CP_ALERT_MED,0);
@@ -1924,15 +2340,15 @@ static void draw_lines(void)
                 }
             } else {
                 attron(A_DIM);
-                mvprintw(yy++,px,U_CHECK" aucune alerte sur cette ligne");
-                mvprintw(yy++,px,"Enter ouvre le board vehicules en direct.");
-                mvprintw(yy++,px,"p bascule vers la recherche d'arret.");
+                mvprintw(yy++,px,U_CHECK" %s",T("aucune alerte sur cette ligne","no alerts on this line"));
+                mvprintw(yy++,px,T("Enter ouvre le tableau vehicules en direct.","Enter opens the live vehicle board."));
+                mvprintw(yy++,px,T("p bascule vers la recherche d'arret.","p switches to stop search."));
                 attroff(A_DIM);
             }
         } else {
             attron(A_DIM);
-            mvprintw(y1+3,rx1+3,U_INFO" aucun resultat");
-            mvprintw(y1+5,rx1+3,"Essayez un identifiant, un type ou une ligne.");
+            mvprintw(y1+3,rx1+3,U_INFO" %s",T("aucun resultat","no results"));
+            mvprintw(y1+5,rx1+3,T("Essayez un identifiant, un type ou une ligne.","Try an id, a type or a line name."));
             attroff(A_DIM);
         }
     } else {
@@ -1973,7 +2389,8 @@ static void draw_lines(void)
             draw_line_badge(row,4,l);
             if(selected) attron(COLOR_PAIR(CP_SEL));
             print_hl(row,11,l->libelle,g_search,cw);
-            mvprintw(row,COLS-17,"%-5s",l->vehicule);
+            draw_type_pill(row,COLS-18,l->vehicule,selected);
+            if(selected) attron(COLOR_PAIR(CP_SEL));
             mvprintw(row,COLS-10," %s ",l->sae?U_CHECK:U_MDOT);
             if(alerts>0){
                 if(selected) attroff(COLOR_PAIR(CP_SEL));
@@ -2001,7 +2418,8 @@ static void draw_lines(void)
 
     char r[32];
     snprintf(r,sizeof(r),"%d/%d",g_nfiltered>0?g_cursor+1:0,g_nfiltered);
-    draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme",r);
+    draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"),r);
 }
 
 /* ── Screen: Vehicles ────────────────────────────────────────────── */
@@ -2059,7 +2477,7 @@ static void draw_vehicle_lane_panel(int y1,int x1,int y2,int x2,const char *dir)
 
     if(!cnt){
         attron(A_DIM);
-        mvprintw(y,x1+2,U_INFO" aucun vehicule sur ce sens");
+        mvprintw(y,x1+2,"%s",T(U_INFO" aucun vehicule sur ce sens",U_INFO" no vehicles on this direction"));
         attroff(A_DIM);
         return;
     }
@@ -2141,6 +2559,24 @@ static const char *map_mask_glyph(unsigned char mask)
     if(mask&MAP_N || mask&MAP_S) return "\xe2\x94\x82";
     if(mask&MAP_E || mask&MAP_W) return "\xe2\x94\x80";
     return "\xe2\x94\x80";
+}
+
+/* Double-line box drawing for rail tracks */
+static const char *map_rail_glyph(unsigned char mask)
+{
+    if(mask==(MAP_E|MAP_W))             return "\xe2\x95\x90"; /* ═ */
+    if(mask==(MAP_N|MAP_S))             return "\xe2\x95\x91"; /* ║ */
+    if(mask==(MAP_E|MAP_S))             return "\xe2\x95\x94"; /* ╔ */
+    if(mask==(MAP_W|MAP_S))             return "\xe2\x95\x97"; /* ╗ */
+    if(mask==(MAP_E|MAP_N))             return "\xe2\x95\x9a"; /* ╚ */
+    if(mask==(MAP_W|MAP_N))             return "\xe2\x95\x9d"; /* ╝ */
+    if(mask==(MAP_N|MAP_E|MAP_S))       return "\xe2\x95\xa0"; /* ╠ */
+    if(mask==(MAP_N|MAP_W|MAP_S))       return "\xe2\x95\xa3"; /* ╣ */
+    if(mask==(MAP_E|MAP_S|MAP_W))       return "\xe2\x95\xa6"; /* ╦ */
+    if(mask==(MAP_E|MAP_N|MAP_W))       return "\xe2\x95\xa9"; /* ╩ */
+    if(mask==(MAP_N|MAP_E|MAP_S|MAP_W)) return "\xe2\x95\xac"; /* ╬ */
+    if(mask&MAP_N || mask&MAP_S)        return "\xe2\x95\x91"; /* ║ */
+    return "\xe2\x95\x90"; /* ═ */
 }
 
 static void map_set_cell(char *glyph,unsigned char *colors,int *attrs,unsigned char *prio,int w,int h,int x,int y,char ch,int cp,int attr,unsigned char z)
@@ -2637,10 +3073,14 @@ static void draw_vehicle_map_panel(int y1,int x1,int y2,int x2)
 
     attron(A_DIM);
     snprintf(legend,sizeof(legend),
-             "%s%s%s"U_BULLET" vehicule "U_BULLETO" arret #=superposes",
-             has_basemap?"communes":"fond metro",
-             detail_map?" | roads . rail = rivers ~":"",
-             has_route?" | chemin (gras=aller dim=retour) | ":" | ");
+             "%s%s%s"U_BULLET" %s "U_BULLETO" %s #=%s",
+             has_basemap?T("communes","boundaries"):T("fond metro","metro base"),
+             detail_map?" | roads \xe2\x94\x80 rail \xe2\x95\x90 rivers \xe2\x89\x88":"",
+             has_route?T(" | chemin (gras=aller dim=retour) | ",
+                         " | route (bold=outbound dim=inbound) | "):" | ",
+             T("vehicule","vehicle"),
+             T("arret","stop"),
+             T("superposes","overlaps"));
     print_fit(legend_y,x1+2,x2-x1-3,legend);
     attroff(A_DIM);
 
@@ -2740,19 +3180,19 @@ static void draw_vehicle_map_panel(int y1,int x1,int y2,int x2)
                     attroff(COLOR_PAIR(line_cp)|attr);
                 } else if(water_mask[idx]){
                     attron(COLOR_PAIR(CP_BLUE)|A_BOLD);
-                    addch('~');
+                    addstr(map_mask_glyph(water_mask[idx]));
                     attroff(COLOR_PAIR(CP_BLUE)|A_BOLD);
                 } else if(rail_mask[idx]){
-                    attron(COLOR_PAIR(CP_MAGENTA));
-                    addch('=');
-                    attroff(COLOR_PAIR(CP_MAGENTA));
+                    attron(COLOR_PAIR(CP_MAGENTA)|A_BOLD);
+                    addstr(map_rail_glyph(rail_mask[idx]));
+                    attroff(COLOR_PAIR(CP_MAGENTA)|A_BOLD);
                 } else if(boundary_mask[idx]){
                     attron(COLOR_PAIR(CP_SECTION)|A_BOLD);
                     addstr(map_mask_glyph(boundary_mask[idx]));
                     attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
                 } else if(road_mask[idx]){
                     attron(A_DIM);
-                    addch('.');
+                    addstr(map_mask_glyph(road_mask[idx]));
                     attroff(A_DIM);
                 } else if(glyph[idx]!=' '){
                     attron(COLOR_PAIR(colors[idx])|attrs[idx]);
@@ -2811,7 +3251,7 @@ static void draw_vehicle_map_panel(int y1,int x1,int y2,int x2)
         if(detail_map){
             snprintf(footer,sizeof(footer),
                      "%s%s%d veh.  %d names  zoom=x%d  detail roads=%d rail=%d rivers=%d",
-                     has_basemap?"geo.api.gouv.fr communes":"metropole fallback",
+                     has_basemap?T("geo.api.gouv.fr communes","geo.api.gouv.fr boundaries"):"metropole fallback",
                      has_route?"  sv_chem_l overlay  ":"  ",
                      g_nvehicles,
                      has_basemap?g_metro_map.nlabels:0,
@@ -2822,7 +3262,7 @@ static void draw_vehicle_map_panel(int y1,int x1,int y2,int x2)
         } else {
             snprintf(footer,sizeof(footer),
                      "%s%s%d veh.  %d names  zoom=x%d  detail unavailable",
-                     has_basemap?"geo.api.gouv.fr communes":"metropole fallback",
+                     has_basemap?T("geo.api.gouv.fr communes","geo.api.gouv.fr boundaries"):"metropole fallback",
                      has_route?"  sv_chem_l overlay  ":"  ",
                      g_nvehicles,
                      has_basemap?g_metro_map.nlabels:0,
@@ -2831,7 +3271,7 @@ static void draw_vehicle_map_panel(int y1,int x1,int y2,int x2)
     } else {
         snprintf(footer,sizeof(footer),
                  "%s%s%d veh.  %d names  zoom=x%d",
-                 has_basemap?"geo.api.gouv.fr communes":"metropole fallback",
+                 has_basemap?T("geo.api.gouv.fr communes","geo.api.gouv.fr boundaries"):"metropole fallback",
                  has_route?"  sv_chem_l overlay  ":"  ",
                  g_nvehicles,
                  has_basemap?g_metro_map.nlabels:0,
@@ -2851,11 +3291,13 @@ static void draw_vehicles(time_t lr)
     int has_map;
     line_code(ln,code,sizeof(code));
     snprintf(t,sizeof(t),"%s / %s",code,ln->libelle);
-    snprintf(bc,sizeof(bc),"Lignes "U_ARROW" live telemetry");
+    snprintf(bc,sizeof(bc),"%s "U_ARROW" live telemetry",T("Lignes","Lines"));
     if(!g_map_attempted){
         g_map_attempted=1;
         g_has_metro_map=fetch_metro_map(&g_metro_map)>0;
-        toast(g_has_metro_map?"Carte communes chargee":"Carte communes indisponible");
+        toast(g_has_metro_map
+              ? T("Carte communes chargee","Commune map loaded")
+              : T("Carte communes indisponible","Commune map unavailable"));
     }
     ensure_line_route();
     ensure_vehicle_detail_map();
@@ -2880,13 +3322,13 @@ static void draw_vehicles(time_t lr)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",g_nvehicles);
-        stat_card(cards_top,2,cw,"LIVE",buf,"vehicules suivis",CP_ACCENT);
+        stat_card(cards_top,2,cw,"LIVE",buf,T("vehicules suivis","vehicles tracked"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",total_delayed);
-        stat_card(cards_top,2+cw+gap,cw,"DELAY",buf,"retards > 1 min",total_delayed?CP_ALERT_MED:CP_GREEN);
+        stat_card(cards_top,2+cw+gap,cw,"DELAY",buf,T("retards > 1 min","delays > 1 min"),total_delayed?CP_ALERT_MED:CP_GREEN);
         snprintf(buf,sizeof(buf),"%dkm/h",g_nvehicles?total_speed/g_nvehicles:0);
-        stat_card(cards_top,2+(cw+gap)*2,cw,"AVG SPD",buf,"vitesse moyenne",CP_CYAN_T);
+        stat_card(cards_top,2+(cw+gap)*2,cw,"AVG SPD",buf,T("vitesse moyenne","avg speed"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",line_alerts);
-        stat_card(cards_top,2+(cw+gap)*3,cw,"LINE SIG",buf,line_alerts?"messages actifs":"aucun incident",line_alerts?CP_ALERT_MED:CP_GREEN);
+        stat_card(cards_top,2+(cw+gap)*3,cw,"LINE SIG",buf,line_alerts?T("messages actifs","active messages"):T("aucun incident","no incidents"),line_alerts?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -2946,7 +3388,7 @@ static void draw_vehicles(time_t lr)
                 mvprintw(y,3,"%s ",cp==CP_ALERT_HI?U_DIAMOND:cp==CP_ALERT_MED?U_WARN:U_INFO);
                 attroff(COLOR_PAIR(cp)|A_BOLD);
                 attron(A_BOLD);
-                print_fit(y,5,COLS-12,g_alerts[i].titre[0]?g_alerts[i].titre:"Message reseau");
+                print_fit(y,5,COLS-12,g_alerts[i].titre[0]?g_alerts[i].titre:T("Message reseau","Network message"));
                 attroff(A_BOLD);
                 y++;
                 if(y<y2) y+=draw_wrapped_block(y,5,COLS-12,1,g_alerts[i].message,cp,0);
@@ -2958,8 +3400,9 @@ static void draw_vehicles(time_t lr)
     draw_toast_msg();
     int rem=VEHICLE_REFRESH_SEC-(int)(time(NULL)-lr); if(rem<0)rem=0;
     char mid[96],ri[32];
-    snprintf(mid,sizeof(mid)," q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme   %ds",rem);
-    snprintf(ri,sizeof(ri),"%d veh.",g_nvehicles);
+    snprintf(mid,sizeof(mid),T(" q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme   %ds",
+                               " q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme   %ds"),rem);
+    snprintf(ri,sizeof(ri),T("%d veh.","%d veh."),g_nvehicles);
     draw_status(mid,ri);
 
     /* mini progress in status */
@@ -2984,7 +3427,9 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
     int has_any=(g_has_metro_map&&g_metro_map.npaths>0)||(g_has_atlas_map&&g_atlas_map.npaths>0)||(g_has_atlas_routes&&g_atlas_routes.npaths>0);
     char legend[192], footer[192];
 
-    panel_box(y1,x1,y2,x2,"Whole Network","communes + roads + rail + rivers + chemins");
+    panel_box(y1,x1,y2,x2,"Whole Network",
+              T("communes + roads + rail + rivers + chemins",
+                "communes + roads + rail + rivers + routes"));
     if(w<28||h<8){
         attron(A_DIM);
         mvprintw(y1+2,x1+2,"map area too small");
@@ -2993,7 +3438,8 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
     }
     if(!has_any){
         attron(A_DIM);
-        mvprintw(y1+2,x1+2,U_WARN" aucun fond de carte charge");
+        mvprintw(y1+2,x1+2,"%s",T(U_WARN" aucun fond de carte charge",
+                                  U_WARN" no basemap loaded"));
         attroff(A_DIM);
         return;
     }
@@ -3004,7 +3450,9 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
     }
 
     attron(A_DIM);
-    snprintf(legend,sizeof(legend),"communes | roads . | rail = | rivers ~ | chemin %s  /=%s",
+    snprintf(legend,sizeof(legend),
+             T("communes | roads \xe2\x94\x80 | rail \xe2\x95\x90 | rivers \xe2\x89\x88 | chemin %s  /=%s",
+               "communes | roads \xe2\x94\x80 | rail \xe2\x95\x90 | rivers \xe2\x89\x88 | route %s  /=%s"),
              route_emphasis?"front":"bg",
              g_atlas_search[0]?g_atlas_search:(g_atlas_focus_gid?"focus":"all"));
     print_fit(legend_y,x1+2,x2-x1-3,legend);
@@ -3084,13 +3532,13 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
                 int idx=y*w+x;
                 if(water_mask[idx]){
                     attron(COLOR_PAIR(CP_BLUE)|A_BOLD);
-                    addch('~');
+                    addstr(map_mask_glyph(water_mask[idx]));
                     attroff(COLOR_PAIR(CP_BLUE)|A_BOLD);
                     label_occ[idx]=1;
                 } else if(rail_mask[idx]){
-                    attron(COLOR_PAIR(CP_MAGENTA));
-                    addch('=');
-                    attroff(COLOR_PAIR(CP_MAGENTA));
+                    attron(COLOR_PAIR(CP_MAGENTA)|A_BOLD);
+                    addstr(map_rail_glyph(rail_mask[idx]));
+                    attroff(COLOR_PAIR(CP_MAGENTA)|A_BOLD);
                     label_occ[idx]=1;
                 } else if(route_mask[idx] && route_emphasis){
                     if(route_multi[idx]){
@@ -3105,7 +3553,7 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
                     label_occ[idx]=1;
                 } else if(road_mask[idx]){
                     attron(A_DIM);
-                    addch('.');
+                    addstr(map_mask_glyph(road_mask[idx]));
                     attroff(A_DIM);
                 } else if(route_mask[idx]){
                     if(route_multi[idx]){
@@ -3142,7 +3590,8 @@ static void draw_atlas_map_panel(int y1,int x1,int y2,int x2)
     }
 
     attron(A_DIM);
-    snprintf(footer,sizeof(footer),"geo.api.gouv.fr communes  overpass roads=%d rail=%d rivers=%d  chemin=%d",
+    snprintf(footer,sizeof(footer),T("geo.api.gouv.fr communes  overpass roads=%d rail=%d rivers=%d  chemin=%d",
+                                     "geo.api.gouv.fr boundaries  overpass roads=%d rail=%d rivers=%d  path=%d"),
              g_atlas_map.road_paths,g_atlas_map.rail_paths,g_atlas_map.water_paths,count_atlas_visible_paths());
     print_fit(y2-1,x1+2,x2-x1-3,footer);
     attroff(A_DIM);
@@ -3162,12 +3611,16 @@ static void draw_atlas(void)
     if(!g_atlas_map_attempted){
         g_atlas_map_attempted=1;
         g_has_atlas_map=fetch_atlas_map(&g_atlas_map)>0;
-        toast(g_has_atlas_map?"Road/rail/rivers charges":"Road/rail/rivers indisponibles");
+        toast("%s", g_has_atlas_map
+                    ? T("Road/rail/rivers charges","Road/rail/rivers loaded")
+                    : T("Road/rail/rivers indisponibles","Road/rail/rivers unavailable"));
     }
     if(!g_atlas_routes_attempted){
         g_atlas_routes_attempted=1;
         g_has_atlas_routes=fetch_atlas_routes(&g_atlas_routes)>0;
-        toast(g_has_atlas_routes?"Chemins reseau charges":"Chemins reseau indisponibles");
+        toast("%s", g_has_atlas_routes
+                    ? T("Chemins reseau charges","Network paths loaded")
+                    : T("Chemins reseau indisponibles","Network paths unavailable"));
     }
 
     if(g_atlas_focus_gid){
@@ -3175,9 +3628,9 @@ static void draw_atlas(void)
         char code[16];
         if(ln){
             line_code(ln,code,sizeof(code));
-            snprintf(bc,sizeof(bc),"focus ligne %s / %s",code,ln->libelle);
-        } else snprintf(bc,sizeof(bc),"focus ligne");
-    } else if(g_atlas_search[0]) snprintf(bc,sizeof(bc),"filtre %s",g_atlas_search);
+            snprintf(bc,sizeof(bc),T("cible ligne %s / %s","line focus %s / %s"),code,ln->libelle);
+        } else snprintf(bc,sizeof(bc),"%s",T("cible ligne","line focus"));
+    } else if(g_atlas_search[0]) snprintf(bc,sizeof(bc),T("filtre %s","filter %s"),g_atlas_search);
     else snprintf(bc,sizeof(bc),"all lines, whole metropole");
 
     draw_header("Atlas // Whole Map",bc);
@@ -3197,7 +3650,9 @@ static void draw_atlas(void)
         mvprintw(head_y,sx1+2,"/ %s",g_atlas_search[0]?g_atlas_search:"all active lines");
         attroff(A_BOLD);
         attron(A_DIM);
-        mvprintw(head_y+1,sx1+2,"%d visible lines  %d visible chemins",visible_lines,visible_paths);
+        mvprintw(head_y+1,sx1+2,T("%d lignes visibles  %d chemins visibles",
+                                  "%d visible lines  %d visible paths"),
+                 visible_lines,visible_paths);
         attroff(A_DIM);
 
         if(rows<1) rows=1;
@@ -3222,13 +3677,16 @@ static void draw_atlas(void)
         if(LINES-top>=8){
             attron(A_DIM);
             mvprintw(top+1,3,"filter: %s",g_atlas_search[0]?g_atlas_search:"all active lines");
-            mvprintw(top+2,3,"visible lines: %d  visible chemins: %d",visible_lines,visible_paths);
+            mvprintw(top+2,3,T("lignes visibles: %d  chemins visibles: %d",
+                               "visible lines: %d  visible paths: %d"),
+                     visible_lines,visible_paths);
             attroff(A_DIM);
         }
     }
 
     draw_toast_msg();
-    snprintf(mid,sizeof(mid)," /:filter"U_MDOT"Enter:focus"U_MDOT"r:reload"U_MDOT"q:back"U_MDOT"t:theme");
+    snprintf(mid,sizeof(mid),T(" /:filtre"U_MDOT"Enter:focus"U_MDOT"r:recharger"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                               " /:filter"U_MDOT"Enter:focus"U_MDOT"r:reload"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"));
     snprintf(right,sizeof(right),"%d paths",visible_paths);
     draw_status(mid,right);
 }
@@ -3254,7 +3712,7 @@ static void draw_alerts(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",g_nalerts);
-        stat_card(top,2,cw,"TOTAL",buf,"messages reseau",g_nalerts?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2,cw,"TOTAL",buf,T("messages reseau","network messages"),g_nalerts?CP_ALERT_MED:CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",hi);
         stat_card(top,2+cw+gap,cw,"CRIT",buf,"severity 3",hi?CP_ALERT_HI:CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",med);
@@ -3275,8 +3733,8 @@ static void draw_alerts(void)
 
         if(!g_nalerts){
             attron(A_DIM);
-            mvprintw(y1+3,3,U_CHECK" aucune alerte active");
-            mvprintw(y1+5,3,"Le reseau est calme pour le moment.");
+            mvprintw(y1+3,3,"%s",T(U_CHECK" aucune alerte active",U_CHECK" no active alerts"));
+            mvprintw(y1+5,3,"%s",T("Le reseau est calme pour le moment.","The network is quiet right now."));
             attroff(A_DIM);
         }
 
@@ -3294,7 +3752,7 @@ static void draw_alerts(void)
                 mvprintw(sy,3,"%s",ic);
                 attroff(COLOR_PAIR(cp)|A_BOLD);
                 attron(A_BOLD);
-                print_fit(sy,6,COLS-18,a->titre[0]?a->titre:"Message reseau");
+                print_fit(sy,6,COLS-18,a->titre[0]?a->titre:T("Message reseau","Network message"));
                 attroff(A_BOLD);
             }
             vy++;
@@ -3355,7 +3813,8 @@ static void draw_alerts(void)
     char ri[32];
     if(g_alert_total_h>0) snprintf(ri,sizeof(ri),"%d/%d",g_alert_scroll+1,g_alert_total_h);
     else ri[0]=0;
-    draw_status(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme",ri);
+    draw_status(T(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"),ri);
 }
 
 /* ── Screen: Stop Search ─────────────────────────────────────────── */
@@ -3376,13 +3835,13 @@ static void draw_stops(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",g_nstop_groups);
-        stat_card(top,2,cw,"GROUPS",buf,"arrets agreges",CP_ACCENT);
+        stat_card(top,2,cw,"GROUPS",buf,T("arrets agreges","grouped stops"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",g_nstop_filtered);
-        stat_card(top,2+cw+gap,cw,"VISIBLE",buf,"hits courants",CP_CYAN_T);
+        stat_card(top,2+cw+gap,cw,"VISIBLE",buf,T("hits courants","current hits"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",preview_idx>=0?g_stop_groups[preview_idx].ngids:0);
-        stat_card(top,2+(cw+gap)*2,cw,"PLATFORMS",buf,"quais selectionnes",CP_GREEN);
+        stat_card(top,2+(cw+gap)*2,cw,"PLATFORMS",buf,T("quais selectionnes","selected platforms"),CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",cached);
-        stat_card(top,2+(cw+gap)*3,cw,"CACHE",buf,cached?"passages memorises":"ouvrez un board",cached?CP_GREEN:CP_YELLOW);
+        stat_card(top,2+(cw+gap)*3,cw,"CACHE",buf,cached?T("passages memorises","cached departures"):T("ouvrez un tableau","open a board"),cached?CP_GREEN:CP_YELLOW);
         top+=5;
     }
 
@@ -3402,7 +3861,7 @@ static void draw_stops(void)
 
         attron(A_DIM);
         mvprintw(head_y,lx1+3,"STOP");
-        mvprintw(head_y,lx2-8,"QUAIS");
+        mvprintw(head_y,lx2-8,"%s",T("QUAIS","PLAT."));
         attroff(A_DIM);
 
         if(g_cursor<g_scroll)g_scroll=g_cursor;
@@ -3439,7 +3898,7 @@ static void draw_stops(void)
             attroff(A_DIM);
 
             snprintf(buf,sizeof(buf),"%d",sg->ngids);
-            stat_card(y+3,rx1+2,(w-1)/2,"QUAIS",buf,"physical stop ids",CP_GREEN);
+            stat_card(y+3,rx1+2,(w-1)/2,T("QUAIS","PLAT."),buf,"physical stop ids",CP_GREEN);
             snprintf(buf,sizeof(buf),"%d",cached);
             stat_card(y+3,rx1+3+(w-1)/2,w-(w-1)/2,"CACHE",buf,cached?"board already loaded":"press Enter to load",cached?CP_GREEN:CP_YELLOW);
 
@@ -3471,8 +3930,8 @@ static void draw_stops(void)
                 }
             } else if(y<y2-3){
                 attron(A_DIM);
-                mvprintw(y+1,rx1+2,"Enter ouvre le board temps reel.");
-                mvprintw(y+2,rx1+2,"/: change le filtre, q: retour.");
+                mvprintw(y+1,rx1+2,"%s",T("Enter ouvre le tableau temps reel.","Enter opens the live board."));
+                mvprintw(y+2,rx1+2,"%s",T("/: change le filtre, q: retour.","/: change filter, q: back."));
                 attroff(A_DIM);
             }
         }
@@ -3518,7 +3977,8 @@ static void draw_stops(void)
     }
     draw_toast_msg();
     char r[32]; snprintf(r,sizeof(r),"%d/%d",g_nstop_filtered>0?g_cursor+1:0,g_nstop_filtered);
-    draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme",r);
+    draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"),r);
 }
 
 /* ── Screen: Passages ────────────────────────────────────────────── */
@@ -3549,7 +4009,7 @@ static void draw_passages(void)
     int uniq=count_unique_passage_lines();
     int next_min=-1;
     snprintf(t,sizeof(t),"Departures // %s",sg->libelle);
-    snprintf(bc,sizeof(bc),"Arrets "U_ARROW" %s",sg->libelle);
+    snprintf(bc,sizeof(bc),T("Arrets "U_ARROW" %s","Stops "U_ARROW" %s"),sg->libelle);
     draw_header(t,bc); draw_tabs();
 
     if(g_npassages>0){
@@ -3563,13 +4023,13 @@ static void draw_passages(void)
         if(next_min<0) snprintf(buf,sizeof(buf),"--");
         else if(next_min<=1) snprintf(buf,sizeof(buf),"NOW");
         else snprintf(buf,sizeof(buf),"%dmin",next_min);
-        stat_card(top,2,cw,"NEXT",buf,"prochain passage",next_min>=0?CP_GREEN:CP_YELLOW);
+        stat_card(top,2,cw,"NEXT",buf,T("prochain passage","next departure"),next_min>=0?CP_GREEN:CP_YELLOW);
         snprintf(buf,sizeof(buf),"%d",live);
-        stat_card(top,2+cw+gap,cw,"LIVE",buf,"estimations live",live?CP_GREEN:CP_YELLOW);
+        stat_card(top,2+cw+gap,cw,"LIVE",buf,T("estimations direct","live estimates"),live?CP_GREEN:CP_YELLOW);
         snprintf(buf,sizeof(buf),"%d",uniq);
-        stat_card(top,2+(cw+gap)*2,cw,"LINES",buf,"lignes a venir",CP_ACCENT);
+        stat_card(top,2+(cw+gap)*2,cw,"LINES",buf,T("lignes a venir","upcoming lines"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",delayed);
-        stat_card(top,2+(cw+gap)*3,cw,"DELAY",buf,"depassements",delayed?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2+(cw+gap)*3,cw,"DELAY",buf,T("depassements","late departures"),delayed?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -3647,9 +4107,9 @@ static void draw_passages(void)
             }
             if(!g_npassages&&y<y2-2){
                 attron(A_DIM);
-                mvprintw(y,rx1+2,U_INFO" aucun passage prevu");
-                mvprintw(y+2,rx1+2,"r recharge le board");
-                mvprintw(y+3,rx1+2,"/ retourne a la recherche");
+                mvprintw(y,rx1+2,"%s",T(U_INFO" aucun passage prevu",U_INFO" no departure scheduled"));
+                mvprintw(y+2,rx1+2,"%s",T("r recharge le tableau","r reloads the board"));
+                mvprintw(y+3,rx1+2,"%s",T("/ retourne a la recherche","/ returns to search"));
                 attroff(A_DIM);
             }
         }
@@ -3687,14 +4147,15 @@ static void draw_passages(void)
         }
         if(!g_npassages){
             attron(A_DIM);
-            mvprintw(y1+4,3,U_INFO" aucun passage prevu");
+            mvprintw(y1+4,3,"%s",T(U_INFO" aucun passage prevu",U_INFO" no departure scheduled"));
             attroff(A_DIM);
         }
     }
 
     draw_toast_msg();
     char r[32]; snprintf(r,sizeof(r),"%d pass.",g_npassages);
-    draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme",r);
+    draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " q:back"U_MDOT"r:refresh"U_MDOT"/:stop"U_MDOT"t:theme"U_MDOT"L:lang"),r);
 }
 
 /* ── Screen: Itinerary ───────────────────────────────────────────── */
@@ -3740,7 +4201,7 @@ static void draw_itinerary(void)
                  g_itinerary.line_code[0] && g_itinerary.line_name[0] ? " " U_ARROW " " : "",
                  g_itinerary.line_name);
     } else {
-        snprintf(crumb, sizeof(crumb), "selectionnez une ligne");
+        snprintf(crumb, sizeof(crumb), "%s", T("selectionnez une ligne","select a line"));
     }
 
     draw_header(title, crumb);
@@ -3751,26 +4212,29 @@ static void draw_itinerary(void)
         int cw = (COLS - 5 - gap * 3) / 4;
 
         snprintf(buf, sizeof(buf), "%d", g_itinerary.nstops);
-        stat_card(top, 2, cw, "STOPS", buf, "sequence chargee", g_itinerary.ready ? CP_ACCENT : CP_YELLOW);
+        stat_card(top, 2, cw, "STOPS", buf, T("sequence chargee","sequence loaded"), g_itinerary.ready ? CP_ACCENT : CP_YELLOW);
         snprintf(buf, sizeof(buf), "%s", origin ? "SET" : "--");
-        stat_card(top, 2 + cw + gap, cw, "FROM", buf, origin ? origin->name : "choisissez avec o", origin ? CP_GREEN : CP_YELLOW);
+        stat_card(top, 2 + cw + gap, cw, "FROM", buf, origin ? origin->name : T("choisissez avec o","use o to set"), origin ? CP_GREEN : CP_YELLOW);
         snprintf(buf, sizeof(buf), "%s", destination ? "SET" : "--");
-        stat_card(top, 2 + (cw + gap) * 2, cw, "TO", buf, destination ? destination->name : "choisissez avec d", destination ? CP_RED : CP_YELLOW);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "TO", buf, destination ? destination->name : T("choisissez avec d","use d to set"), destination ? CP_RED : CP_YELLOW);
         if (!origin || !destination) snprintf(buf, sizeof(buf), "--");
         else if (hops == 0) snprintf(buf, sizeof(buf), "same");
         else snprintf(buf, sizeof(buf), "%d", hops);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "HOPS", buf, "nombre d'arrets", hops ? CP_CYAN_T : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "HOPS", buf, T("nombre d'arrets","stop count"), hops ? CP_CYAN_T : CP_GREEN);
         top += 5;
     }
 
     if (!g_itinerary.ready) {
         panel_box(top, 1, LINES - 3, COLS - 2, "Route Calculator", "idle");
         attron(A_DIM);
-        mvprintw(top + 3, 4, U_INFO" aucune ligne chargee pour l'itineraire");
-        mvprintw(top + 5, 4, "Ouvrez d'abord une ligne puis appuyez sur i ou 6.");
+        mvprintw(top + 3, 4, "%s", T(U_INFO" aucune ligne chargee pour l'itineraire",
+                                      U_INFO" no line loaded for route planner"));
+        mvprintw(top + 5, 4, "%s", T("Ouvrez d'abord une ligne puis appuyez sur i ou 6.",
+                                      "Open a line first, then press i or 6."));
         attroff(A_DIM);
         draw_toast_msg();
-        draw_status(" 6/i:ouvrir"U_MDOT"1:lignes"U_MDOT"n:reseaux"U_MDOT"t:theme", "n/a");
+        draw_status(T(" 6/i:ouvrir"U_MDOT"1:lignes"U_MDOT"n:reseaux"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " 6/i:open"U_MDOT"1:lines"U_MDOT"n:networks"U_MDOT"t:theme"U_MDOT"L:lang"), "n/a");
         return;
     }
 
@@ -3847,15 +4311,15 @@ static void draw_itinerary(void)
             print_fit(y, px + 8, pw - 9, g_itinerary.line_name[0] ? g_itinerary.line_name : g_itinerary.line_code);
             attroff(A_BOLD);
             attron(A_DIM);
-            mvprintw(y + 1, px, "Ligne %s", g_itinerary.line_code[0] ? g_itinerary.line_code : "--");
+            mvprintw(y + 1, px, T("Ligne %s","Line %s"), g_itinerary.line_code[0] ? g_itinerary.line_code : "--");
             attroff(A_DIM);
 
-            kv_line(y + 3, px, 12, "depart", origin ? origin->name : "--", origin ? CP_GREEN : CP_YELLOW);
-            kv_line(y + 4, px, 12, "arrivee", destination ? destination->name : "--", destination ? CP_RED : CP_YELLOW);
-            kv_line(y + 5, px, 12, "direction", itinerary_direction_target(), CP_ACCENT);
+            kv_line(y + 3, px, 12, T("depart","origin"), origin ? origin->name : "--", origin ? CP_GREEN : CP_YELLOW);
+            kv_line(y + 4, px, 12, T("arrivee","dest"), destination ? destination->name : "--", destination ? CP_RED : CP_YELLOW);
+            kv_line(y + 5, px, 12, T("direction","direction"), itinerary_direction_target(), CP_ACCENT);
             if (!origin || !destination) snprintf(buf, sizeof(buf), "--");
             else snprintf(buf, sizeof(buf), "%d", hops);
-            kv_line(y + 6, px, 12, "arrets", buf, CP_ACCENT);
+            kv_line(y + 6, px, 12, T("arrets","stops"), buf, CP_ACCENT);
 
             y += 8;
             attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
@@ -3864,8 +4328,10 @@ static void draw_itinerary(void)
 
             if (!origin || !destination) {
                 attron(A_DIM);
-                mvprintw(y++, px, "o definit le depart, d definit l'arrivee.");
-                mvprintw(y++, px, "x inverse les deux bornes.");
+                mvprintw(y++, px, "%s", T("o definit le depart, d definit l'arrivee.",
+                                          "o sets origin, d sets destination."));
+                mvprintw(y++, px, "%s", T("x inverse les deux bornes.",
+                                          "x swaps origin and destination."));
                 attroff(A_DIM);
             } else {
                 int step = g_itinerary.destination >= g_itinerary.origin ? 1 : -1;
@@ -3933,7 +4399,8 @@ static void draw_itinerary(void)
     }
     draw_toast_msg();
     snprintf(buf, sizeof(buf), "%d/%d", g_itinerary.nfiltered > 0 ? g_itinerary.cursor + 1 : 0, g_itinerary.nfiltered);
-    draw_status(" j/k"U_MDOT"o:depart"U_MDOT"d:arrivee"U_MDOT"x:swap"U_MDOT"/:filtre"U_MDOT"q:back"U_MDOT"t:theme", buf);
+    draw_status(T(" j/k"U_MDOT"o:depart"U_MDOT"d:arrivee"U_MDOT"x:swap"U_MDOT"/:filtre"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k"U_MDOT"o:origin"U_MDOT"d:dest"U_MDOT"x:swap"U_MDOT"/:filter"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"), buf);
 }
 
 /* ── Screen: Toulouse ────────────────────────────────────────────── */
@@ -3949,7 +4416,7 @@ static void draw_toulouse(void)
     int alert_lines = count_toulouse_impacted_lines();
     int top = 3;
 
-    draw_header("NVT // Toulouse", g_tls_search[0] ? "reseau filtre" : "reseau live");
+    draw_header("NVT // Toulouse", g_tls_search[0] ? T("reseau filtre","filtered network") : T("reseau en direct","live network"));
     draw_tabs();
 
     if(COLS>=94&&LINES>=24){
@@ -3957,13 +4424,13 @@ static void draw_toulouse(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",total);
-        stat_card(top,2,cw,"ACTIVE",buf,"lignes actives",CP_ACCENT);
+        stat_card(top,2,cw,"ACTIVE",buf,T("lignes actives","active lines"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",rails);
-	stat_card(top,2+cw+gap,cw,"METRO+TRAM",buf,"metros + trams",CP_CYAN_T);
+	stat_card(top,2+cw+gap,cw,"METRO+TRAM",buf,T("metros + trams","metros + trams"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",buses);
-        stat_card(top,2+(cw+gap)*2,cw,"BUS",buf,"reseau bus",CP_GREEN);
+        stat_card(top,2+(cw+gap)*2,cw,"BUS",buf,T("reseau bus","bus network"),CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",alert_lines);
-        stat_card(top,2+(cw+gap)*3,cw,"ALERTS",buf,"lignes impactees",alert_lines?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2+(cw+gap)*3,cw,"ALERTS",buf,T("lignes impactees","lines impacted"),alert_lines?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -3980,7 +4447,7 @@ static void draw_toulouse(void)
         if(mr<1) mr=1;
 
         panel_box(y1,lx1,y2,lx2,"Network Index",g_tls_search[0]?g_tls_search:"all active");
-        panel_box(y1,rx1,y2,rx2,"Line Focus",sel?toulouse_mode_label(sel):"idle");
+        dbox_panel(y1,rx1,y2,rx2,"Line Focus",sel?toulouse_mode_label(sel):"idle");
 
         if(g_tls_cursor<g_tls_scroll) g_tls_scroll=g_tls_cursor;
         if(g_tls_cursor>=g_tls_scroll+mr) g_tls_scroll=g_tls_cursor-mr+1;
@@ -4016,7 +4483,8 @@ static void draw_toulouse(void)
             draw_toulouse_badge(row,lx1+3,line);
             if(selected) attron(COLOR_PAIR(CP_SEL));
             print_hl(row,lx1+10,line->libelle,g_tls_search,name_w);
-            mvprintw(row,lx2-16,"%-5s",toulouse_mode_label(line));
+            draw_type_pill(row,lx2-17,toulouse_mode_label(line),selected);
+            if(selected) attron(COLOR_PAIR(CP_SEL));
             mvprintw(row,lx2-9," %s ",toulouse_line_realtime_capable(line)?U_CHECK:U_MDOT);
             if(alerts>0){
                 attroff(selected?COLOR_PAIR(CP_SEL):0);
@@ -4047,9 +4515,9 @@ static void draw_toulouse(void)
             if(pw>=28){
                 int sw=(pw-1)/2;
                 snprintf(buf,sizeof(buf),"%s",toulouse_line_realtime_capable(sel)?U_CHECK" live":"-");
-                stat_card(yy+3,px,sw,"SAE",buf,toulouse_line_realtime_capable(sel)?"temps reel via 4.7":"telemetrie limitee",toulouse_line_realtime_capable(sel)?CP_GREEN:CP_YELLOW);
+                stat_card(yy+3,px,sw,"SAE",buf,toulouse_line_realtime_capable(sel)?T("temps reel via 4.7","realtime via 4.7"):T("telemetrie limitee","limited telemetry"),toulouse_line_realtime_capable(sel)?CP_GREEN:CP_YELLOW);
                 snprintf(buf,sizeof(buf),"%d",alerts);
-                stat_card(yy+3,px+sw+1,pw-sw,"ALERTS",buf,alerts?"messages actifs":"ligne stable",alerts?CP_ALERT_MED:CP_GREEN);
+                stat_card(yy+3,px+sw+1,pw-sw,"ALERTS",buf,alerts?T("messages actifs","active messages"):T("ligne stable","stable line"),alerts?CP_ALERT_MED:CP_GREEN);
             }
 
             yy+=9;
@@ -4076,7 +4544,7 @@ static void draw_toulouse(void)
                     mvprintw(yy,px,"%s ",shown==0?U_WARN:U_DIAMOND);
                     attroff(COLOR_PAIR(toulouse_alert_cp(&g_tls_alerts[i]))|A_BOLD);
                     attron(A_BOLD);
-                    print_fit(yy,px+2,pw-4,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:"Message reseau");
+                    print_fit(yy,px+2,pw-4,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:T("Message reseau","Network message"));
                     attroff(A_BOLD);
                     yy++;
                     yy+=draw_wrapped_block(yy,px+2,pw-4,2,g_tls_alerts[i].message,toulouse_alert_cp(&g_tls_alerts[i]),0);
@@ -4091,7 +4559,7 @@ static void draw_toulouse(void)
                     mvprintw(yy,px,"%s ",U_INFO);
                     attroff(COLOR_PAIR(toulouse_alert_cp(&g_tls_alerts[i]))|A_BOLD);
                     attron(A_BOLD);
-                    print_fit(yy,px+2,pw-4,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:"Message reseau");
+                    print_fit(yy,px+2,pw-4,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:T("Message reseau","Network message"));
                     attroff(A_BOLD);
                     yy++;
                     yy+=draw_wrapped_block(yy,px+2,pw-4,2,g_tls_alerts[i].message,toulouse_alert_cp(&g_tls_alerts[i]),0);
@@ -4100,15 +4568,15 @@ static void draw_toulouse(void)
                 }
             } else {
                 attron(A_DIM);
-                mvprintw(yy++,px,U_CHECK" aucune alerte sur cette ligne");
-                mvprintw(yy++,px,"Enter ouvre le board vehicules en direct.");
-                mvprintw(yy++,px,"p bascule vers la recherche d'arret.");
+                mvprintw(yy++,px,"%s",T(U_CHECK" aucune alerte sur cette ligne",U_CHECK" no alerts on this line"));
+                mvprintw(yy++,px,"%s",T("Enter ouvre le tableau vehicules en direct.","Enter opens the live vehicle board."));
+                mvprintw(yy++,px,"%s",T("p bascule vers la recherche d'arret.","p switches to stop search."));
                 attroff(A_DIM);
             }
         } else {
             attron(A_DIM);
-            mvprintw(y1+3,rx1+3,U_INFO" aucun resultat");
-            mvprintw(y1+5,rx1+3,"Essayez un identifiant, un type ou une ligne.");
+            mvprintw(y1+3,rx1+3,"%s",T(U_INFO" aucun resultat",U_INFO" no results"));
+            mvprintw(y1+5,rx1+3,"%s",T("Essayez un identifiant, un type ou une ligne.","Try an id, a type or a line."));
             attroff(A_DIM);
         }
     } else {
@@ -4149,7 +4617,8 @@ static void draw_toulouse(void)
             draw_toulouse_badge(row,4,line);
             if(selected) attron(COLOR_PAIR(CP_SEL));
             print_hl(row,11,line->libelle,g_tls_search,cw);
-            mvprintw(row,COLS-17,"%-5s",toulouse_mode_label(line));
+            draw_type_pill(row,COLS-18,toulouse_mode_label(line),selected);
+            if(selected) attron(COLOR_PAIR(CP_SEL));
             mvprintw(row,COLS-10," %s ",toulouse_line_realtime_capable(line)?U_CHECK:U_MDOT);
             if(alerts>0){
                 if(selected) attroff(COLOR_PAIR(CP_SEL));
@@ -4178,7 +4647,8 @@ static void draw_toulouse(void)
     {
         char r[32];
         snprintf(r,sizeof(r),"%d/%d",g_ntls_filtered>0?g_tls_cursor+1:0,g_ntls_filtered);
-        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme",r);
+        draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"),r);
     }
 }
 
@@ -4220,7 +4690,7 @@ static void draw_toulouse_alerts(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",total);
-        stat_card(top,2,cw,"TOTAL",buf,"messages reseau",total?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2,cw,"TOTAL",buf,T("messages reseau","network messages"),total?CP_ALERT_MED:CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",hi);
         stat_card(top,2+cw+gap,cw,"CRIT",buf,"severity 3",hi?CP_ALERT_HI:CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",med);
@@ -4241,8 +4711,8 @@ static void draw_toulouse_alerts(void)
 
         if(!total){
             attron(A_DIM);
-            mvprintw(y1+3,3,U_CHECK" aucune alerte active");
-            mvprintw(y1+5,3,"Le reseau est calme pour le moment.");
+            mvprintw(y1+3,3,"%s",T(U_CHECK" aucune alerte active",U_CHECK" no active alerts"));
+            mvprintw(y1+5,3,"%s",T("Le reseau est calme pour le moment.","The network is quiet right now."));
             attroff(A_DIM);
         }
 
@@ -4258,7 +4728,7 @@ static void draw_toulouse_alerts(void)
                 mvprintw(sy,3,"%s",ic);
                 attroff(COLOR_PAIR(cp)|A_BOLD);
                 attron(A_BOLD);
-                print_fit(sy,6,COLS-18,a->titre[0]?a->titre:"Message reseau");
+                print_fit(sy,6,COLS-18,a->titre[0]?a->titre:T("Message reseau","Network message"));
                 attroff(A_BOLD);
             }
             vy++;
@@ -4306,7 +4776,8 @@ static void draw_toulouse_alerts(void)
         char ri[32];
         if(g_alert_total_h>0) snprintf(ri,sizeof(ri),"%d/%d",g_alert_scroll+1,g_alert_total_h);
         else ri[0]=0;
-        draw_status(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme",ri);
+        draw_status(T(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"),ri);
     }
 }
 
@@ -4325,13 +4796,13 @@ static void draw_toulouse_stops(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",g_ntls_stops);
-        stat_card(top,2,cw,"GROUPS",buf,"arrets agreges",CP_ACCENT);
+        stat_card(top,2,cw,"GROUPS",buf,T("arrets agreges","grouped stops"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",g_ntls_stop_filtered);
-        stat_card(top,2+cw+gap,cw,"VISIBLE",buf,"hits courants",CP_CYAN_T);
+        stat_card(top,2+cw+gap,cw,"VISIBLE",buf,T("hits courants","current hits"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",sel?toulouse_token_count(sel->lignes):0);
-        stat_card(top,2+(cw+gap)*2,cw,"PLATFORMS",buf,"quais selectionnes",CP_GREEN);
+        stat_card(top,2+(cw+gap)*2,cw,"PLATFORMS",buf,T("quais selectionnes","selected platforms"),CP_GREEN);
         snprintf(buf,sizeof(buf),"%d",cached);
-        stat_card(top,2+(cw+gap)*3,cw,"CACHE",buf,cached?"passages memorises":"ouvrez un board",cached?CP_GREEN:CP_YELLOW);
+        stat_card(top,2+(cw+gap)*3,cw,"CACHE",buf,cached?T("passages memorises","cached departures"):T("ouvrez un tableau","open a board"),cached?CP_GREEN:CP_YELLOW);
         top+=5;
     }
 
@@ -4351,7 +4822,7 @@ static void draw_toulouse_stops(void)
 
         attron(A_DIM);
         mvprintw(head_y,lx1+3,"STOP");
-        mvprintw(head_y,lx2-8,"QUAIS");
+        mvprintw(head_y,lx2-8,"%s",T("QUAIS","PLAT."));
         attroff(A_DIM);
 
         if(g_tls_stop_cursor<g_tls_stop_scroll)g_tls_stop_scroll=g_tls_stop_cursor;
@@ -4388,7 +4859,7 @@ static void draw_toulouse_stops(void)
             attroff(A_DIM);
 
             snprintf(buf,sizeof(buf),"%d",toulouse_token_count(stop->lignes));
-            stat_card(y+3,rx1+2,(w-1)/2,"QUAIS",buf,"physical stop ids",CP_GREEN);
+            stat_card(y+3,rx1+2,(w-1)/2,T("QUAIS","PLAT."),buf,"physical stop ids",CP_GREEN);
             snprintf(buf,sizeof(buf),"%d",cached);
             stat_card(y+3,rx1+3+(w-1)/2,w-(w-1)/2,"CACHE",buf,cached?"board already loaded":"press Enter to load",cached?CP_GREEN:CP_YELLOW);
 
@@ -4423,8 +4894,8 @@ static void draw_toulouse_stops(void)
                 }
             } else if(y<y2-3){
                 attron(A_DIM);
-                mvprintw(y+1,rx1+2,"Enter ouvre le board temps reel.");
-                mvprintw(y+2,rx1+2,"/: change le filtre, q: retour.");
+                mvprintw(y+1,rx1+2,"%s",T("Enter ouvre le tableau temps reel.","Enter opens the live board."));
+                mvprintw(y+2,rx1+2,"%s",T("/: change le filtre, q: retour.","/: change filter, q: back."));
                 attroff(A_DIM);
             }
         }
@@ -4472,7 +4943,8 @@ static void draw_toulouse_stops(void)
     {
         char r[32];
         snprintf(r,sizeof(r),"%d/%d",g_ntls_stop_filtered>0?g_tls_stop_cursor+1:0,g_ntls_stop_filtered);
-        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme",r);
+        draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"),r);
     }
 }
 
@@ -4486,7 +4958,9 @@ static void draw_toulouse_passages(void)
     int uniq=count_toulouse_unique_passage_lines();
     int next_min=g_ntls_passages?toulouse_waiting_minutes(g_tls_passages[0].waiting_time):-1;
     snprintf(t,sizeof(t),"Departures // %s",stop?stop->libelle:"stop area");
-    snprintf(bc,sizeof(bc),"Arrets "U_ARROW" %s",stop?stop->libelle:"selection");
+    snprintf(bc,sizeof(bc),
+             T("Arrets "U_ARROW" %s","Stops "U_ARROW" %s"),
+             stop?stop->libelle:T("selection","selection"));
     draw_header(t,bc); draw_tabs();
 
     if(COLS>=94&&LINES>=24){
@@ -4495,13 +4969,13 @@ static void draw_toulouse_passages(void)
         if(next_min<0) snprintf(buf,sizeof(buf),"--");
         else if(next_min<=1) snprintf(buf,sizeof(buf),"NOW");
         else snprintf(buf,sizeof(buf),"%dmin",next_min);
-        stat_card(top,2,cw,"NEXT",buf,"prochain passage",next_min>=0?CP_GREEN:CP_YELLOW);
+        stat_card(top,2,cw,"NEXT",buf,T("prochain passage","next departure"),next_min>=0?CP_GREEN:CP_YELLOW);
         snprintf(buf,sizeof(buf),"%d",live);
-        stat_card(top,2+cw+gap,cw,"LIVE",buf,"estimations live",live?CP_GREEN:CP_YELLOW);
+        stat_card(top,2+cw+gap,cw,"LIVE",buf,T("estimations direct","live estimates"),live?CP_GREEN:CP_YELLOW);
         snprintf(buf,sizeof(buf),"%d",uniq);
-        stat_card(top,2+(cw+gap)*2,cw,"LINES",buf,"lignes a venir",CP_ACCENT);
+        stat_card(top,2+(cw+gap)*2,cw,"LINES",buf,T("lignes a venir","upcoming lines"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",delayed);
-        stat_card(top,2+(cw+gap)*3,cw,"DELAY",buf,"depassements",delayed?CP_ALERT_MED:CP_GREEN);
+        stat_card(top,2+(cw+gap)*3,cw,"DELAY",buf,T("depassements","late departures"),delayed?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -4572,9 +5046,9 @@ static void draw_toulouse_passages(void)
             }
             if(!g_ntls_passages&&y<y2-2){
                 attron(A_DIM);
-                mvprintw(y,rx1+2,U_INFO" aucun passage prevu");
-                mvprintw(y+2,rx1+2,"r recharge le board");
-                mvprintw(y+3,rx1+2,"/ retourne a la recherche");
+                mvprintw(y,rx1+2,"%s",T(U_INFO" aucun passage prevu",U_INFO" no departure scheduled"));
+                mvprintw(y+2,rx1+2,"%s",T("r recharge le tableau","r reloads the board"));
+                mvprintw(y+3,rx1+2,"%s",T("/ retourne a la recherche","/ returns to search"));
                 attroff(A_DIM);
             }
         }
@@ -4608,7 +5082,7 @@ static void draw_toulouse_passages(void)
         }
         if(!g_ntls_passages){
             attron(A_DIM);
-            mvprintw(y1+4,3,U_INFO" aucun passage prevu");
+            mvprintw(y1+4,3,"%s",T(U_INFO" aucun passage prevu",U_INFO" no departure scheduled"));
             attroff(A_DIM);
         }
     }
@@ -4617,7 +5091,8 @@ static void draw_toulouse_passages(void)
     {
         char r[32];
         snprintf(r,sizeof(r),"%d pass.",g_ntls_passages);
-        draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme",r);
+        draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " q:back"U_MDOT"r:refresh"U_MDOT"/:stop"U_MDOT"t:theme"U_MDOT"L:lang"),r);
     }
 }
 
@@ -4670,7 +5145,7 @@ static void draw_toulouse_vehicle_map_panel(int y1,int x1,int y2,int x2)
     panel_box(y1,x1,y2,x2,"ASCII Map",meta);
     attron(A_DIM);
     snprintf(legend,sizeof(legend),"%s | route only | no vehicle positions",
-             has_basemap?"communes":"route");
+             has_basemap?T("communes","boundaries"):"route");
     print_fit(legend_y,x1+2,x2-x1-3,legend);
     attroff(A_DIM);
 
@@ -4810,7 +5285,7 @@ static void draw_toulouse_vehicle_lane_panel(int y1,int x1,int y2,int x2,const c
 
     if(!cnt){
         attron(A_DIM);
-        mvprintw(y,x1+2,U_INFO" aucun vehicule sur ce sens");
+        mvprintw(y,x1+2,"%s",T(U_INFO" aucun vehicule sur ce sens",U_INFO" no vehicles on this direction"));
         attroff(A_DIM);
         return;
     }
@@ -4872,19 +5347,22 @@ static void draw_toulouse_vehicles(void)
         draw_tabs();
         panel_box(3,1,LINES-3,COLS-2,"Live Vehicles","idle");
         attron(A_DIM);
-        mvprintw(6,4,U_INFO" aucune ligne selectionnee");
+        mvprintw(6,4,"%s",T(U_INFO" aucune ligne selectionnee",U_INFO" no line selected"));
         attroff(A_DIM);
         draw_toast_msg();
-        draw_status(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme","n/a");
+        draw_status(T(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme"U_MDOT"L:lang",
+                  " n:menu"U_MDOT"1:lines"U_MDOT"t:theme"U_MDOT"L:lang"),"n/a");
         return;
     }
 
     snprintf(t,sizeof(t),"%s / %s",ln->code,ln->libelle);
-    snprintf(bc,sizeof(bc),"Lignes "U_ARROW" live telemetry");
+    snprintf(bc,sizeof(bc),"%s "U_ARROW" live telemetry",T("Lignes","Lines"));
     if(!g_tls_map_attempted){
         g_tls_map_attempted=1;
         g_has_tls_metro_map=fetch_toulouse_metro_map(&g_tls_metro_map)>0;
-        toast(g_has_tls_metro_map?"Carte communes chargee":"Carte communes indisponible");
+        toast(g_has_tls_metro_map
+              ? T("Carte communes chargee","Commune map loaded")
+              : T("Carte communes indisponible","Commune map unavailable"));
     }
     ensure_toulouse_line_route();
     if(lcp){
@@ -4906,13 +5384,13 @@ static void draw_toulouse_vehicles(void)
         int cw=(COLS-5-gap*3)/4;
         char buf[32];
         snprintf(buf,sizeof(buf),"%d",g_ntls_vehicles);
-        stat_card(cards_top,2,cw,"LIVE",buf,"vehicules suivis",CP_ACCENT);
+        stat_card(cards_top,2,cw,"LIVE",buf,T("vehicules suivis","vehicles tracked"),CP_ACCENT);
         snprintf(buf,sizeof(buf),"%d",total_delayed);
-        stat_card(cards_top,2+cw+gap,cw,"DELAY",buf,"retards > 1 min",total_delayed?CP_ALERT_MED:CP_GREEN);
+        stat_card(cards_top,2+cw+gap,cw,"DELAY",buf,T("retards > 1 min","delays > 1 min"),total_delayed?CP_ALERT_MED:CP_GREEN);
         snprintf(buf,sizeof(buf),"%dkm/h",g_ntls_vehicles?total_speed/g_ntls_vehicles:0);
-        stat_card(cards_top,2+(cw+gap)*2,cw,"AVG SPD",buf,"vitesse moyenne",CP_CYAN_T);
+        stat_card(cards_top,2+(cw+gap)*2,cw,"AVG SPD",buf,T("vitesse moyenne","avg speed"),CP_CYAN_T);
         snprintf(buf,sizeof(buf),"%d",line_alerts);
-        stat_card(cards_top,2+(cw+gap)*3,cw,"LINE SIG",buf,line_alerts?"messages actifs":"aucun incident",line_alerts?CP_ALERT_MED:CP_GREEN);
+        stat_card(cards_top,2+(cw+gap)*3,cw,"LINE SIG",buf,line_alerts?T("messages actifs","active messages"):T("aucun incident","no incidents"),line_alerts?CP_ALERT_MED:CP_GREEN);
         top+=5;
     }
 
@@ -4955,7 +5433,7 @@ static void draw_toulouse_vehicles(void)
                 mvprintw(y,3,"%s ",cp==CP_ALERT_HI?U_DIAMOND:cp==CP_ALERT_MED?U_WARN:U_INFO);
                 attroff(COLOR_PAIR(cp)|A_BOLD);
                 attron(A_BOLD);
-                print_fit(y,5,COLS-12,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:"Message reseau");
+                print_fit(y,5,COLS-12,g_tls_alerts[i].titre[0]?g_tls_alerts[i].titre:T("Message reseau","Network message"));
                 attroff(A_BOLD);
                 y++;
                 if(y<y2) y+=draw_wrapped_block(y,5,COLS-12,1,g_tls_alerts[i].message,cp,0);
@@ -4967,7 +5445,8 @@ static void draw_toulouse_vehicles(void)
     draw_toast_msg();
     {
         char mid[96],ri[32];
-        snprintf(mid,sizeof(mid)," q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme");
+        snprintf(mid,sizeof(mid),"%s",T(" q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                                        " q:back"U_MDOT"r:refresh"U_MDOT"+/-/0:zoom"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"));
         snprintf(ri,sizeof(ri),"%d veh.",g_ntls_vehicles);
         draw_status(mid,ri);
     }
@@ -4983,7 +5462,7 @@ static void draw_idfm(void)
     int top = 3;
 
     draw_header(live_network_is_sncf() ? "NVT // SNCF" : "NVT // Paris IDFM",
-                g_live_search[0] ? "reseau filtre" : "navitia live");
+                g_live_search[0] ? T("reseau filtre","filtered network") : "navitia live");
     draw_tabs();
 
     if (COLS >= 94 && LINES >= 24) {
@@ -4992,13 +5471,13 @@ static void draw_idfm(void)
         char buf[32];
 
         snprintf(buf, sizeof(buf), "%d", total);
-        stat_card(top, 2, cw, "LINES", buf, "referentiel charge", CP_ACCENT);
+        stat_card(top, 2, cw, "LINES", buf, T("referentiel charge","reference loaded"), CP_ACCENT);
         snprintf(buf, sizeof(buf), "%d", rails);
-        stat_card(top, 2 + cw + gap, cw, "RAIL", buf, "metro rer tram train", CP_CYAN_T);
+        stat_card(top, 2 + cw + gap, cw, "RAIL", buf, T("metro rer tram train","metro rail tram train"), CP_CYAN_T);
         snprintf(buf, sizeof(buf), "%d", buses);
-        stat_card(top, 2 + (cw + gap) * 2, cw, "BUS", buf, "bus et cars", CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "BUS", buf, T("bus et cars","bus and coach"), CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", alert_lines);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, "lignes impactees", alert_lines ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, T("lignes impactees","lines impacted"), alert_lines ? CP_ALERT_MED : CP_GREEN);
         top += 5;
     }
 
@@ -5025,7 +5504,7 @@ static void draw_idfm(void)
         if (name_w < 18) name_w = 18;
 
         panel_box(y1, lx1, y2, lx2, "Line Index", g_live_search[0] ? g_live_search : "all lines");
-        panel_box(y1, rx1, y2, rx2, "Line Focus", sel ? nvt_idfm_line_type_label(sel) : "idle");
+        dbox_panel(y1, rx1, y2, rx2, "Line Focus", sel ? nvt_idfm_line_type_label(sel) : "idle");
 
         if (g_live_cursor < g_live_scroll) g_live_scroll = g_live_cursor;
         if (g_live_cursor >= g_live_scroll + mr) g_live_scroll = g_live_cursor - mr + 1;
@@ -5060,7 +5539,8 @@ static void draw_idfm(void)
             draw_idfm_badge(row, lx1 + 3, line);
             if (selected) attron(COLOR_PAIR(CP_SEL));
             print_hl(row, lx1 + 12, line->libelle, g_live_search, name_w);
-            mvprintw(row, lx2 - 16, "%-6s", nvt_idfm_line_type_label(line));
+            draw_type_pill(row, lx2 - 17, nvt_idfm_line_type_label(line), selected);
+            if (selected) attron(COLOR_PAIR(CP_SEL));
             if (alerts > 0) {
                 attron(COLOR_PAIR(CP_ALERT_MED) | A_BOLD);
                 mvprintw(row, lx2 - 6, "%2d", alerts);
@@ -5090,9 +5570,9 @@ static void draw_idfm(void)
             attroff(A_DIM);
 
             snprintf(buf, sizeof(buf), "%d", sel->terminus_count);
-            stat_card(y + 3, px, (pw - 1) / 2, "ROUTES", buf, "directions exposees", CP_GREEN);
+            stat_card(y + 3, px, (pw - 1) / 2, "ROUTES", buf, T("directions exposees","routes exposed"), CP_GREEN);
             snprintf(buf, sizeof(buf), "%d", alerts);
-            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "ALERTS", buf, alerts ? "perturbations en cours" : "ligne stable", alerts ? CP_ALERT_MED : CP_GREEN);
+            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "ALERTS", buf, alerts ? T("perturbations en cours","active disruptions") : T("ligne stable","stable line"), alerts ? CP_ALERT_MED : CP_GREEN);
 
             y += 9;
             attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
@@ -5118,7 +5598,7 @@ static void draw_idfm(void)
                     mvprintw(y, px, "%s ", cp == CP_ALERT_HI ? U_DIAMOND : U_WARN);
                     attroff(COLOR_PAIR(cp) | A_BOLD);
                     attron(A_BOLD);
-                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : "Message reseau");
+                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : T("Message reseau","Network message"));
                     attroff(A_BOLD);
                     y++;
                     y += draw_wrapped_block(y, px + 2, pw - 4, 3, g_live_alerts[i].message, cp, 0);
@@ -5135,7 +5615,7 @@ static void draw_idfm(void)
                     mvprintw(y, px, "%s ", U_INFO);
                     attroff(COLOR_PAIR(cp) | A_BOLD);
                     attron(A_BOLD);
-                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : "Information reseau");
+                    print_fit(y, px + 2, pw - 4, g_live_alerts[i].titre[0] ? g_live_alerts[i].titre : T("Information reseau","Network information"));
                     attroff(A_BOLD);
                     y++;
                     y += draw_wrapped_block(y, px + 2, pw - 4, 2, g_live_alerts[i].message, cp, 0);
@@ -5144,8 +5624,9 @@ static void draw_idfm(void)
                 }
             } else {
                 attron(A_DIM);
-                mvprintw(y++, px, U_CHECK" aucune alerte sur cette ligne");
-                mvprintw(y++, px, "Enter: courses actives, p: arrets desservis.");
+                mvprintw(y++, px, "%s", T(U_CHECK" aucune alerte sur cette ligne",U_CHECK" no alerts on this line"));
+                mvprintw(y++, px, "%s", T("Enter: courses actives, p: arrets desservis.",
+                                          "Enter: active journeys, p: served stops."));
                 attroff(A_DIM);
             }
         }
@@ -5182,7 +5663,7 @@ static void draw_idfm(void)
             }
             draw_idfm_badge(row, 4, &g_live_lines[idx]);
             print_hl(row, 13, g_live_lines[idx].libelle, g_live_search, name_w);
-            mvprintw(row, COLS - 14, "%-6s", nvt_idfm_line_type_label(&g_live_lines[idx]));
+            draw_type_pill(row, COLS - 15, nvt_idfm_line_type_label(&g_live_lines[idx]), selected);
         }
         scrollbar(list_y, mr, g_live_scroll, g_nlive_filtered);
     }
@@ -5198,7 +5679,8 @@ static void draw_idfm(void)
     {
         char r[32];
         snprintf(r, sizeof(r), "%d/%d", g_nlive_filtered > 0 ? g_live_cursor + 1 : 0, g_nlive_filtered);
-        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme", r);
+        draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"), r);
     }
 }
 
@@ -5219,7 +5701,7 @@ static void draw_idfm_alerts(void)
     }
 
     draw_header(live_network_is_sncf() ? "Operations // SNCF Alerts" : "Operations // IDFM Alerts",
-                total ? "messages navitia" : "quiet network");
+                total ? T("messages navitia","navitia messages") : "quiet network");
     draw_tabs();
 
     if (COLS >= 94 && LINES >= 24) {
@@ -5228,13 +5710,13 @@ static void draw_idfm_alerts(void)
         char buf[32];
 
         snprintf(buf, sizeof(buf), "%d", total);
-        stat_card(top, 2, cw, "TOTAL", buf, "perturbations chargees", total ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2, cw, "TOTAL", buf, T("perturbations chargees","disruptions loaded"), total ? CP_ALERT_MED : CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", hi);
-        stat_card(top, 2 + cw + gap, cw, "CRIT", buf, "fort impact", hi ? CP_ALERT_HI : CP_GREEN);
+        stat_card(top, 2 + cw + gap, cw, "CRIT", buf, T("fort impact","high impact"), hi ? CP_ALERT_HI : CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", med);
-        stat_card(top, 2 + (cw + gap) * 2, cw, "WARN", buf, "impacts ligne", med ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "WARN", buf, T("impacts ligne","line impacts"), med ? CP_ALERT_MED : CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", impacted);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "LINES", buf, "lignes impactees", impacted ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "LINES", buf, T("lignes impactees","lines impacted"), impacted ? CP_ALERT_MED : CP_GREEN);
         top += 5;
     }
 
@@ -5252,7 +5734,8 @@ static void draw_idfm_alerts(void)
 
         if (!total) {
             attron(A_DIM);
-            mvprintw(y1 + 3, 3, U_CHECK" aucune alerte active");
+            mvprintw(y1 + 3, 3, "%s", T(U_CHECK" aucune alerte active",
+                                        U_CHECK" no active alerts"));
             attroff(A_DIM);
         }
 
@@ -5266,7 +5749,7 @@ static void draw_idfm_alerts(void)
                 mvprintw(sy, 3, "%s", cp == CP_ALERT_HI ? U_DIAMOND : cp == CP_ALERT_MED ? U_WARN : U_INFO);
                 attroff(COLOR_PAIR(cp) | A_BOLD);
                 attron(A_BOLD);
-                print_fit(sy, 6, COLS - 18, a->titre[0] ? a->titre : "Information reseau");
+                print_fit(sy, 6, COLS - 18, a->titre[0] ? a->titre : T("Information reseau","Network information"));
                 attroff(A_BOLD);
             }
             vy++;
@@ -5304,7 +5787,8 @@ static void draw_idfm_alerts(void)
         char ri[32];
         if (g_alert_total_h > 0) snprintf(ri, sizeof(ri), "%d/%d", g_alert_scroll + 1, g_alert_total_h);
         else ri[0] = '\0';
-        draw_status(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme", ri);
+        draw_status(T(" j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " j/k:scroll"U_MDOT"r:refresh"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"), ri);
     }
 }
 
@@ -5316,7 +5800,8 @@ static void draw_idfm_stops(void)
     int top = 3;
 
     draw_header(live_network_is_sncf() ? "Stop Areas // SNCF" : "Stop Areas // IDFM",
-                g_live_stop_search[0] ? "recherche active" : "recherche requise");
+                g_live_stop_search[0] ? T("recherche active","search active")
+                                      : T("recherche requise","search required"));
     draw_tabs();
 
     if (COLS >= 94 && LINES >= 24) {
@@ -5325,13 +5810,13 @@ static void draw_idfm_stops(void)
         char buf[32];
 
         snprintf(buf, sizeof(buf), "%d", g_nlive_stops);
-        stat_card(top, 2, cw, "STOPS", buf, "resultats charges", CP_ACCENT);
+        stat_card(top, 2, cw, "STOPS", buf, T("resultats charges","results loaded"), CP_ACCENT);
         snprintf(buf, sizeof(buf), "%d", g_nlive_stop_filtered);
-        stat_card(top, 2 + cw + gap, cw, "VISIBLE", buf, "hits courants", CP_CYAN_T);
+        stat_card(top, 2 + cw + gap, cw, "VISIBLE", buf, T("hits courants","current hits"), CP_CYAN_T);
         snprintf(buf, sizeof(buf), "%s", line ? line->code : "--");
-        stat_card(top, 2 + (cw + gap) * 2, cw, "LINE", buf, line ? line->libelle : "selectionnez une ligne", CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "LINE", buf, line ? line->libelle : T("selectionnez une ligne","select a line"), CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", cached);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "CACHE", buf, cached ? "departs memorises" : "ouvrez un board", cached ? CP_GREEN : CP_YELLOW);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "CACHE", buf, cached ? T("departs memorises","departures cached") : T("ouvrez un tableau","open a board"), cached ? CP_GREEN : CP_YELLOW);
         top += 5;
     }
 
@@ -5386,8 +5871,10 @@ static void draw_idfm_stops(void)
 
         if (!line) {
             attron(A_DIM);
-            mvprintw(list_y, lx1 + 3, "Selectionnez d'abord une ligne %s.", current_live_network_short());
-            mvprintw(y1 + 3, rx1 + 2, "Aucune ligne active.");
+            mvprintw(list_y, lx1 + 3, T("Selectionnez d'abord une ligne %s.",
+                                        "Select a %s line first."), current_live_network_short());
+            mvprintw(y1 + 3, rx1 + 2, "%s", T("Aucune ligne active.",
+                                              "No active line."));
             attroff(A_DIM);
         } else if (!g_live_stop_search[0]) {
             draw_idfm_badge(y1 + 2, rx1 + 2, line);
@@ -5395,14 +5882,18 @@ static void draw_idfm_stops(void)
             print_fit(y1 + 2, rx1 + 11, rx2 - rx1 - 12, line->libelle);
             attroff(A_BOLD);
             attron(A_DIM);
-            mvprintw(list_y, lx1 + 3, "Appuyez sur / puis validez avec Entree pour rechercher un arret.");
-            mvprintw(y1 + 4, rx1 + 2, "Recherche limitee a la ligne choisie pour eviter le chargement massif.");
-            mvprintw(y1 + 5, rx1 + 2, "Ligne: %s (%s)", line->code, nvt_idfm_line_type_label(line));
+            mvprintw(list_y, lx1 + 3, "%s", T("Appuyez sur / puis validez avec Entree pour rechercher un arret.",
+                                              "Press / then Enter to search for a stop."));
+            mvprintw(y1 + 4, rx1 + 2, "%s", T("Recherche limitee a la ligne choisie pour eviter le chargement massif.",
+                                              "Search is limited to the selected line to avoid a full network load."));
+            mvprintw(y1 + 5, rx1 + 2, T("Ligne: %s (%s)","Line: %s (%s)"), line->code, nvt_idfm_line_type_label(line));
             attroff(A_DIM);
         } else if (!g_nlive_stop_filtered) {
             attron(A_DIM);
-            mvprintw(list_y, lx1 + 3, "Aucun arret trouve pour \"%s\".", g_live_stop_search);
-            mvprintw(y1 + 3, rx1 + 2, "Essayez un nom d'arret plus court ou une commune.");
+            mvprintw(list_y, lx1 + 3, T("Aucun arret trouve pour \"%s\".",
+                                        "No stop found for \"%s\"."), g_live_stop_search);
+            mvprintw(y1 + 3, rx1 + 2, "%s", T("Essayez un nom d'arret plus court ou une commune.",
+                                              "Try a shorter stop name or a city."));
             attroff(A_DIM);
         } else if (sel) {
             int y = y1 + 2;
@@ -5418,9 +5909,11 @@ static void draw_idfm_stops(void)
             attroff(A_DIM);
 
             snprintf(buf, sizeof(buf), "%s", line ? line->code : "--");
-            stat_card(y + 3, px, (pw - 1) / 2, "LINE", buf, line ? line->libelle : "aucune ligne", CP_GREEN);
+            stat_card(y + 3, px, (pw - 1) / 2, "LINE", buf, line ? line->libelle : T("aucune ligne","no line"), CP_GREEN);
             snprintf(buf, sizeof(buf), "%d", cached);
-            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "CACHE", buf, cached ? "board charge" : "Enter pour charger", cached ? CP_GREEN : CP_YELLOW);
+            stat_card(y + 3, px + (pw - 1) / 2 + 1, pw - (pw - 1) / 2, "CACHE", buf,
+                      cached ? T("tableau charge","board loaded") : T("Enter pour charger","press Enter to load"),
+                      cached ? CP_GREEN : CP_YELLOW);
 
             y += 9;
             attron(COLOR_PAIR(CP_SECTION) | A_BOLD);
@@ -5476,15 +5969,18 @@ static void draw_idfm_stops(void)
 
         if (!line) {
             attron(A_DIM);
-            mvprintw(list_y, 4, "Selectionnez d'abord une ligne %s.", current_live_network_short());
+            mvprintw(list_y, 4, T("Selectionnez d'abord une ligne %s.",
+                                  "Select a %s line first."), current_live_network_short());
             attroff(A_DIM);
         } else if (!g_live_stop_search[0]) {
             attron(A_DIM);
-            mvprintw(list_y, 4, "Appuyez sur / puis Entree pour rechercher un arret sur %s.", line->code);
+            mvprintw(list_y, 4, T("Appuyez sur / puis Entree pour rechercher un arret sur %s.",
+                                  "Press / then Enter to search for a stop on %s."), line->code);
             attroff(A_DIM);
         } else if (!g_nlive_stop_filtered) {
             attron(A_DIM);
-            mvprintw(list_y, 4, "Aucun arret trouve pour \"%s\".", g_live_stop_search);
+            mvprintw(list_y, 4, T("Aucun arret trouve pour \"%s\".",
+                                  "No stop found for \"%s\"."), g_live_stop_search);
             attroff(A_DIM);
         }
     }
@@ -5499,7 +5995,8 @@ static void draw_idfm_stops(void)
     {
         char r[32];
         snprintf(r, sizeof(r), "%d/%d", g_nlive_stop_filtered > 0 ? g_live_stop_cursor + 1 : 0, g_nlive_stop_filtered);
-        draw_status(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme", r);
+        draw_status(T(" j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " j/k"U_MDOT"Enter"U_MDOT"/"U_MDOT"q:back"U_MDOT"t:theme"U_MDOT"L:lang"), r);
     }
 }
 
@@ -5517,7 +6014,9 @@ static void draw_idfm_passages(void)
     int next_min = g_nlive_passages ? toulouse_waiting_minutes(g_live_passages[0].waiting_time) : -1;
 
     snprintf(title, sizeof(title), "Departures // %s", stop ? stop->libelle : "stop area");
-    snprintf(crumb, sizeof(crumb), "%s "U_ARROW" %s", line ? line->code : "ligne", stop ? stop->libelle : "selection");
+    snprintf(crumb, sizeof(crumb), "%s "U_ARROW" %s",
+             line ? line->code : T("ligne","line"),
+             stop ? stop->libelle : T("selection","selection"));
     draw_header(title, crumb);
     draw_tabs();
 
@@ -5528,13 +6027,13 @@ static void draw_idfm_passages(void)
         if (next_min < 0) snprintf(buf, sizeof(buf), "--");
         else if (next_min <= 1) snprintf(buf, sizeof(buf), "NOW");
         else snprintf(buf, sizeof(buf), "%dmin", next_min);
-        stat_card(top, 2, cw, "NEXT", buf, "prochain depart", next_min >= 0 ? CP_GREEN : CP_YELLOW);
+        stat_card(top, 2, cw, "NEXT", buf, T("prochain depart","next departure"), next_min >= 0 ? CP_GREEN : CP_YELLOW);
         snprintf(buf, sizeof(buf), "%d", live);
-        stat_card(top, 2 + cw + gap, cw, "LIVE", buf, "estimations live", live ? CP_GREEN : CP_YELLOW);
+        stat_card(top, 2 + cw + gap, cw, "LIVE", buf, T("estimations direct","live estimates"), live ? CP_GREEN : CP_YELLOW);
         snprintf(buf, sizeof(buf), "%d", uniq);
-        stat_card(top, 2 + (cw + gap) * 2, cw, "LINES", buf, "lignes a venir", CP_ACCENT);
+        stat_card(top, 2 + (cw + gap) * 2, cw, "LINES", buf, T("lignes a venir","upcoming lines"), CP_ACCENT);
         snprintf(buf, sizeof(buf), "%d", delayed);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "DELAY", buf, "ecarts theorique/reel", delayed ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "DELAY", buf, T("ecarts theorique/reel","schedule/live gaps"), delayed ? CP_ALERT_MED : CP_GREEN);
         top += 5;
     }
 
@@ -5574,8 +6073,10 @@ static void draw_idfm_passages(void)
 
         if (!g_nlive_passages) {
             attron(A_DIM);
-            mvprintw(y1 + 4, 3, U_INFO" aucun depart pour cette ligne a cet arret");
-            mvprintw(y1 + 6, 3, "r recharge le board, / revient a la liste des arrets.");
+            mvprintw(y1 + 4, 3, "%s", T(U_INFO" aucun depart pour cette ligne a cet arret",
+                                        U_INFO" no departure for this line at this stop"));
+            mvprintw(y1 + 6, 3, "%s", T("r recharge le tableau, / revient a la liste des arrets.",
+                                        "r reloads the board, / returns to the stop list."));
             attroff(A_DIM);
         }
     }
@@ -5584,7 +6085,8 @@ static void draw_idfm_passages(void)
     {
         char r[32];
         snprintf(r, sizeof(r), "%d dep.", g_nlive_passages);
-        draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme", r);
+        draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"/:arret"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " q:back"U_MDOT"r:refresh"U_MDOT"/:stop"U_MDOT"t:theme"U_MDOT"L:lang"), r);
     }
 }
 
@@ -5602,10 +6104,12 @@ static void draw_idfm_vehicles(void)
         draw_tabs();
         panel_box(3, 1, LINES - 3, COLS - 2, "Active Journeys", "idle");
         attron(A_DIM);
-        mvprintw(6, 4, U_INFO" aucune ligne selectionnee");
+        mvprintw(6, 4, "%s", T(U_INFO" aucune ligne selectionnee",
+                               U_INFO" no line selected"));
         attroff(A_DIM);
         draw_toast_msg();
-        draw_status(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme", "n/a");
+        draw_status(T(" n:menu"U_MDOT"1:lignes"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " n:menu"U_MDOT"1:lines"U_MDOT"t:theme"U_MDOT"L:lang"), "n/a");
         return;
     }
 
@@ -5629,13 +6133,13 @@ static void draw_idfm_vehicles(void)
         char buf[32];
 
         snprintf(buf, sizeof(buf), "%d", g_nlive_vehicles);
-        stat_card(top, 2, cw, "JOURNEYS", buf, "courses actives", CP_ACCENT);
+        stat_card(top, 2, cw, "JOURNEYS", buf, T("courses actives","active journeys"), CP_ACCENT);
         snprintf(buf, sizeof(buf), "%d", unique_destinations);
-        stat_card(top, 2 + cw + gap, cw, "HEADSIGNS", buf, "destinations vues", CP_CYAN_T);
+        stat_card(top, 2 + cw + gap, cw, "HEADSIGNS", buf, T("destinations vues","destinations seen"), CP_CYAN_T);
         snprintf(buf, sizeof(buf), "%s", line->code);
         stat_card(top, 2 + (cw + gap) * 2, cw, "LINE", buf, line->libelle, CP_GREEN);
         snprintf(buf, sizeof(buf), "%d", alerts);
-        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, alerts ? "perturbations en cours" : "aucune alerte", alerts ? CP_ALERT_MED : CP_GREEN);
+        stat_card(top, 2 + (cw + gap) * 3, cw, "ALERTS", buf, alerts ? T("perturbations en cours","active disruptions") : T("aucune alerte","no alerts"), alerts ? CP_ALERT_MED : CP_GREEN);
         top += 5;
     }
 
@@ -5650,7 +6154,9 @@ static void draw_idfm_vehicles(void)
             int head_y = y1 + 1;
             int row_y = head_y + 2;
 
-            panel_box(y1, 1, journeys_y2, COLS - 2, "Active Journeys", "positions non exposees par l'endpoint");
+            panel_box(y1, 1, journeys_y2, COLS - 2, "Active Journeys",
+                      T("positions non exposees par l'endpoint",
+                        "positions not exposed by the endpoint"));
             attron(A_DIM);
             mvprintw(head_y, 3, "TRIP");
             mvprintw(head_y, 16, "HEADSIGN");
@@ -5663,13 +6169,17 @@ static void draw_idfm_vehicles(void)
                 attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
                 mvprintw(row_y + i, 3, "%-10.10s", g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
                 attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
-                print_fit(row_y + i, 16, COLS - 20, g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus : "destination indisponible");
+                print_fit(row_y + i, 16, COLS - 20,
+                          g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus
+                                                         : T("destination indisponible","destination unavailable"));
             }
 
             if (!g_nlive_vehicles) {
                 attron(A_DIM);
-                mvprintw(y1 + 4, 3, U_INFO" aucune course active retournee");
-                mvprintw(y1 + 6, 3, "L'API Navitia expose ici des courses actives sans coordonnees cartographiques.");
+                mvprintw(y1 + 4, 3, "%s", T(U_INFO" aucune course active retournee",
+                                            U_INFO" no active journey returned"));
+                mvprintw(y1 + 6, 3, "%s", T("L'API Navitia expose ici des courses actives sans coordonnees cartographiques.",
+                                            "The Navitia API exposes active journeys here without map coordinates."));
                 attroff(A_DIM);
             }
         }
@@ -5704,7 +6214,8 @@ static void draw_idfm_vehicles(void)
             }
         } else if (!stop && y2 - y1 >= 12) {
             attron(A_DIM);
-            mvprintw(y2 - 2, 3, "p puis Enter charge les arrets et les prochains passages de la ligne.");
+            mvprintw(y2 - 2, 3, "%s", T("p puis Enter charge les arrets et les prochains passages de la ligne.",
+                                        "p then Enter loads the line stops and next departures."));
             attroff(A_DIM);
         }
     }
@@ -5713,7 +6224,8 @@ static void draw_idfm_vehicles(void)
     {
         char ri[32];
         snprintf(ri, sizeof(ri), "%d act.", g_nlive_vehicles);
-        draw_status(" q:back"U_MDOT"r:refresh"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme", ri);
+        draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                      " q:back"U_MDOT"r:refresh"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"), ri);
     }
 }
 
@@ -5891,11 +6403,11 @@ static void do_idfm_stop_search(void)
     if (!submitted) return;
     if (!g_live_stop_search[0]) {
         reset_idfm_stop_view(0);
-        toast("Recherche arret effacee");
+        toast(T("Recherche arret effacee","Stop search cleared"));
         return;
     }
     if (g_live_sel_line < 0) {
-        toast("Selectionnez d'abord une ligne");
+        toast(T("Selectionnez d'abord une ligne","Select a line first"));
         return;
     }
     if (g_nlive_stops <= 0 && load_current_network_stops(NULL) < 0) return;
@@ -5908,8 +6420,8 @@ static void do_idfm_stop_search(void)
     );
     g_live_stop_cursor = 0;
     g_live_stop_scroll = 0;
-    if (g_nlive_stop_filtered > 0) toast("%d arrets trouves", g_nlive_stop_filtered);
-    else toast("Aucun arret pour %s", g_live_stop_search);
+    if (g_nlive_stop_filtered > 0) toast(T("%d arrets trouves","%d stops found"), g_nlive_stop_filtered);
+    else toast(T("Aucun arret pour %s","No stop found for %s"), g_live_stop_search);
 }
 
 static void do_atlas_search(void)
@@ -5979,36 +6491,54 @@ static void draw_load(int step,int tot,const char *name,int fr)
         " | .` |\\ V /  | |  ",
         " |_|\\_| \\_/   |_|  ",
     };
-    const char *sp="|/-\\";
+    /* Braille spinner — far more distinctive than |/-\ */
+    static const char *sp[]={"⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"};
+    /* Heavy horizontal rule for divider inside box */
+    static const char *hrule="\xe2\x95\x90"; /* ═ */
     int lh=4,lw=21,cy=LINES/2-5,cx=COLS/2-lw/2;
     if(cy<1)cy=1; if(cx<1)cx=1;
-    int bw=lw+20,bh=lh+10,bx=COLS/2-bw/2,by=cy-2;
+    int bw=lw+22,bh=lh+11,bx=COLS/2-bw/2,by=cy-2;
     if(by<0)by=0; if(bx<0)bx=0;
-    erase(); rbox(by,bx,by+bh,bx+bw);
+    erase();
 
+    /* box fill */
+    for(int y=by+1;y<by+bh;y++) mvhline(y,bx+1,' ',bw-1);
+    rbox(by,bx,by+bh,bx+bw);
+
+    /* logo in accent */
     attron(COLOR_PAIR(CP_ACCENT)|A_BOLD);
     for(int i=0;i<lh;i++) mvprintw(cy+i,cx,"%s",logo[i]);
     attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);
 
-    attron(A_DIM); mvprintw(cy+lh+1,COLS/2-11,"Navigateur Transports"); attroff(A_DIM);
-    attron(COLOR_PAIR(CP_SECTION)); mvprintw(cy+lh+2,COLS/2-3,"v%s",NVT_VERSION); attroff(COLOR_PAIR(CP_SECTION));
+    /* ═══ divider under logo */
+    attron(COLOR_PAIR(CP_BORDER)|A_DIM);
+    for(int x=bx+2;x<bx+bw-1;x++) mvaddstr(cy+lh,x,hrule);
+    attroff(COLOR_PAIR(CP_BORDER)|A_DIM);
+
+    attron(A_DIM);
+    mvprintw(cy+lh+1,COLS/2-11,T("Navigateur Transports","Transport Navigator"));
+    attroff(A_DIM);
+    attron(COLOR_PAIR(CP_SECTION)|A_BOLD); mvprintw(cy+lh+2,COLS/2-3,"v%s",NVT_VERSION); attroff(COLOR_PAIR(CP_SECTION)|A_BOLD);
 
     int ly=cy+lh+4;
     attron(COLOR_PAIR(CP_ACCENT));
-    mvprintw(ly,COLS/2-12," %c  %s"U_ELLIP"    ",sp[fr%4],name);
+    mvprintw(ly,COLS/2-13," %s  %s"U_ELLIP"    ",sp[fr%10],name);
     attroff(COLOR_PAIR(CP_ACCENT));
 
-    int pw=bw-8,px=bx+4,pct=step*100/tot,apct=pct+(fr%3)*(100/tot/3);
+    int pw=bw-8,px=bx+4,pct=step*100/tot;
+    /* animate progress within current step using frame counter */
+    int apct=pct+(fr%8)*(100/tot/8);
+    if(apct>pct+100/tot-1)apct=pct+100/tot-1;
     if(apct>100)apct=100;
     progress_bar(ly+1,px,pw,apct);
-    mvprintw(ly+1,px+pw+2,"%3d%%",pct);
+    attron(A_DIM); mvprintw(ly+1,px+pw+2,"%3d%%",pct); attroff(A_DIM);
 
     /* step dots */
-    int dy=ly+3,dx=COLS/2-tot;
+    int dy=ly+3,dx=COLS/2-tot*2;
     for(int i=0;i<tot;i++){
-        if(i<step){attron(COLOR_PAIR(CP_GREEN)|A_BOLD);mvaddstr(dy,dx+i*3,U_BULLET);attroff(COLOR_PAIR(CP_GREEN)|A_BOLD);}
-        else if(i==step){attron(COLOR_PAIR(CP_ACCENT)|A_BOLD);mvaddstr(dy,dx+i*3,U_BULLET);attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);}
-        else{attron(A_DIM);mvaddstr(dy,dx+i*3,U_BULLETO);attroff(A_DIM);}
+        if(i<step){attron(COLOR_PAIR(CP_GREEN)|A_BOLD);mvaddstr(dy,dx+i*4,U_BULLET);attroff(COLOR_PAIR(CP_GREEN)|A_BOLD);}
+        else if(i==step){attron(COLOR_PAIR(CP_ACCENT)|A_BOLD);mvaddstr(dy,dx+i*4,sp[fr%10]);attroff(COLOR_PAIR(CP_ACCENT)|A_BOLD);}
+        else{attron(A_DIM);mvaddstr(dy,dx+i*4,U_BULLETO);attroff(A_DIM);}
     }
     refresh();
 }
@@ -6017,22 +6547,26 @@ static const char *network_summary(NvtNetwork network)
 {
     switch (network) {
     case NET_TLS:
-        return "Metro, tram, bus et alertes Tisseo";
+        return T("Metro, tram, bus et alertes Tisseo",
+                 "Metro, tram, bus and Tisseo alerts");
     case NET_IDFM:
-        return "Metro, RER, tram, train et bus IDFM";
+        return T("Metro, RER, tram, train et bus IDFM",
+                 "Metro, RER, tram, train and IDFM bus");
     case NET_SNCF:
-        return "Train, TER, cars SNCF et departs Navitia";
+        return T("Train, TER, cars SNCF et departs Navitia",
+                 "Train, TER, SNCF coaches and Navitia timetables");
     case NET_BDX:
     default:
-        return "Tram, bus, passages et vehicules Bordeaux";
+        return T("Tram, bus, passages et vehicules Bordeaux",
+                 "Tram, bus, passages and live vehicles Bordeaux");
     }
 }
 
 static const char *network_menu_state(NvtNetwork network)
 {
-    if (network == g_network && g_network_loaded[network]) return "actif";
-    if (g_network_loaded[network]) return "pret";
-    return "a charger";
+    if (network == g_network && g_network_loaded[network]) return T("actif","active");
+    if (g_network_loaded[network]) return T("pret","ready");
+    return T("a charger","not loaded");
 }
 
 static void animate_load_step(int step, int total, const char *name, int base_frame)
@@ -6052,14 +6586,14 @@ static int ensure_network_loaded(NvtNetwork network)
 
     switch (network) {
     case NET_BDX:
-        animate_load_step(0, 3, "Arrets Bordeaux", 0);
+        animate_load_step(0, 3, T("Arrets Bordeaux","Bordeaux Stops"), 0);
         if (nvt_data_init_bordeaux(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_nstop_groups = 0;
             g_nstop_filtered = 0;
             return -1;
         }
-        animate_load_step(1, 3, "Lignes Bordeaux", 4);
+        animate_load_step(1, 3, T("Lignes Bordeaux","Bordeaux Lines"), 4);
         if (nvt_data_refresh_bordeaux_overview(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_nlines = 0;
@@ -6067,14 +6601,14 @@ static int ensure_network_loaded(NvtNetwork network)
             g_natlas_filtered = 0;
             return -1;
         }
-        animate_load_step(2, 3, "Alertes Bordeaux", 8);
+        animate_load_step(2, 3, T("Alertes Bordeaux","Bordeaux Alerts"), 8);
         if (nvt_data_refresh_bordeaux_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_nalerts = 0;
         }
         break;
     case NET_TLS:
-        animate_load_step(0, 2, "Reseau Toulouse", 0);
+        animate_load_step(0, 2, T("Reseau Toulouse","Toulouse Network"), 0);
         if (nvt_data_refresh_toulouse_overview(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             memset(&g_tls_snapshot, 0, sizeof(g_tls_snapshot));
@@ -6084,14 +6618,14 @@ static int ensure_network_loaded(NvtNetwork network)
             g_ntls_stop_filtered = 0;
             return -1;
         }
-        animate_load_step(1, 2, "Alertes Toulouse", 4);
+        animate_load_step(1, 2, T("Alertes Toulouse","Toulouse Alerts"), 4);
         if (nvt_data_refresh_toulouse_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_ntls_alerts = 0;
         }
         break;
     case NET_IDFM:
-        animate_load_step(0, 2, "Reseau IDFM", 0);
+        animate_load_step(0, 2, T("Reseau IDFM","IDFM Network"), 0);
         if (nvt_data_refresh_idfm_overview(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             memset(&g_idf_snapshot, 0, sizeof(g_idf_snapshot));
@@ -6099,14 +6633,14 @@ static int ensure_network_loaded(NvtNetwork network)
             g_nidf_filtered = 0;
             return -1;
         }
-        animate_load_step(1, 2, "Alertes IDFM", 4);
+        animate_load_step(1, 2, T("Alertes IDFM","IDFM Alerts"), 4);
         if (nvt_data_refresh_idfm_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_nidf_alerts = 0;
         }
         break;
     case NET_SNCF:
-        animate_load_step(0, 2, "Reseau SNCF", 0);
+        animate_load_step(0, 2, T("Reseau SNCF","SNCF Network"), 0);
         if (nvt_data_refresh_sncf_overview(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             memset(&g_app.sncf.snapshot, 0, sizeof(g_app.sncf.snapshot));
@@ -6114,7 +6648,7 @@ static int ensure_network_loaded(NvtNetwork network)
             g_app.sncf.nfiltered = 0;
             return -1;
         }
-        animate_load_step(1, 2, "Alertes SNCF", 4);
+        animate_load_step(1, 2, T("Alertes SNCF","SNCF Alerts"), 4);
         if (nvt_data_refresh_sncf_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_app.sncf.nalerts = 0;
@@ -6125,7 +6659,7 @@ static int ensure_network_loaded(NvtNetwork network)
     }
 
     g_network_loaded[network] = 1;
-    draw_load(1, 1, "Pret !", 0);
+    draw_load(1, 1, T("Pret !","Ready!"), 0);
     napms(180);
     return 0;
 }
@@ -6141,12 +6675,7 @@ static void draw_network_menu(const char *title, const char *subtitle, int curso
     if (x0 < 0) x0 = 0;
 
     erase();
-    for (int y = y0; y <= y0 + h; y++) mvhline(y, x0, ' ', w + 1);
-    rbox(y0, x0, y0 + h, x0 + w);
-
-    attron(COLOR_PAIR(CP_BORDER) | A_BOLD);
-    mvprintw(y0, x0 + (w - (int)strlen(title) - 2) / 2, " %s ", title);
-    attroff(COLOR_PAIR(CP_BORDER) | A_BOLD);
+    shadow_box(y0, x0, y0 + h, x0 + w, title, NULL);
 
     if (subtitle && subtitle[0]) {
         attron(A_DIM);
@@ -6177,8 +6706,14 @@ static void draw_network_menu(const char *title, const char *subtitle, int curso
     }
 
     attron(A_DIM);
-    if (allow_cancel) mvprintw(y0 + h - 1, x0 + 4, "j/k ou fleches, Entree pour choisir, Esc pour annuler");
-    else mvprintw(y0 + h - 1, x0 + 4, "j/k ou fleches, Entree pour choisir");
+    if (allow_cancel)
+        mvprintw(y0 + h - 1, x0 + 4,
+                 T("j/k fleches, Entree choisir, Esc annuler",
+                   "j/k arrows, Enter to select, Esc to cancel"));
+    else
+        mvprintw(y0 + h - 1, x0 + 4,
+                 T("j/k ou fleches, Entree pour choisir",
+                   "j/k or arrows, Enter to select"));
     attroff(A_DIM);
 }
 
@@ -6230,8 +6765,12 @@ static int prompt_network_menu(const char *title, const char *subtitle, NvtNetwo
 static void open_network_menu(int allow_cancel)
 {
     int selected = prompt_network_menu(
-        allow_cancel ? "Changer de reseau" : "Choisir un reseau",
-        allow_cancel ? "Les reseaux sont charges uniquement a la demande." : "Chargement initial limite au reseau choisi.",
+        allow_cancel ? T("Changer de reseau","Switch Network")
+                     : T("Choisir un reseau","Choose a Network"),
+        allow_cancel ? T("Les reseaux sont charges uniquement a la demande.",
+                         "Networks are loaded on demand.")
+                     : T("Chargement initial limite au reseau choisi.",
+                         "Only the selected network will be loaded."),
         g_network,
         allow_cancel
     );
@@ -6239,7 +6778,7 @@ static void open_network_menu(int allow_cancel)
     if (selected < 0) return;
     if (ensure_network_loaded((NvtNetwork)selected) == 0) {
         switch_network((NvtNetwork)selected);
-        toast("Reseau %s", network_name());
+        toast(T("Reseau %s","Network %s"), network_name());
     } else if ((NvtNetwork)selected != g_network) {
         switch_network((NvtNetwork)selected);
     }
@@ -6256,7 +6795,12 @@ int main(void)
     initscr(); cbreak(); noecho(); keypad(stdscr,TRUE); curs_set(0); timeout(1000);
     init_colors();
 
-    open_network_menu(0);
+    if (ensure_network_loaded(g_network) < 0) {
+        open_network_menu(0);
+    } else {
+        switch_network(g_network);
+        toast(T("Reseau %s","Network %s"), network_name());
+    }
 
     time_t lvr=0, lar=time(NULL);
 
@@ -6276,7 +6820,7 @@ int main(void)
                     char fetch_err[128];
                     if(nvt_data_refresh_bordeaux_vehicles(&g_app, 2, fetch_err, sizeof(fetch_err)) < 0){
                         nvt_app_toast_error(&g_app, now, "%s", fetch_err);
-                    } else if(g_nvehicles>0) toast("%d vehicules",g_nvehicles);
+                    } else if(g_nvehicles>0) toast(T("%d vehicules","%d vehicles"),g_nvehicles);
                     lvr=now;
                 }
                 if(now-lar>=ALERT_REFRESH_SEC){
@@ -6314,8 +6858,10 @@ int main(void)
         int ch=getch(); if(ch==ERR) continue;
         if(g_show_help){g_show_help=0;continue;}
         if(ch=='?'||ch==KEY_F(1)){g_show_help=1;continue;}
-        if(ch=='t'&&g_256){g_theme=(g_theme+1)%N_THEMES;apply_theme();toast("Theme: %s",themes[g_theme].name);continue;}
-        if(ch=='n'){open_network_menu(1);continue;}
+        if(ch=='t'&&g_256){g_theme=(g_theme+1)%N_THEMES;apply_theme();nvt_save_config(&g_app);toast("Theme: %s",themes[g_theme].name);continue;}
+        if(ch=='f'&&g_256){g_nerd^=1;toast("Nerd Font icons: %s",g_nerd?"on":"off");continue;}
+        if(ch=='L'){g_lang^=1;nvt_save_config(&g_app);toast(g_lang?"Language: English":"Langue: Francais");continue;}
+        if(ch=='n'){open_network_menu(1);nvt_save_config(&g_app);continue;}
         if(ch=='6'||ch=='i'){open_current_network_itinerary(g_screen==SCR_ITINERARY);continue;}
 
         int mr=LINES-8,hp=mr/2; if(mr<1)mr=1; if(hp<1)hp=1;
@@ -6339,14 +6885,14 @@ int main(void)
                         g_vehicle_zoom=0;
                         reset_toulouse_line_route();
                         g_screen=SCR_VEHICLES;
-                        load_current_network_vehicles("%d vehicules");
+                        load_current_network_vehicles(T("%d vehicules","%d vehicles"));
                     }
                     break;
                 case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
                 case '/': memset(g_tls_search,0,sizeof(g_tls_search)); do_toulouse_search(); break;
-                case 27: if(g_tls_search[0]){memset(g_tls_search,0,sizeof(g_tls_search));rebuild_toulouse_filter();g_tls_cursor=0;g_tls_scroll=0;toast("Filtre efface");} break;
+                case 27: if(g_tls_search[0]){memset(g_tls_search,0,sizeof(g_tls_search));rebuild_toulouse_filter();g_tls_cursor=0;g_tls_scroll=0;toast("%s",T("Filtre efface","Filter cleared"));} break;
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH; g_tls_stop_cursor=0; g_tls_stop_scroll=0; break;
-                case 'r': case KEY_F(5): refresh_current_network_overview("Flux Toulouse recharge"); break;
+                case 'r': case KEY_F(5): refresh_current_network_overview(T("Flux Toulouse recharge","Toulouse feed reloaded")); break;
                 }
             } else if(g_network==NET_IDFM || g_network==NET_SNCF){
                 switch(ch){
@@ -6363,7 +6909,7 @@ int main(void)
                     if(g_nlive_filtered>0){
                         g_live_sel_line=g_live_filtered[g_live_cursor];
                         g_screen=SCR_VEHICLES;
-                        load_current_network_vehicles(live_network_is_sncf() ? "%d trajets" : "%d courses");
+                        load_current_network_vehicles(live_network_is_sncf() ? T("%d trajets","%d journeys") : T("%d courses","%d journeys"));
                     }
                     break;
                 case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
@@ -6374,7 +6920,7 @@ int main(void)
                         rebuild_idfm_filter();
                         g_live_cursor=0;
                         g_live_scroll=0;
-                        toast("Filtre efface");
+                        toast("%s",T("Filtre efface","Filter cleared"));
                     }
                     break;
                 case 'p': case '4':
@@ -6382,7 +6928,7 @@ int main(void)
                         open_idfm_stop_search(g_live_filtered[g_live_cursor], 1);
                     }
                     break;
-                case 'r': case KEY_F(5): refresh_current_network_overview(live_network_is_sncf() ? "Flux SNCF recharge" : "Flux IDFM recharge"); break;
+                case 'r': case KEY_F(5): refresh_current_network_overview(live_network_is_sncf() ? T("Flux SNCF recharge","SNCF feed reloaded") : T("Flux IDFM recharge","IDFM feed reloaded")); break;
                 }
             } else {
                 switch(ch){
@@ -6398,9 +6944,9 @@ int main(void)
                 case '\n': case KEY_ENTER: if(g_nfiltered>0){g_sel_line=g_filtered[g_cursor];g_vehicle_zoom=0;reset_vehicle_detail_map();g_screen=SCR_VEHICLES;lvr=0;}break;
                 case 'a': case '3': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
                 case '/': memset(g_search,0,sizeof(g_search));do_search();break;
-                case 27: if(g_search[0]){memset(g_search,0,sizeof(g_search));rebuild_filter();g_cursor=0;g_scroll=0;toast("Filtre efface");}break;
+                case 27: if(g_search[0]){memset(g_search,0,sizeof(g_search));rebuild_filter();g_cursor=0;g_scroll=0;toast("%s",T("Filtre efface","Filter cleared"));}break;
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();break;
-                case 'r': case KEY_F(5): refresh_current_network_overview("Donnees mises a jour"); break;
+                case 'r': case KEY_F(5): refresh_current_network_overview(T("Donnees mises a jour","Data refreshed")); break;
                 }
             }
             break;
@@ -6412,7 +6958,7 @@ int main(void)
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case 'r': case KEY_F(5):
                     reset_toulouse_line_route();
-                    load_current_network_vehicles("%d vehicules");
+                    load_current_network_vehicles(T("%d vehicules","%d vehicles"));
                     refresh_current_network_alerts(NULL);
                     break;
                 case '+': case '=': if(g_vehicle_zoom<MAX_VEHICLE_ZOOM) g_vehicle_zoom++; break;
@@ -6427,7 +6973,7 @@ int main(void)
                     open_idfm_stop_search(g_live_sel_line, 1);
                     break;
                 case 'r': case KEY_F(5):
-                    load_current_network_vehicles(live_network_is_sncf() ? "%d trajets" : "%d courses");
+                    load_current_network_vehicles(live_network_is_sncf() ? T("%d trajets","%d journeys") : T("%d courses","%d journeys"));
                     refresh_current_network_alerts(NULL);
                     break;
                 }
@@ -6437,7 +6983,7 @@ int main(void)
                 case 'r': case KEY_F(5):
                     reset_line_route();
                     reset_vehicle_detail_map();
-                    if (load_current_network_vehicles("%d vehicules") >= 0) lvr=now;
+                    if (load_current_network_vehicles(T("%d vehicules","%d vehicles")) >= 0) lvr=now;
                     refresh_current_network_alerts(NULL);
                     lar=now;
                     break;
@@ -6461,9 +7007,9 @@ int main(void)
             case 'G': case KEY_END: g_alert_scroll=g_alert_total_h>0?g_alert_total_h-1:0;break;
             case 'r': case KEY_F(5):
                 refresh_current_network_alerts(
-                    g_network==NET_TLS ? "%d alertes Toulouse"
-                    : (g_network==NET_IDFM ? "%d alertes IDFM"
-                       : (g_network==NET_SNCF ? "%d alertes SNCF" : "%d alertes"))
+                    g_network==NET_TLS ? T("%d alertes Toulouse","%d Toulouse alerts")
+                    : (g_network==NET_IDFM ? T("%d alertes IDFM","%d IDFM alerts")
+                       : (g_network==NET_SNCF ? T("%d alertes SNCF","%d SNCF alerts") : T("%d alertes","%d alerts")))
                 );
                 lar=time(NULL);
                 break;
@@ -6488,7 +7034,7 @@ int main(void)
                 case 21: g_tls_stop_cursor-=hp;if(g_tls_stop_cursor<0)g_tls_stop_cursor=0;break;
                 case 'g': case KEY_HOME: g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case 'G': case KEY_END: g_tls_stop_cursor=g_ntls_stop_filtered>0?g_ntls_stop_filtered-1:0;break;
-                case '\n': case KEY_ENTER: if(g_ntls_stop_filtered>0){g_tls_sel_stop=g_tls_stop_filtered[g_tls_stop_cursor];g_screen=SCR_PASSAGES;load_current_network_passages("%d passages");}break;
+                case '\n': case KEY_ENTER: if(g_ntls_stop_filtered>0){g_tls_sel_stop=g_tls_stop_filtered[g_tls_stop_cursor];g_screen=SCR_PASSAGES;load_current_network_passages(T("%d passages","%d departures"));}break;
                 case '/': memset(g_tls_stop_search,0,sizeof(g_tls_stop_search));do_toulouse_stop_search();break;
                 case '1': g_screen=SCR_LINES;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
@@ -6508,7 +7054,7 @@ int main(void)
                     if(g_nlive_stop_filtered>0){
                         g_live_sel_stop=g_live_stop_filtered[g_live_stop_cursor];
                         g_screen=SCR_PASSAGES;
-                        load_current_network_passages("%d departs");
+                        load_current_network_passages(T("%d departs","%d departures"));
                     }
                     break;
                 case '/': do_idfm_stop_search(); break;
@@ -6526,7 +7072,7 @@ int main(void)
                 case 21: g_cursor-=hp;if(g_cursor<0)g_cursor=0;break;
                 case 'g': case KEY_HOME: g_cursor=0;g_scroll=0;break;
                 case 'G': case KEY_END: g_cursor=g_nstop_filtered>0?g_nstop_filtered-1:0;break;
-                case '\n': case KEY_ENTER: if(g_nstop_filtered>0){g_sel_stop_group=g_stop_filtered[g_cursor];g_screen=SCR_PASSAGES;load_current_network_passages("%d passages");}break;
+                case '\n': case KEY_ENTER: if(g_nstop_filtered>0){g_sel_stop_group=g_stop_filtered[g_cursor];g_screen=SCR_PASSAGES;load_current_network_passages(T("%d passages","%d departures"));}break;
                 case '/': memset(g_stop_search,0,sizeof(g_stop_search));do_stop_search();break;
                 case '1': g_screen=SCR_LINES;g_cursor=0;g_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
@@ -6537,7 +7083,7 @@ int main(void)
             if(g_network==NET_TLS){
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
-                case 'r': case KEY_F(5): load_current_network_passages("%d passages");break;
+                case 'r': case KEY_F(5): load_current_network_passages(T("%d passages","%d departures"));break;
                 case '/': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '1': g_screen=SCR_LINES;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
@@ -6546,7 +7092,7 @@ int main(void)
             } else if(g_network==NET_IDFM || g_network==NET_SNCF){
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
-                case 'r': case KEY_F(5): load_current_network_passages("%d departs"); break;
+                case 'r': case KEY_F(5): load_current_network_passages(T("%d departs","%d departures")); break;
                 case '/': g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
                 case '1': g_screen=SCR_LINES; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
                 case '3': case 'a': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
@@ -6555,7 +7101,7 @@ int main(void)
             } else {
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;break;
-                case 'r': case KEY_F(5): load_current_network_passages("%d passages");break;
+                case 'r': case KEY_F(5): load_current_network_passages(T("%d passages","%d departures"));break;
                 case '/': g_screen=SCR_STOP_SEARCH;g_cursor=0;g_scroll=0;memset(g_stop_search,0,sizeof(g_stop_search));rebuild_stop_filter();break;
                 case '1': g_screen=SCR_LINES;g_cursor=0;g_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
@@ -6615,13 +7161,14 @@ int main(void)
                 reset_metro_map_cache();
                 reset_atlas_map();
                 reset_atlas_routes();
-                toast("Atlas recharge");
+                toast("%s",T("Atlas recharge","Atlas reloaded"));
                 break;
             case 'm': break;
             } break;
         }
     }
 quit:
+    nvt_save_config(&g_app);
     endwin(); course_cache_free(&g_course_cache); stopmap_free(&g_stops); api_cleanup();
     return 0;
 }

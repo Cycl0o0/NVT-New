@@ -16,7 +16,7 @@
 #define OVERPASS_API_BASE "https://overpass-api.de/api/interpreter"
 #define MAP_BDX_EPCI  "243300316"
 #define MAP_TLS_EPCI  "243100518"
-#define NVT_VERSION   "1.0"
+#define NVT_VERSION   "V2.0"
 #define USER_AGENT_FMT "NVT/%s  %s/%s %s/%s"
 #define USER_AGENT_MAX 192
 
