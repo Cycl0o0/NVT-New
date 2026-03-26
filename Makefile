@@ -47,9 +47,6 @@ backend-run: nvt-backend
 mcp-run: nvt-backend
 	python3 ./mcp/nvt_mcp_server.py
 
-apple-project:
-	cd Apple && xcodegen generate
-
 nvt: $(TUI_SRCS) api.h config.h cJSON.h line_colors.h
 	$(CC) $(CFLAGS) $(NCURSES_CFLAGS) -o $@ $(TUI_SRCS) $(CURSES_LDFLAGS)
 
@@ -68,4 +65,4 @@ tests/test_map_math: $(TEST_MAP_SRCS) map_math.h
 clean:
 	rm -f nvt nvt-backend tests/test_filter tests/test_itinerary tests/test_map_math
 
-.PHONY: all tui backend test backend-run mcp-run apple-project clean
+.PHONY: all tui backend test backend-run mcp-run clean

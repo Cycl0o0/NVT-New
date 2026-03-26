@@ -10,7 +10,6 @@ The project currently provides:
 - a terminal user interface in C (`nvt`)
 - a local backend API for transit data
 - a local MCP server for lines, stops, next passages, alerts, and line monitoring
-- a native SwiftUI Apple app for iOS, macOS, visionOS, and watchOS companion browsing
 - support for Bordeaux, Toulouse, and Paris IDFM networks
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
@@ -36,7 +35,6 @@ The project currently provides:
 ```text
 .
 |-- backend.c
-|-- Apple/
 |-- mcp/
 |-- api.c
 |-- api.h
@@ -87,14 +85,6 @@ To point it to an already running backend instead:
 NVT_BACKEND_URL=http://127.0.0.1:8080 python3 ./mcp/nvt_mcp_server.py
 ```
 
-Generate the Apple app project:
-
-```bash
-make apple-project
-```
-
-This creates `Apple/NVT.xcodeproj`.
-
 Run the TUI directly:
 
 ```bash
@@ -127,18 +117,6 @@ It exposes tools for:
 - composite line monitoring
 
 Connection examples and environment details live in `docs/mcp-server.md`.
-
-## Apple App
-
-The native SwiftUI Apple client lives in `Apple/`.
-
-It includes:
-
-- one shared app target for `iOS`, `macOS`, and `visionOS`
-- one `watchOS` companion app target
-- direct backend integration for lines, alerts, stops, passages, vehicles, and route/boundary maps
-
-Build notes live in `Apple/README.md`.
 
 ## Development Notes
 
