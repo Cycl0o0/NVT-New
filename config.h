@@ -12,6 +12,8 @@
 #define SNCF_API_KEY "538d62fe-af52-4ec5-9a90-97b20b7dd733"
 #define SNCF_API_BASE "https://api.sncf.com/v1"
 #define SNCF_COVERAGE "sncf"
+/* STAR — Rennes / Métropole. Public Opendatasoft API, no auth required. */
+#define STAR_API_BASE "https://data.explore.star.fr/api/explore/v2.1/catalog/datasets"
 #define MAP_API_BASE  "https://geo.api.gouv.fr"
 #define OVERPASS_API_BASE "https://overpass-api.de/api/interpreter"
 #define MAP_BDX_EPCI  "243300316"

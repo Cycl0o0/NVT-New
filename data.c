@@ -129,6 +129,8 @@ static int fetch_toulouse_overview_once(void *ctx)
 
     app->tls.nlines = app->tls.snapshot.sample_lines;
     app->tls.nstops = app->tls.snapshot.sample_stops;
+    /* Wire stops cache for vehicle synthesis. */
+    nvt_set_toulouse_vehicle_stops(app->tls.stops, app->tls.nstops);
     app->tls.nfiltered = nvt_rebuild_toulouse_line_filter(
         app->tls.lines,
         app->tls.nlines,
@@ -346,7 +348,12 @@ static int fetch_idfm_vehicles_once(void *ctx)
     if (app->idf.sel_line < 0 || app->idf.sel_line >= app->idf.nlines) return 0;
 
     line = &app->idf.lines[app->idf.sel_line];
+    /* Wire stops cache so SIRI ETT synthesis can compute positions. */
+    if (app->idf.nstops > 0) {
+        nvt_set_idfm_vehicle_stops(app->idf.stops, app->idf.nstops);
+    }
     app->idf.nvehicles = fetch_idfm_vehicles(line, app->idf.vehicles, MAX_VEHICLES);
+    nvt_set_idfm_vehicle_stops(NULL, 0);
     if (app->idf.nvehicles < 0) return -1;
     if (app->idf.nvehicles > 1) {
         qsort(
@@ -562,4 +569,127 @@ int nvt_data_load_sncf_passages(AppState *app, int attempts, char *err, size_t e
 int nvt_data_load_sncf_vehicles(AppState *app, int attempts, char *err, size_t err_sz)
 {
     return nvt_retry_operation("SNCF journeys", attempts, fetch_sncf_vehicles_once, app, err, err_sz);
+}
+
+/* ── STAR (Rennes Métropole) ───────────────────────────────────── */
+
+static int fetch_star_overview_once(void *ctx)
+{
+    AppState *app = ctx;
+
+    if (fetch_star_snapshot(&app->star.snapshot, app->star.lines, MAX_LINES) < 0) return -1;
+
+    app->star.nlines = app->star.snapshot.sample_lines;
+    if (app->star.nlines > 1) {
+        qsort(app->star.lines, app->star.nlines, sizeof(ToulouseLine), nvt_cmp_idfm_lines);
+    }
+    app->star.nfiltered = nvt_rebuild_toulouse_line_filter(
+        app->star.lines, app->star.nlines, app->star.search,
+        app->star.filtered, MAX_LINES
+    );
+    app->star.nstops = 0;
+    app->star.nstop_filtered = 0;
+    app->star.npassages = 0;
+    app->star.nvehicles = 0;
+    app->star.sel_stop = -1;
+    return app->star.nlines;
+}
+
+static int fetch_star_stops_once(void *ctx)
+{
+    AppState *app = ctx;
+    ToulouseLine *line;
+
+    app->star.nstop_filtered = 0;
+    app->star.npassages = 0;
+    app->star.sel_stop = -1;
+    if (app->star.sel_line < 0 || app->star.sel_line >= app->star.nlines) return 0;
+
+    line = &app->star.lines[app->star.sel_line];
+    app->star.nstops = fetch_star_line_stops(line, app->star.stops, MAX_STOPS);
+    if (app->star.nstops < 0) return -1;
+    if (app->star.nstops > 1) {
+        qsort(app->star.stops, app->star.nstops, sizeof(ToulouseStop), cmp_live_stops_by_name);
+    }
+    if (app->star.stop_search[0]) {
+        app->star.nstop_filtered = nvt_rebuild_toulouse_stop_filter(
+            app->star.stops, app->star.nstops, app->star.stop_search,
+            app->star.stop_filtered, MAX_STOPS
+        );
+    }
+    return app->star.nstops;
+}
+
+static int fetch_star_alerts_once(void *ctx)
+{
+    AppState *app = ctx;
+
+    app->star.nalerts = fetch_star_alerts(app->star.alerts, MAX_ALERTS);
+    if (app->star.nalerts < 0) return -1;
+    app->star.snapshot.sample_alerts = app->star.nalerts;
+    return app->star.nalerts;
+}
+
+static int fetch_star_passages_once(void *ctx)
+{
+    AppState *app = ctx;
+    ToulouseLine *line;
+    ToulouseStop *stop;
+
+    app->star.npassages = 0;
+    if (app->star.sel_line < 0 || app->star.sel_line >= app->star.nlines) return 0;
+    if (app->star.sel_stop < 0 || app->star.sel_stop >= app->star.nstops) return 0;
+
+    line = &app->star.lines[app->star.sel_line];
+    stop = &app->star.stops[app->star.sel_stop];
+    app->star.npassages = fetch_star_passages(line, stop, app->star.passages, MAX_PASSAGES);
+    if (app->star.npassages < 0) return -1;
+    if (app->star.npassages > 1) {
+        qsort(app->star.passages, app->star.npassages, sizeof(ToulousePassage),
+              cmp_live_passages_by_waiting_time);
+    }
+    return app->star.npassages;
+}
+
+static int fetch_star_vehicles_once(void *ctx)
+{
+    AppState *app = ctx;
+    ToulouseLine *line;
+
+    app->star.nvehicles = 0;
+    if (app->star.sel_line < 0 || app->star.sel_line >= app->star.nlines) return 0;
+
+    line = &app->star.lines[app->star.sel_line];
+    app->star.nvehicles = fetch_star_vehicles(line, app->star.vehicles, MAX_VEHICLES);
+    if (app->star.nvehicles < 0) return -1;
+    if (app->star.nvehicles > 1) {
+        qsort(app->star.vehicles, app->star.nvehicles, sizeof(ToulouseVehicle),
+              cmp_live_vehicles_by_terminus);
+    }
+    return app->star.nvehicles;
+}
+
+int nvt_data_refresh_star_overview(AppState *app, int attempts, char *err, size_t err_sz)
+{
+    return nvt_retry_operation("STAR lines", attempts, fetch_star_overview_once, app, err, err_sz);
+}
+
+int nvt_data_load_star_stops(AppState *app, int attempts, char *err, size_t err_sz)
+{
+    return nvt_retry_operation("STAR line stops", attempts, fetch_star_stops_once, app, err, err_sz);
+}
+
+int nvt_data_refresh_star_alerts(AppState *app, int attempts, char *err, size_t err_sz)
+{
+    return nvt_retry_operation("STAR alerts", attempts, fetch_star_alerts_once, app, err, err_sz);
+}
+
+int nvt_data_load_star_passages(AppState *app, int attempts, char *err, size_t err_sz)
+{
+    return nvt_retry_operation("STAR departures", attempts, fetch_star_passages_once, app, err, err_sz);
+}
+
+int nvt_data_load_star_vehicles(AppState *app, int attempts, char *err, size_t err_sz)
+{
+    return nvt_retry_operation("STAR vehicles", attempts, fetch_star_vehicles_once, app, err, err_sz);
 }

@@ -695,14 +695,23 @@ static int live_network_is_sncf(void)
     return g_network == NET_SNCF;
 }
 
+static int live_network_is_star(void)
+{
+    return g_network == NET_STAR;
+}
+
 static NvtIdfmState *current_live_state(void)
 {
-    return live_network_is_sncf() ? (NvtIdfmState *)&g_app.sncf : &g_app.idf;
+    if (g_network == NET_SNCF) return (NvtIdfmState *)&g_app.sncf;
+    if (g_network == NET_STAR) return (NvtIdfmState *)&g_app.star;
+    return &g_app.idf;
 }
 
 static const char *current_live_network_short(void)
 {
-    return live_network_is_sncf() ? "SNCF" : "IDFM";
+    if (g_network == NET_SNCF) return "SNCF";
+    if (g_network == NET_STAR) return "STAR";
+    return "IDFM";
 }
 
 #define g_live_snapshot (current_live_state()->snapshot)
@@ -1209,6 +1218,7 @@ static int select_line_for_itinerary(void)
         return (g_tls_sel_line >= 0 && g_tls_sel_line < g_ntls_lines) ? 0 : -1;
     case NET_IDFM:
     case NET_SNCF:
+    case NET_STAR:
         if (g_screen == SCR_LINES && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         else if (g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         return (g_live_sel_line >= 0 && g_live_sel_line < g_nlive_lines) ? 0 : -1;
@@ -1231,7 +1241,8 @@ static int itinerary_matches_current_line(void)
         return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
     }
     case NET_IDFM:
-    case NET_SNCF: {
+    case NET_SNCF:
+    case NET_STAR: {
         ToulouseLine *line = selected_idfm_line();
         return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
     }
@@ -1382,6 +1393,7 @@ static int load_current_network_itinerary(int force_reload)
         break;
     case NET_IDFM:
     case NET_SNCF:
+    case NET_STAR:
         count = load_live_itinerary();
         break;
     case NET_BDX:
@@ -6555,6 +6567,9 @@ static const char *network_summary(NvtNetwork network)
     case NET_SNCF:
         return T("Train, TER, cars SNCF et departs Navitia",
                  "Train, TER, SNCF coaches and Navitia timetables");
+    case NET_STAR:
+        return T("Bus, metro, vehicules et passages Rennes STAR",
+                 "Bus, metro, vehicles and passages Rennes STAR");
     case NET_BDX:
     default:
         return T("Tram, bus, passages et vehicules Bordeaux",
@@ -6652,6 +6667,21 @@ static int ensure_network_loaded(NvtNetwork network)
         if (nvt_data_refresh_sncf_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_app.sncf.nalerts = 0;
+        }
+        break;
+    case NET_STAR:
+        animate_load_step(0, 2, T("Reseau STAR (Rennes)","STAR Network (Rennes)"), 0);
+        if (nvt_data_refresh_star_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            memset(&g_app.star.snapshot, 0, sizeof(g_app.star.snapshot));
+            g_app.star.nlines = 0;
+            g_app.star.nfiltered = 0;
+            return -1;
+        }
+        animate_load_step(1, 2, T("Alertes STAR","STAR Alerts"), 4);
+        if (nvt_data_refresh_star_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_app.star.nalerts = 0;
         }
         break;
     case NET_COUNT:

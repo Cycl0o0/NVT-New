@@ -135,6 +135,10 @@ typedef struct {
     int delayed;
     int vitesse;
     int arret;
+    /* Real-time GPS — 0/0 means "not provided by upstream" */
+    double lon, lat;
+    int    bearing;     /* heading in degrees, -1 if unknown */
+    int    has_position;
 } ToulouseVehicle;
 
 typedef struct {
@@ -264,6 +268,10 @@ void      course_cache_init(CourseCache *cc);
 void      course_cache_free(CourseCache *cc);
 int       fetch_toulouse_snapshot(ToulouseSnapshot *snap, ToulouseLine *lines, int max_lines,
                                   ToulouseStop *stops, int max_stops);
+/* Provide the cached Tisseo stops list to fetch_toulouse_vehicles so it
+   can synthesize positions from real-time stop schedules. Callers should
+   set this once after fetch_toulouse_snapshot completes. */
+void      nvt_set_toulouse_vehicle_stops(const ToulouseStop *stops, int count);
 int       fetch_toulouse_alerts(ToulouseAlert *out, int max);
 int       fetch_toulouse_passages(const char *stop_area_ref, ToulousePassage *out, int max);
 int       fetch_toulouse_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
@@ -272,6 +280,14 @@ int       fetch_idfm_line_stops(const ToulouseLine *line, ToulouseStop *out, int
 int       fetch_idfm_alerts(ToulouseAlert *out, int max);
 int       fetch_idfm_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
 int       fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
+/* Provide cached IDFM line stops so fetch_idfm_vehicles can synthesize
+   vehicle positions from PRIM SIRI ETT. Set after fetch_idfm_line_stops. */
+void      nvt_set_idfm_vehicle_stops(const ToulouseStop *stops, int count);
+int       fetch_star_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
+int       fetch_star_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
+int       fetch_star_alerts(ToulouseAlert *out, int max);
+int       fetch_star_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
+int       fetch_star_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
 int       fetch_sncf_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
 int       fetch_sncf_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
 int       fetch_sncf_alerts(ToulouseAlert *out, int max);

@@ -18,9 +18,9 @@ endif
 CURSES_LDFLAGS = $(NCURSES_LIBS) $(CURL_LDFLAGS)
 BACKEND_LDFLAGS = $(CURL_LDFLAGS)
 
-COMMON_SRCS = api.c cJSON.c
+COMMON_SRCS = api.c cJSON.c interpolated_positions.c idfm_crosswalk.c
 TUI_SRCS = nvt.c app_state.c config_file.c data.c filter.c itinerary.c map_math.c network.c ui.c $(COMMON_SRCS)
-BACKEND_SRCS = backend.c api.c cJSON.c
+BACKEND_SRCS = backend.c api.c cJSON.c interpolated_positions.c idfm_crosswalk.c
 TEST_FILTER_SRCS = tests/test_filter.c filter.c
 TEST_ITINERARY_SRCS = tests/test_itinerary.c itinerary.c filter.c
 TEST_MAP_SRCS = tests/test_map_math.c map_math.c

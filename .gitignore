@@ -32,3 +32,6 @@ Thumbs.db
 
 # API docs & endpoints
 /apispecific/
+
+# Claude Code workspace
+.claude/

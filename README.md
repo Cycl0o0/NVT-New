@@ -2,15 +2,15 @@
 
 NVT is first a TUI transport monitoring application written in C.
 
-Around that TUI app, the project also provides a local backend API and a Home Assistant custom integration.
-It now also provides a local MCP server that exposes the backend data to AI clients.
+Around that TUI app, the project also provides a local backend API, a Nuxt 3 web frontend, and a Home Assistant custom integration. It also ships a local MCP server that exposes the backend data to AI clients.
 
 The project currently provides:
 
 - a terminal user interface in C (`nvt`)
 - a local backend API for transit data
+- a Nuxt 3 / Vue 3 web frontend with MapKit JS in `web/`
 - a local MCP server for lines, stops, next passages, alerts, and line monitoring
-- support for Bordeaux, Toulouse, and Paris IDFM networks
+- support for Bordeaux (TBM), Toulouse (Tisséo), Paris (IDFM), SNCF, and Rennes (STAR)
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
 
@@ -18,11 +18,28 @@ The project currently provides:
 
 - `Cycl0o0`
 
+## Networks & live vehicle GPS
+
+Every supported network reports lines, stops, next passages, alerts, and **live vehicle positions** with real GPS coordinates. The strategy varies per network because not every operator publishes a SIRI VehicleMonitoring feed publicly:
+
+| Network | API | Live vehicle GPS source |
+|---|---|---|
+| **Bordeaux TBM** | data.bordeaux-metropole.fr | Native vehicle endpoint |
+| **Toulouse Tisséo** | api.tisseo.fr v2 | Synthesized from real-time `stops_schedules` (a vehicle is rendered at every stop with an imminent passage) |
+| **Paris IDFM** | PRIM Navitia + PRIM SIRI Lite | Synthesized from SIRI Estimated Timetable (`/marketplace/estimated-timetable`) using a 38 k-stop crosswalk fetched once from `data.iledefrance-mobilites.fr/datasets/arrets` |
+| **SNCF** | api.sncf.com Navitia | Synthesized from `/lines/{id}/departures` using `stop_point.coord` returned in each departure |
+| **Rennes STAR** | data.explore.star.fr Opendatasoft | Native `tco-bus-vehicules-position-tr` dataset |
+
+GTFS-RT is intentionally not used. All sources are public JSON APIs.
+
 ## Features
 
 - Ncurses-based TUI app written in C
-- Multi-network live support for Bordeaux, Toulouse, and Paris IDFM
+- Multi-network live support across 5 networks
 - Local backend endpoints for lines, alerts, stop groups, passages, vehicles, and map boundaries
+- Real-time vehicle positions on every network (synthesized when no native GPS feed exists — see table above)
+- Generic `interpolated_positions` module for synthesizing vehicle markers from passage timetables
+- IDFM stop crosswalk (`idfm_crosswalk`) bridging SIRI `STIF:StopPoint:Q:XXX:` ↔ Navitia stops via `arrid` lookup
 - A line-based itinerary calculator in the TUI for Bordeaux, Toulouse, IDFM, and SNCF
 - One Home Assistant config entry per `network + stop + line + direction`
 - User-defined threshold values such as `5`, `10`, `20`, or more minutes
@@ -34,14 +51,16 @@ The project currently provides:
 
 ```text
 .
-|-- backend.c
-|-- mcp/
-|-- api.c
-|-- api.h
-|-- nvt.c
+|-- backend.c                      HTTP backend
+|-- nvt.c                          TUI entry point
+|-- api.[ch]                       Network fetchers (TBM, Tisséo, IDFM, SNCF, STAR)
+|-- interpolated_positions.[ch]    Generic synthesis: passages → vehicle markers
+|-- idfm_crosswalk.[ch]            SIRI StopPointRef → coords lookup for IDFM
+|-- data.c, network.c, ui.c, ...   TUI modules
+|-- web/                           Nuxt 3 / Vue 3 frontend with MapKit JS
+|-- mcp/                           MCP server (Python)
+|-- custom_components/nvt/         Home Assistant integration
 |-- Makefile
-`-- custom_components/
-    `-- nvt/
 ```
 
 ## Build
@@ -91,6 +110,17 @@ Run the TUI directly:
 ./nvt
 ```
 
+## Web frontend
+
+The Nuxt 3 frontend lives in `web/`. It exposes the backend through a server proxy and renders lines, live passages, alerts and a fullscreen MapKit JS map with the selected line color tinting the basemap.
+
+```bash
+cd web
+npm install
+cp .env.example .env   # set MAPKIT_JS_TOKEN and (optionally) NVT_BACKEND_URL
+npm run dev
+```
+
 ## Home Assistant
 
 The Home Assistant integration lives in `custom_components/nvt/`.
@@ -126,7 +156,8 @@ Connection examples and environment details live in `docs/mcp-server.md`.
 - Press `i` or `6` on a selected line to open the itinerary calculator, then use `o`, `d`, and `x`
 - Technical notes for the modularized TUI live in `docs/technical-readme.md`
 - MCP usage notes live in `docs/mcp-server.md`
-- IDFM support is configured directly in the C sources
+- IDFM, SNCF, and STAR support is configured directly in the C sources
+- The IDFM crosswalk downloads ~3 MB gzipped on first vehicle request (lazy load), then is kept in memory
 - Local Home Assistant test data can be stored in `.ha-test/`
 - Python cache files and compiled binaries should not be committed
 

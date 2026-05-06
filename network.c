@@ -155,6 +155,41 @@ static void sncf_reset_transient(AppState *app)
     app->sncf.sel_stop = -1;
 }
 
+static int star_refresh_overview(AppState *app, char *err, size_t err_sz)
+{
+    return nvt_data_refresh_star_overview(app, 2, err, err_sz);
+}
+
+static int star_refresh_alerts(AppState *app, char *err, size_t err_sz)
+{
+    return nvt_data_refresh_star_alerts(app, 2, err, err_sz);
+}
+
+static int star_load_stops(AppState *app, char *err, size_t err_sz)
+{
+    return nvt_data_load_star_stops(app, 2, err, err_sz);
+}
+
+static int star_load_passages(AppState *app, char *err, size_t err_sz)
+{
+    return nvt_data_load_star_passages(app, 2, err, err_sz);
+}
+
+static int star_load_vehicles(AppState *app, char *err, size_t err_sz)
+{
+    return nvt_data_load_star_vehicles(app, 2, err, err_sz);
+}
+
+static void star_reset_transient(AppState *app)
+{
+    app->star.nstops = 0;
+    app->star.nstop_filtered = 0;
+    app->star.npassages = 0;
+    app->star.nvehicles = 0;
+    app->star.sel_line = -1;
+    app->star.sel_stop = -1;
+}
+
 static const NvtNetworkAdapter NETWORKS[] = {
     {
         .kind = NET_BDX,
@@ -196,6 +231,16 @@ static const NvtNetworkAdapter NETWORKS[] = {
         .load_vehicles = sncf_load_vehicles,
         .reset_transient = sncf_reset_transient,
     },
+    {
+        .kind = NET_STAR,
+        .name = "Rennes STAR",
+        .refresh_overview = star_refresh_overview,
+        .refresh_alerts = star_refresh_alerts,
+        .load_stops = star_load_stops,
+        .load_passages = star_load_passages,
+        .load_vehicles = star_load_vehicles,
+        .reset_transient = star_reset_transient,
+    },
 };
 
 const char *nvt_network_name(NvtNetwork network)
@@ -207,6 +252,8 @@ const char *nvt_network_name(NvtNetwork network)
         return "Paris IDFM";
     case NET_SNCF:
         return "SNCF";
+    case NET_STAR:
+        return "Rennes STAR";
     case NET_BDX:
     default:
         return "Bordeaux";
@@ -249,6 +296,12 @@ void nvt_switch_network(AppState *app, NvtNetwork network)
     app->sncf.stop_scroll = 0;
     app->sncf.sel_line = -1;
     app->sncf.sel_stop = -1;
+    app->star.cursor = 0;
+    app->star.scroll = 0;
+    app->star.stop_cursor = 0;
+    app->star.stop_scroll = 0;
+    app->star.sel_line = -1;
+    app->star.sel_stop = -1;
     app->ui.alert_scroll = 0;
 
     adapter = nvt_network_adapter(network);

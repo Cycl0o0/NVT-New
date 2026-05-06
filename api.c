@@ -332,6 +332,14 @@ static char *http_get(const char *url)
     return http_get_timeout(url, 15L);
 }
 
+/* Public wrapper for use by other compilation units (idfm_crosswalk.c, etc).
+ * Honors gzip/deflate auto-decompression via libcurl, 30s timeout for large
+ * bulk downloads. */
+char *nvt_http_get_bulk(const char *url)
+{
+    return http_get_timeout(url, 30L);
+}
+
 static char *http_get_query(const char *base, const char *query, long timeout_sec)
 {
     CURL *curl = curl_easy_init();
@@ -1128,7 +1136,7 @@ static int load_toulouse_stop_areas_live(ToulouseStop *out, int max, int *total_
     int n = 0;
 
     if (total_count) *total_count = 0;
-    snprintf(url, sizeof(url), TISSEO_API_BASE "/stop_areas.json?network=%s&displayLines=1&key=%s",
+    snprintf(url, sizeof(url), TISSEO_API_BASE "/stop_areas.json?network=%s&displayLines=1&displayCoordXY=1&key=%s",
              TISSEO_NETWORK_ENCODED, TISSEO_API_KEY);
     raw = http_get(url);
     if (!raw) return -1;
@@ -1144,6 +1152,7 @@ static int load_toulouse_stop_areas_live(ToulouseStop *out, int max, int *total_
     cJSON_ArrayForEach(item, items) {
         ToulouseStop *stop;
         cJSON *lines;
+        const char *xs, *ys;
 
         if (n >= max) break;
         stop = &out[n];
@@ -1152,6 +1161,13 @@ static int load_toulouse_stop_areas_live(ToulouseStop *out, int max, int *total_
         stop->id = parse_prefixed_id(jstr(item, "id"));
         SCOPY(stop->libelle, jstr(item, "name"));
         SCOPY(stop->commune, jstr(item, "cityName"));
+        /* Tisséo utilise x=lon, y=lat (WGS84). */
+        xs = jstr(item, "x");
+        ys = jstr(item, "y");
+        if (xs[0] && ys[0]) {
+            stop->lon = atof(xs);
+            stop->lat = atof(ys);
+        }
         lines = cJSON_GetObjectItemCaseSensitive(item, "line");
         stop_line_list_from_array(lines, "shortName", stop->lignes, sizeof(stop->lignes),
                                   stop->mode, sizeof(stop->mode));
@@ -1348,75 +1364,176 @@ static const char *schedule_way_to_dir(const cJSON *destination)
     return "ALLER";
 }
 
+/*
+ * Tisséo v2 doesn't expose GPS vehicle positions publicly. We synthesize
+ * "live" vehicles from real-time stop schedules: for each stop on the line
+ * with a passage imminent (<2 min), we emit a vehicle pinned at that stop's
+ * coordinates. The `interpolated_positions` module enforces de-duplication
+ * by destination + datetime so the same vehicle doesn't render at multiple
+ * consecutive stops.
+ */
+#include "interpolated_positions.h"
+
+/* Internal: collect all line stops + their passages into parallel arrays.
+ * Returns number of stops with at least one upcoming passage. */
+static int toulouse_collect_line_passages(
+    const ToulouseLine *line,
+    const ToulouseStop *all_stops, int n_all_stops,
+    /* out */
+    ToulouseStop *out_stops, int max_stops,
+    ToulousePassage *out_passages_pool, int max_passages_pool,
+    StopPassages *out_per_stop, int max_per_stop_count)
+{
+    /* Step 1: filter all_stops to those serving this line. */
+    int line_stop_indices[256];
+    int n_line_stops = 0;
+    char line_code_pad[32];
+    snprintf(line_code_pad, sizeof(line_code_pad), " %s ", line->code);
+
+    for (int i = 0; i < n_all_stops && n_line_stops < (int)(sizeof(line_stop_indices)/sizeof(int)); i++) {
+        char padded[256];
+        snprintf(padded, sizeof(padded), " %s ", all_stops[i].lignes);
+        if (strstr(padded, line_code_pad)) {
+            line_stop_indices[n_line_stops++] = i;
+        }
+    }
+    if (n_line_stops == 0) return 0;
+
+    /* Step 2: chunk fetches stops_schedules.json?stopsList=<chunk>&lineId=X.
+     * Tisséo accepts up to ~30 stops per call. */
+    int passage_pool_used = 0;
+    int n_used_stops = 0;
+    int CHUNK = 30;
+
+    for (int chunk_start = 0; chunk_start < n_line_stops; chunk_start += CHUNK) {
+        char stops_csv[2048];
+        char url[3072];
+        char *raw;
+        cJSON *root, *departures, *areas, *area;
+        int chunk_end = chunk_start + CHUNK;
+        if (chunk_end > n_line_stops) chunk_end = n_line_stops;
+
+        stops_csv[0] = '\0';
+        for (int i = chunk_start; i < chunk_end; i++) {
+            const char *ref = all_stops[line_stop_indices[i]].ref;
+            if (!ref[0]) continue;
+            if (stops_csv[0]) strncat(stops_csv, ",", sizeof(stops_csv) - strlen(stops_csv) - 1);
+            strncat(stops_csv, ref, sizeof(stops_csv) - strlen(stops_csv) - 1);
+        }
+        if (!stops_csv[0]) continue;
+
+        snprintf(url, sizeof(url),
+                 TISSEO_API_BASE "/stops_schedules.json?stopsList=%s&lineId=%s"
+                 "&timetableByArea=1&number=2&displayRealTime=1&key=%s",
+                 stops_csv, line->ref, TISSEO_API_KEY);
+        raw = http_get(url);
+        if (!raw) continue;
+        root = cJSON_Parse(raw); free(raw);
+        if (!root) continue;
+
+        departures = cJSON_GetObjectItemCaseSensitive(root, "departures");
+        areas = departures ? cJSON_GetObjectItemCaseSensitive(departures, "stopAreas") : NULL;
+
+        /* Index area-by-id to find which line_stop_indices entry it maps to */
+        cJSON_ArrayForEach(area, areas) {
+            const char *area_id = jstr(area, "id");
+            cJSON *schedules = cJSON_GetObjectItemCaseSensitive(area, "schedules");
+            cJSON *schedule;
+            int matched_idx = -1;
+
+            /* Find which all_stops entry this area corresponds to. */
+            for (int i = chunk_start; i < chunk_end; i++) {
+                if (strcmp(all_stops[line_stop_indices[i]].ref, area_id) == 0) {
+                    matched_idx = line_stop_indices[i];
+                    break;
+                }
+            }
+            if (matched_idx < 0) continue;
+            if (n_used_stops >= max_stops) break;
+
+            /* Add the stop to out_stops once, and gather passages */
+            int passages_for_stop_start = passage_pool_used;
+            int passages_for_stop_count = 0;
+
+            cJSON_ArrayForEach(schedule, schedules) {
+                cJSON *destination = cJSON_GetObjectItemCaseSensitive(schedule, "destination");
+                cJSON *journeys = cJSON_GetObjectItemCaseSensitive(schedule, "journeys");
+                cJSON *journey;
+                cJSON *line_obj = cJSON_GetObjectItemCaseSensitive(schedule, "line");
+
+                cJSON_ArrayForEach(journey, journeys) {
+                    if (passage_pool_used >= max_passages_pool) break;
+                    ToulousePassage *p = &out_passages_pool[passage_pool_used];
+                    memset(p, 0, sizeof(*p));
+                    SCOPY(p->line_code, line_obj ? jstr(line_obj, "shortName") : line->code);
+                    SCOPY(p->line_name, line_obj ? jstr(line_obj, "name") : line->libelle);
+                    SCOPY(p->destination, destination ? jstr(destination, "name") : "");
+                    SCOPY(p->stop_name, all_stops[matched_idx].libelle);
+                    SCOPY(p->datetime, jstr(journey, "dateTime"));
+                    SCOPY(p->waiting_time, jstr(journey, "waiting_time"));
+                    p->realtime = atoi(jstr(journey, "realTime")) > 0;
+                    p->delayed = 0;
+                    passage_pool_used++;
+                    passages_for_stop_count++;
+                }
+            }
+
+            if (passages_for_stop_count > 0 && n_used_stops < max_stops &&
+                n_used_stops < max_per_stop_count) {
+                out_stops[n_used_stops] = all_stops[matched_idx];
+                out_per_stop[n_used_stops].passages = &out_passages_pool[passages_for_stop_start];
+                out_per_stop[n_used_stops].count = passages_for_stop_count;
+                out_per_stop[n_used_stops].stop_index = n_used_stops;
+                n_used_stops++;
+            }
+        }
+        cJSON_Delete(root);
+    }
+
+    return n_used_stops;
+}
+
+/* `g_tls_stops_for_vehicles` is set by the caller via the new helper.
+ * The TUI/backend already keep a global list of Tisséo stops; we just
+ * need a way to access it from inside api.c. Declared as a weak
+ * thread-local pointer, set just before calling fetch_toulouse_vehicles. */
+const ToulouseStop *g_tls_vehicle_stops_ptr = NULL;
+int                 g_tls_vehicle_stops_count = 0;
+
+void nvt_set_toulouse_vehicle_stops(const ToulouseStop *stops, int count)
+{
+    g_tls_vehicle_stops_ptr   = stops;
+    g_tls_vehicle_stops_count = count;
+}
+
 int fetch_toulouse_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
 {
-    char stops_list[384];
-    char url[1024];
-    char *raw;
-    cJSON *root, *departures, *areas, *area, *schedules, *schedule, *journeys, *journey;
-    int n = 0;
+    if (!line || !out || max <= 0 || !line->ref[0]) return -1;
 
-    if (!line || !out || max <= 0 || line->terminus_count <= 0 || !line->ref[0]) return -1;
-
-    stops_list[0] = '\0';
-    for (int i = 0; i < line->terminus_count; i++) {
-        append_token(stops_list, sizeof(stops_list), line->terminus_refs[i]);
-    }
-    if (!stops_list[0]) return -1;
-
-    for (char *p = stops_list; *p; p++) {
-        if (*p == ' ') *p = ',';
+    /* Si pas de cache stops, fallback sur l'ancien comportement (terminus). */
+    if (!g_tls_vehicle_stops_ptr || g_tls_vehicle_stops_count <= 0) {
+        return 0;  /* no stops cache available — caller will fall back */
     }
 
-    snprintf(url, sizeof(url),
-             TISSEO_API_BASE "/stops_schedules.json?stopsList=%s&lineId=%s&timetableByArea=1&number=3&displayRealTime=1&key=%s",
-             stops_list, line->ref, TISSEO_API_KEY);
-    raw = http_get(url);
-    if (!raw) return -1;
+    /* Synthesis state: at most 256 line stops, 1024 passages total */
+    static ToulouseStop      sl_stops[256];
+    static ToulousePassage   sl_passages[1024];
+    static StopPassages      sl_per_stop[256];
 
-    root = cJSON_Parse(raw);
-    free(raw);
-    if (!root) return -1;
+    int n_collected = toulouse_collect_line_passages(
+        line,
+        g_tls_vehicle_stops_ptr, g_tls_vehicle_stops_count,
+        sl_stops,    256,
+        sl_passages, 1024,
+        sl_per_stop, 256
+    );
+    if (n_collected <= 0) return 0;
 
-    departures = cJSON_GetObjectItemCaseSensitive(root, "departures");
-    areas = departures ? cJSON_GetObjectItemCaseSensitive(departures, "stopAreas") : NULL;
-    cJSON_ArrayForEach(area, areas) {
-        schedules = cJSON_GetObjectItemCaseSensitive(area, "schedules");
-        cJSON_ArrayForEach(schedule, schedules) {
-            cJSON *line_obj = cJSON_GetObjectItemCaseSensitive(schedule, "line");
-            cJSON *destination = cJSON_GetObjectItemCaseSensitive(schedule, "destination");
-            cJSON *stop = cJSON_GetObjectItemCaseSensitive(schedule, "stop");
-
-            journeys = cJSON_GetObjectItemCaseSensitive(schedule, "journeys");
-            cJSON_ArrayForEach(journey, journeys) {
-                ToulouseVehicle *vehicle;
-                int eta;
-
-                if (n >= max) break;
-                vehicle = &out[n];
-                memset(vehicle, 0, sizeof(*vehicle));
-                SCOPY(vehicle->line_code, line_obj ? jstr(line_obj, "shortName") : line->code);
-                SCOPY(vehicle->line_name, line_obj ? jstr(line_obj, "name") : line->libelle);
-                SCOPY(vehicle->current_stop, stop ? jstr(stop, "name") : jstr(area, "name"));
-                SCOPY(vehicle->next_stop, destination ? jstr(destination, "name") : "");
-                SCOPY(vehicle->terminus, destination ? jstr(destination, "name") : "");
-                SCOPY(vehicle->sens, schedule_way_to_dir(destination));
-                SCOPY(vehicle->datetime, jstr(journey, "dateTime"));
-                SCOPY(vehicle->waiting_time, jstr(journey, "waiting_time"));
-                vehicle->realtime = atoi(jstr(journey, "realTime")) > 0;
-                vehicle->delayed = vehicle->realtime ? 0 : 1;
-                vehicle->vitesse = 0;
-                eta = waiting_minutes(vehicle->waiting_time);
-                vehicle->arret = eta >= 0 && eta <= 1;
-                n++;
-            }
-            if (n >= max) break;
-        }
-        if (n >= max) break;
-    }
-
-    cJSON_Delete(root);
-    return n;
+    /* Use the generic synthesis module (imminent threshold = 180s). */
+    return nvt_synthesize_vehicles_from_passages(
+        line, sl_stops, n_collected, sl_per_stop,
+        180, out, max
+    );
 }
 
 static const char *idfm_line_mode_name(const cJSON *item)
@@ -1761,6 +1878,181 @@ int fetch_idfm_passages(const ToulouseLine *line, const ToulouseStop *stop, Toul
     return n;
 }
 
+/*
+ * SIRI Lite ETT-based synthesis: PRIM Navitia /vehicle_positions returns
+ * empty `coord` for IDFM lines. We use SIRI ETT (which IS public on PRIM)
+ * combined with the IDFM "arrets" reference (`arrid → lat/lon`) to position
+ * vehicles. The crosswalk is loaded lazily on first IDFM vehicle request.
+ */
+#include "idfm_crosswalk.h"
+
+static const char *prim_siri_ett_endpoint = "https://prim.iledefrance-mobilites.fr/marketplace/estimated-timetable";
+
+/* Pull first .value from a SIRI Lite array-of-{value} field */
+static const char *sl_array_value(const cJSON *node, const char *key)
+{
+    cJSON *arr = cJSON_GetObjectItemCaseSensitive((cJSON *)node, key);
+    cJSON *first = arr ? cJSON_GetArrayItem(arr, 0) : NULL;
+    return first ? jstr(first, "value") : "";
+}
+
+/* Compute seconds until ISO 8601 datetime "2026-05-06T15:05:42.227Z". Negative if past. */
+static int iso8601_seconds_until(const char *iso, time_t now_t)
+{
+    struct tm tmv;
+    int ms_dummy;
+    char zone[8] = "Z";
+    int parsed;
+
+    if (!iso || !iso[0]) return -1;
+    memset(&tmv, 0, sizeof(tmv));
+    parsed = sscanf(iso, "%4d-%2d-%2dT%2d:%2d:%2d.%dZ",
+                    &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
+                    &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec, &ms_dummy);
+    if (parsed < 6) {
+        parsed = sscanf(iso, "%4d-%2d-%2dT%2d:%2d:%2d%7s",
+                        &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
+                        &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec, zone);
+        if (parsed < 6) return -1;
+    }
+    tmv.tm_year -= 1900;
+    tmv.tm_mon  -= 1;
+    /* SIRI gives UTC (Z); use timegm */
+    time_t t = timegm(&tmv);
+    if (t == (time_t)-1) return -1;
+    return (int)(t - now_t);
+}
+
+static const ToulouseStop *idfm_find_stop_by_ref(const ToulouseStop *stops, int n, const char *ref)
+{
+    if (!ref || !ref[0]) return NULL;
+    for (int i = 0; i < n; i++) {
+        if (strcmp(stops[i].ref, ref) == 0) return &stops[i];
+    }
+    return NULL;
+}
+
+int fetch_idfm_vehicles_via_ett(const ToulouseLine *line,
+                                const ToulouseStop *line_stops, int n_line_stops,
+                                ToulouseVehicle *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root;
+    int n = 0;
+    time_t now_t = time(NULL);
+
+    /* line_stops/n_line_stops kept for backward-compat / fallback when crosswalk
+     * is unavailable. We prefer the IDFM crosswalk (arrid → coords). */
+    (void)line_stops;
+    (void)n_line_stops;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    /* Convert Navitia line ref → SIRI LineRef.
+     * Navitia: "line:IDFM:C01371"  →  SIRI: "STIF:Line::C01371:" */
+    char siri_line_ref[96];
+    {
+        const char *p = line->ref;
+        const char *code = strrchr(p, ':');
+        code = code ? code + 1 : p;
+        snprintf(siri_line_ref, sizeof(siri_line_ref), "STIF:Line::%s:", code);
+    }
+    snprintf(url, sizeof(url), "%s?LineRef=%s", prim_siri_ett_endpoint, siri_line_ref);
+    raw = http_get_idfm(url);
+    if (!raw) return -1;
+    root = cJSON_Parse(raw); free(raw);
+    if (!root) return -1;
+
+    cJSON *siri = cJSON_GetObjectItemCaseSensitive(root, "Siri");
+    cJSON *sd   = siri ? cJSON_GetObjectItemCaseSensitive(siri, "ServiceDelivery") : NULL;
+    cJSON *etd  = sd   ? cJSON_GetObjectItemCaseSensitive(sd,   "EstimatedTimetableDelivery") : NULL;
+
+    cJSON *delivery;
+    cJSON_ArrayForEach(delivery, etd) {
+        cJSON *frames = cJSON_GetObjectItemCaseSensitive(delivery, "EstimatedJourneyVersionFrame");
+        cJSON *frame;
+        cJSON_ArrayForEach(frame, frames) {
+            cJSON *journeys = cJSON_GetObjectItemCaseSensitive(frame, "EstimatedVehicleJourney");
+            cJSON *journey;
+            cJSON_ArrayForEach(journey, journeys) {
+                if (n >= max) break;
+                cJSON *calls_obj = cJSON_GetObjectItemCaseSensitive(journey, "EstimatedCalls");
+                cJSON *calls = calls_obj ? cJSON_GetObjectItemCaseSensitive(calls_obj, "EstimatedCall") : NULL;
+                if (!cJSON_IsArray(calls)) continue;
+
+                /* Find the call with smallest non-negative ExpectedArrivalTime — that's the next stop. */
+                const cJSON *next_call = NULL;
+                int best_secs = -1;
+                cJSON *call;
+                cJSON_ArrayForEach(call, calls) {
+                    const char *eta_str = jstr(call, "ExpectedArrivalTime");
+                    if (!eta_str[0]) eta_str = jstr(call, "ExpectedDepartureTime");
+                    int secs = iso8601_seconds_until(eta_str, now_t);
+                    if (secs < 0) continue;
+                    if (best_secs < 0 || secs < best_secs) {
+                        best_secs = secs;
+                        next_call = call;
+                    }
+                }
+                if (!next_call || best_secs > 600) continue;  /* skip if > 10min away */
+
+                cJSON *stop_ref_obj = cJSON_GetObjectItemCaseSensitive((cJSON *)next_call, "StopPointRef");
+                const char *stop_ref = stop_ref_obj ? jstr(stop_ref_obj, "value") : "";
+                char arrid[16];
+                const IdfmStop *idfm_stop = NULL;
+
+                if (idfm_extract_arrid_from_siri(stop_ref, arrid, sizeof(arrid))) {
+                    idfm_stop = idfm_crosswalk_lookup(arrid);
+                }
+                if (!idfm_stop) continue;
+
+                /* Build vehicle */
+                ToulouseVehicle *v = &out[n];
+                memset(v, 0, sizeof(*v));
+                SCOPY(v->ref, jstr(cJSON_GetObjectItemCaseSensitive(journey, "DatedVehicleJourneyRef"), "value"));
+                SCOPY(v->line_code, line->code);
+                SCOPY(v->line_name, line->libelle);
+                SCOPY(v->terminus, sl_array_value(journey, "DestinationName"));
+                SCOPY(v->sens, jstr(cJSON_GetObjectItemCaseSensitive(journey, "DirectionRef"), "value"));
+                SCOPY(v->current_stop, idfm_stop->name);
+                SCOPY(v->next_stop, idfm_stop->name);
+
+                v->lon = idfm_stop->lon;
+                v->lat = idfm_stop->lat;
+                v->has_position = 1;
+                v->bearing = -1;
+                v->realtime = 1;
+                v->arret = best_secs <= 30;
+
+                /* waiting_time format HH:MM:SS */
+                snprintf(v->waiting_time, sizeof(v->waiting_time), "%02d:%02d:%02d",
+                         best_secs / 3600, (best_secs / 60) % 60, best_secs % 60);
+                /* Format datetime from next_call */
+                {
+                    const char *eta = jstr(next_call, "ExpectedDepartureTime");
+                    if (!eta[0]) eta = jstr(next_call, "ExpectedArrivalTime");
+                    if (eta[0]) snprintf(v->datetime, sizeof(v->datetime), "%.19s", eta);
+                }
+                n++;
+            }
+        }
+    }
+
+    cJSON_Delete(root);
+    return n;
+}
+
+/* Cached IDFM stops list passed by the caller (mirror of Tisseo pattern). */
+const ToulouseStop *g_idfm_vehicle_stops_ptr = NULL;
+int                 g_idfm_vehicle_stops_count = 0;
+
+void nvt_set_idfm_vehicle_stops(const ToulouseStop *stops, int count)
+{
+    g_idfm_vehicle_stops_ptr   = stops;
+    g_idfm_vehicle_stops_count = count;
+}
+
 int fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
 {
     char url[768];
@@ -1772,7 +2064,15 @@ int fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
 
     if (!line || !line->ref[0] || !out || max <= 0) return -1;
 
-    snprintf(url, sizeof(url), IDFM_API_BASE "/lines/%s/vehicle_positions?count=1", line->ref);
+    /* Prefer SIRI ETT + IDFM crosswalk (gives positions on the map).
+     * The crosswalk is lazy-loaded on first call. */
+    {
+        int synth_n = fetch_idfm_vehicles_via_ett(line, NULL, 0, out, max);
+        if (synth_n > 0) return synth_n;
+    }
+
+    /* Fallback: Navitia vehicle_positions (typically empty on PRIM). */
+    snprintf(url, sizeof(url), IDFM_API_BASE "/lines/%s/vehicle_positions?count=200", line->ref);
     raw = http_get_idfm(url);
     if (!raw) return -1;
 
@@ -1781,14 +2081,19 @@ int fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
     if (!root) return -1;
 
     items = cJSON_GetObjectItemCaseSensitive(root, "vehicle_positions");
-    entry = cJSON_GetArrayItem(items, 0);
-    if (entry) {
+    cJSON_ArrayForEach(entry, items) {
         cJSON *journeys = cJSON_GetObjectItemCaseSensitive(entry, "vehicle_journey_positions");
         cJSON *journey;
 
         cJSON_ArrayForEach(journey, journeys) {
             ToulouseVehicle *vehicle;
             cJSON *vehicle_journey;
+            cJSON *coord;
+            const char *lat_str;
+            const char *lon_str;
+            const char *freshness;
+            cJSON *speed_n;
+            cJSON *bearing_n;
 
             if (n >= max) break;
             vehicle_journey = cJSON_GetObjectItemCaseSensitive(journey, "vehicle_journey");
@@ -1798,12 +2103,36 @@ int fetch_idfm_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
             memset(vehicle, 0, sizeof(*vehicle));
             SCOPY(vehicle->line_code, line->code);
             SCOPY(vehicle->line_name, line->libelle);
+            SCOPY(vehicle->ref, jstr(vehicle_journey, "id"));
             SCOPY(vehicle->current_stop, jstr(vehicle_journey, "name"));
             SCOPY(vehicle->terminus, jstr(vehicle_journey, "headsign"));
             SCOPY(vehicle->sens, jstr(vehicle_journey, "headsign"));
-            vehicle->realtime = 1;
+
+            /* GPS — Navitia returns lat/lon as strings. */
+            coord = cJSON_GetObjectItemCaseSensitive(journey, "coord");
+            lat_str = coord ? jstr(coord, "lat") : "";
+            lon_str = coord ? jstr(coord, "lon") : "";
+            if (lat_str[0] && lon_str[0]) {
+                vehicle->lat = strtod(lat_str, NULL);
+                vehicle->lon = strtod(lon_str, NULL);
+                vehicle->has_position = 1;
+            }
+
+            /* Speed in m/s → km/h */
+            speed_n = cJSON_GetObjectItemCaseSensitive(journey, "speed");
+            if (cJSON_IsNumber(speed_n)) {
+                vehicle->vitesse = (int)(speed_n->valuedouble * 3.6 + 0.5);
+            }
+
+            /* Heading 0..360 */
+            bearing_n = cJSON_GetObjectItemCaseSensitive(journey, "bearing");
+            vehicle->bearing = cJSON_IsNumber(bearing_n) ? (int)bearing_n->valueint : -1;
+
+            freshness = jstr(journey, "data_freshness");
+            vehicle->realtime = freshness[0] && strcmp(freshness, "base_schedule") != 0;
             n++;
         }
+        if (n >= max) break;
     }
 
     cJSON_Delete(root);
@@ -2106,7 +2435,93 @@ static const char *navitia_link_id(const cJSON *links, const char *type)
     return "";
 }
 
-int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+/**
+ * Try Navitia vehicle_positions first (gives real GPS), then fall back
+ * to scanning /departures and producing position-less vehicle entries.
+ *
+ * Coverage notes: vehicle_positions is reliable for TER/Intercités on
+ * the SNCF Navitia coverage when the operator publishes real-time. If
+ * the endpoint returns nothing (404 / empty array), we still want a
+ * usable vehicle list, so we keep the legacy departures-based logic.
+ */
+static int sncf_fetch_vehicles_via_positions(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root;
+    cJSON *items;
+    cJSON *entry;
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url),
+             SNCF_API_BASE "/coverage/" SNCF_COVERAGE "/lines/%s/vehicle_positions?count=200",
+             line->ref);
+    raw = http_get_sncf(url);
+    if (!raw) return -1;
+
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    items = cJSON_GetObjectItemCaseSensitive(root, "vehicle_positions");
+    cJSON_ArrayForEach(entry, items) {
+        cJSON *journeys = cJSON_GetObjectItemCaseSensitive(entry, "vehicle_journey_positions");
+        cJSON *journey;
+
+        cJSON_ArrayForEach(journey, journeys) {
+            ToulouseVehicle *vehicle;
+            cJSON *vehicle_journey;
+            cJSON *coord;
+            const char *lat_str;
+            const char *lon_str;
+            const char *freshness;
+            cJSON *speed_n;
+            cJSON *bearing_n;
+
+            if (n >= max) break;
+            vehicle_journey = cJSON_GetObjectItemCaseSensitive(journey, "vehicle_journey");
+            if (!vehicle_journey) continue;
+
+            vehicle = &out[n];
+            memset(vehicle, 0, sizeof(*vehicle));
+            SCOPY(vehicle->line_code, line->code);
+            SCOPY(vehicle->line_name, line->libelle);
+            SCOPY(vehicle->ref, jstr(vehicle_journey, "id"));
+            SCOPY(vehicle->current_stop, jstr(vehicle_journey, "name"));
+            SCOPY(vehicle->terminus, jstr(vehicle_journey, "headsign"));
+            SCOPY(vehicle->sens, jstr(vehicle_journey, "headsign"));
+
+            coord = cJSON_GetObjectItemCaseSensitive(journey, "coord");
+            lat_str = coord ? jstr(coord, "lat") : "";
+            lon_str = coord ? jstr(coord, "lon") : "";
+            /* SNCF Navitia rarely populates coord; skip entries without it
+             * so the caller falls back to /departures-based synthesis. */
+            if (!lat_str[0] || !lon_str[0]) continue;
+            vehicle->lat = strtod(lat_str, NULL);
+            vehicle->lon = strtod(lon_str, NULL);
+            vehicle->has_position = 1;
+
+            speed_n = cJSON_GetObjectItemCaseSensitive(journey, "speed");
+            if (cJSON_IsNumber(speed_n)) {
+                vehicle->vitesse = (int)(speed_n->valuedouble * 3.6 + 0.5);
+            }
+            bearing_n = cJSON_GetObjectItemCaseSensitive(journey, "bearing");
+            vehicle->bearing = cJSON_IsNumber(bearing_n) ? (int)bearing_n->valueint : -1;
+
+            freshness = jstr(journey, "data_freshness");
+            vehicle->realtime = freshness[0] && strcmp(freshness, "base_schedule") != 0;
+            n++;
+        }
+        if (n >= max) break;
+    }
+
+    cJSON_Delete(root);
+    return n;
+}
+
+static int sncf_fetch_vehicles_via_departures(const ToulouseLine *line, ToulouseVehicle *out, int max)
 {
     int n = 0;
 
@@ -2182,6 +2597,21 @@ int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
             seconds_to_waiting_time(wait_seconds, vehicle->waiting_time, sizeof(vehicle->waiting_time));
             vehicle->realtime = stop_date_time && strcmp(jstr(stop_date_time, "data_freshness"), "base_schedule") != 0;
             vehicle->delayed = departure_dt[0] && base_departure_dt[0] && strcmp(departure_dt, base_departure_dt) != 0;
+            vehicle->bearing = -1;
+            /* Synthesize position from stop_point.coord — Navitia delivers it. */
+            if (stop_point) {
+                cJSON *coord = cJSON_GetObjectItemCaseSensitive(stop_point, "coord");
+                if (coord) {
+                    const char *lon_s = jstr(coord, "lon");
+                    const char *lat_s = jstr(coord, "lat");
+                    if (lon_s[0] && lat_s[0]) {
+                        vehicle->lon = atof(lon_s);
+                        vehicle->lat = atof(lat_s);
+                        vehicle->has_position = 1;
+                        vehicle->arret = wait_seconds <= 60;
+                    }
+                }
+            }
             n++;
         }
         cJSON_Delete(root);
@@ -2189,6 +2619,349 @@ int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
         if (items_on_page <= 0 || n >= max) break;
     }
 
+    return n;
+}
+
+int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    int n = sncf_fetch_vehicles_via_positions(line, out, max);
+    if (n > 0) return n;
+    return sncf_fetch_vehicles_via_departures(line, out, max);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ * Rennes Métropole — STAR (Opendatasoft public API, no auth header).
+ *
+ * Datasets used:
+ *   tco-bus-topologie-lignes-td       — lines (~167)
+ *   tco-bus-topologie-pointsarret-td  — stops (~1800)
+ *   tco-bus-circulation-passages-tr   — real-time passages (per stop)
+ *   tco-bus-vehicules-position-tr     — real-time vehicle GPS
+ * ────────────────────────────────────────────────────────────────── */
+
+static char *http_get_star(const char *url) { return http_get(url); }
+
+static int star_parse_color_hash(const char *hash_color, char *out, size_t out_sz)
+{
+    /* STAR sends "#61c3d9" — strip leading '#' so it matches our other
+       fetchers' expectation (raw 6-hex chars). */
+    if (!hash_color || !out || out_sz == 0) { if (out && out_sz) out[0] = '\0'; return 0; }
+    if (hash_color[0] == '#') hash_color++;
+    snprintf(out, out_sz, "%s", hash_color);
+    return 1;
+}
+
+static void star_fill_line(ToulouseLine *line, const cJSON *item)
+{
+    const char *id          = jstr(item, "id");
+    const char *nomcourt    = jstr(item, "nomcourt");
+    const char *nomlong     = jstr(item, "nomlong");
+    const char *family      = jstr(item, "nomfamillecommerciale");
+    const char *visibilite  = jstr(item, "visibilite");
+    const char *couleur     = jstr(item, "couleurligne");
+    const char *txtcouleur  = jstr(item, "couleurtexteligne");
+    int active = jstr(item, "estversionactive")[0]
+              && strcmp(jstr(item, "estversionactive"), "Oui") == 0;
+
+    memset(line, 0, sizeof(*line));
+    SCOPY(line->ref, id);
+    line->id = atoi(id);
+    SCOPY(line->code, nomcourt[0] ? nomcourt : id);
+    SCOPY(line->libelle, nomlong[0] ? nomlong : line->code);
+    SCOPY(line->mode, family[0] ? family : "Bus");
+    star_parse_color_hash(couleur, line->couleur, sizeof(line->couleur));
+    star_parse_color_hash(txtcouleur, line->texte_couleur, sizeof(line->texte_couleur));
+    parse_hex_triplet(line->couleur, &line->r, &line->g, &line->b);
+    line->terminus_count = 0;
+    /* `active` and `visibilite` only used at filter time below. */
+    (void)active;
+    (void)visibilite;
+}
+
+int fetch_star_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
+{
+    int n = 0;
+
+    if (!snap || !lines || max_lines <= 0) return -1;
+    memset(snap, 0, sizeof(*snap));
+    SCOPY(snap->doc_ref, "https://data.explore.star.fr/");
+    SCOPY(snap->doc_version, "v2.1");
+    SCOPY(snap->doc_date, "2026-05-06");
+    SCOPY(snap->lines_url, STAR_API_BASE "/tco-bus-topologie-lignes-td/records");
+    SCOPY(snap->stops_url, STAR_API_BASE "/tco-bus-topologie-pointsarret-td/records");
+    SCOPY(snap->alerts_url, STAR_API_BASE "/tco-bus-perturbations-td/records");
+
+    /* Opendatasoft API caps limit at 100 per request — paginate via offset. */
+    for (int offset = 0; n < max_lines; offset += 100) {
+        char url[512];
+        char *raw;
+        cJSON *root, *items, *item;
+        int got = 0;
+
+        snprintf(url, sizeof(url),
+                 STAR_API_BASE "/tco-bus-topologie-lignes-td/records"
+                 "?limit=100&offset=%d&where=estversionactive%%3D%%22Oui%%22",
+                 offset);
+        raw = http_get_star(url);
+        if (!raw) break;
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) break;
+
+        items = cJSON_GetObjectItemCaseSensitive(root, "results");
+        cJSON_ArrayForEach(item, items) {
+            const char *vis = jstr(item, "visibilite");
+            if (n >= max_lines) break;
+            if (vis[0] && strcmp(vis, "Grand public") != 0) continue;
+            star_fill_line(&lines[n], item);
+            n++;
+            got++;
+        }
+        cJSON_Delete(root);
+        if (got < 100) break;
+    }
+
+    snap->total_lines = n;
+    snap->sample_lines = n;
+    snap->live = 1;
+    return n;
+}
+
+int fetch_star_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
+{
+    /* STAR has no first-class line→stops index in the topology dataset.
+       Use the real-time passages stream (already filtered by line) and
+       de-dupe on idarret to enumerate stops actually served. */
+    int n = 0;
+    char seen_keys[512][16] = {{0}};
+    int seen_count = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    for (int offset = 0; n < max && offset < 5000; offset += 100) {
+        char url[512];
+        char *raw;
+        cJSON *root, *items, *item;
+        int got = 0;
+
+        snprintf(url, sizeof(url),
+                 STAR_API_BASE "/tco-bus-circulation-passages-tr/records"
+                 "?limit=100&offset=%d&where=idligne%%3D%%22%s%%22"
+                 "&select=idarret%%2Cnomarret%%2Cnomcourtligne%%2Ccoordonnees",
+                 offset, line->ref);
+        raw = http_get_star(url);
+        if (!raw) break;
+        root = cJSON_Parse(raw);
+        free(raw);
+        if (!root) break;
+
+        items = cJSON_GetObjectItemCaseSensitive(root, "results");
+        cJSON_ArrayForEach(item, items) {
+            const char *idarret = jstr(item, "idarret");
+            const char *nom     = jstr(item, "nomarret");
+            cJSON *coord;
+            int dup = 0;
+
+            got++;
+            if (!idarret[0] || n >= max) continue;
+            for (int i = 0; i < seen_count; i++) {
+                if (strcmp(seen_keys[i], idarret) == 0) { dup = 1; break; }
+            }
+            if (dup) continue;
+            if (seen_count < (int)(sizeof(seen_keys) / sizeof(seen_keys[0]))) {
+                SCOPY(seen_keys[seen_count], idarret);
+                seen_count++;
+            }
+
+            memset(&out[n], 0, sizeof(out[n]));
+            SCOPY(out[n].ref, idarret);
+            out[n].id = atoi(idarret);
+            SCOPY(out[n].libelle, nom);
+            SCOPY(out[n].mode, "Bus");
+            SCOPY(out[n].lignes, line->code);
+            coord = cJSON_GetObjectItemCaseSensitive(item, "coordonnees");
+            if (coord) {
+                cJSON *lon = cJSON_GetObjectItemCaseSensitive(coord, "lon");
+                cJSON *lat = cJSON_GetObjectItemCaseSensitive(coord, "lat");
+                if (cJSON_IsNumber(lon)) out[n].lon = lon->valuedouble;
+                if (cJSON_IsNumber(lat)) out[n].lat = lat->valuedouble;
+            }
+            n++;
+        }
+        cJSON_Delete(root);
+        if (got < 100) break;
+    }
+
+    return n;
+}
+
+int fetch_star_alerts(ToulouseAlert *out, int max)
+{
+    int n = 0;
+    char url[512];
+    char *raw;
+    cJSON *root, *items, *item;
+
+    if (!out || max <= 0) return 0;
+
+    snprintf(url, sizeof(url),
+             STAR_API_BASE "/tco-bus-perturbations-td/records?limit=100");
+    raw = http_get_star(url);
+    if (!raw) return 0;
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return 0;
+
+    items = cJSON_GetObjectItemCaseSensitive(root, "results");
+    cJSON_ArrayForEach(item, items) {
+        if (n >= max) break;
+        memset(&out[n], 0, sizeof(out[n]));
+        SCOPY(out[n].id,      jstr(item, "id"));
+        SCOPY(out[n].titre,   jstr(item, "titreperturbation"));
+        SCOPY(out[n].message, jstr(item, "messageperturbation"));
+        SCOPY(out[n].importance, jstr(item, "niveauperturbation"));
+        SCOPY(out[n].scope, jstr(item, "perimetreperturbation"));
+        SCOPY(out[n].lines, jstr(item, "ligne"));
+        n++;
+    }
+    cJSON_Delete(root);
+    return n;
+}
+
+static int star_seconds_until(const char *iso_dt)
+{
+    struct tm tmv;
+    time_t now;
+    time_t t;
+
+    if (!iso_dt || !iso_dt[0]) return -1;
+    memset(&tmv, 0, sizeof(tmv));
+    /* Format: "2026-05-06T16:22:00+00:00" */
+    if (sscanf(iso_dt, "%4d-%2d-%2dT%2d:%2d:%2d",
+               &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
+               &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec) != 6) return -1;
+    tmv.tm_year -= 1900;
+    tmv.tm_mon  -= 1;
+    t = timegm(&tmv);
+    if (t == (time_t)-1) return -1;
+    now = time(NULL);
+    return (int)difftime(t, now);
+}
+
+int fetch_star_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root, *items, *item;
+    int n = 0;
+
+    if (!line || !stop || !stop->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url),
+             STAR_API_BASE "/tco-bus-circulation-passages-tr/records"
+             "?limit=20&where=idligne%%3D%%22%s%%22%%20AND%%20idarret%%3D%%22%s%%22"
+             "&order_by=depart",
+             line->ref, stop->ref);
+    raw = http_get_star(url);
+    if (!raw) return -1;
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    items = cJSON_GetObjectItemCaseSensitive(root, "results");
+    cJSON_ArrayForEach(item, items) {
+        ToulousePassage *p;
+        const char *depart      = jstr(item, "depart");
+        const char *theorique   = jstr(item, "departtheorique");
+        const char *destination = jstr(item, "destination");
+        const char *nomarret    = jstr(item, "nomarret");
+        const char *nomcourt    = jstr(item, "nomcourtligne");
+        const char *precision   = jstr(item, "precision");
+        int wait_s = star_seconds_until(depart);
+
+        if (n >= max) break;
+        if (wait_s < -60) continue;
+        if (wait_s < 0) wait_s = 0;
+
+        p = &out[n];
+        memset(p, 0, sizeof(*p));
+        SCOPY(p->line_code, nomcourt[0] ? nomcourt : line->code);
+        SCOPY(p->line_name, line->libelle);
+        SCOPY(p->destination, destination);
+        SCOPY(p->stop_name, nomarret[0] ? nomarret : stop->libelle);
+        SCOPY(p->datetime, depart);
+        seconds_to_waiting_time(wait_s, p->waiting_time, sizeof(p->waiting_time));
+        p->realtime = precision[0] && strcmp(precision, "Applicable") == 0;
+        p->delayed = depart[0] && theorique[0] && strcmp(depart, theorique) != 0;
+        n++;
+    }
+    cJSON_Delete(root);
+    return n;
+}
+
+int fetch_star_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root, *items, *item;
+    int n = 0;
+
+    if (!line || !line->ref[0] || !out || max <= 0) return -1;
+
+    snprintf(url, sizeof(url),
+             STAR_API_BASE "/tco-bus-vehicules-position-tr/records"
+             "?limit=100&where=idligne%%3D%%22%s%%22",
+             line->ref);
+    raw = http_get_star(url);
+    if (!raw) return -1;
+    root = cJSON_Parse(raw);
+    free(raw);
+    if (!root) return -1;
+
+    items = cJSON_GetObjectItemCaseSensitive(root, "results");
+    cJSON_ArrayForEach(item, items) {
+        ToulouseVehicle *v;
+        const char *idbus       = jstr(item, "idbus");
+        const char *nomcourt    = jstr(item, "nomcourtligne");
+        const char *destination = jstr(item, "destination");
+        cJSON *coord = cJSON_GetObjectItemCaseSensitive(item, "coordonnees");
+        cJSON *ecart = cJSON_GetObjectItemCaseSensitive(item, "ecartsecondes");
+        cJSON *etat  = cJSON_GetObjectItemCaseSensitive(item, "etat");
+
+        if (n >= max) break;
+        if (!coord) continue;
+
+        v = &out[n];
+        memset(v, 0, sizeof(*v));
+        SCOPY(v->ref, idbus);
+        SCOPY(v->line_code, nomcourt[0] ? nomcourt : line->code);
+        SCOPY(v->line_name, line->libelle);
+        SCOPY(v->terminus, destination);
+        SCOPY(v->sens, destination);
+
+        {
+            cJSON *lon = cJSON_GetObjectItemCaseSensitive(coord, "lon");
+            cJSON *lat = cJSON_GetObjectItemCaseSensitive(coord, "lat");
+            if (cJSON_IsNumber(lon)) v->lon = lon->valuedouble;
+            if (cJSON_IsNumber(lat)) v->lat = lat->valuedouble;
+            if (v->lat || v->lon) v->has_position = 1;
+        }
+        v->bearing = -1;
+        v->realtime = 1;
+        if (cJSON_IsNumber(ecart)) {
+            int e = (int)ecart->valueint;
+            v->delayed = e > 60;
+        }
+        if (cJSON_IsArray(etat)) {
+            cJSON *first = cJSON_GetArrayItem(etat, 0);
+            if (first && cJSON_IsString(first)) {
+                /* "En ligne" / "HS" / "Hors-ligne" — only "En ligne" is in service */
+                v->arret = strcmp(first->valuestring, "En ligne") != 0;
+            }
+        }
+        n++;
+    }
+    cJSON_Delete(root);
     return n;
 }
 

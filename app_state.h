@@ -20,6 +20,7 @@ typedef enum {
     NET_TLS,
     NET_IDFM,
     NET_SNCF,
+    NET_STAR,
     NET_COUNT,
 } NvtNetwork;
 
@@ -100,6 +101,7 @@ typedef struct {
 } NvtIdfmState;
 
 typedef NvtIdfmState NvtSncfState;
+typedef NvtIdfmState NvtStarState;
 
 typedef struct {
     CourseCache course_cache;
@@ -155,6 +157,7 @@ typedef struct {
     NvtToulouseState tls;
     NvtIdfmState idf;
     NvtSncfState sncf;
+    NvtStarState star;
     NvtMapState map;
     NvtUiState ui;
 } AppState;

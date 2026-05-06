@@ -24,5 +24,10 @@ int nvt_data_load_sncf_stops(AppState *app, int attempts, char *err, size_t err_
 int nvt_data_refresh_sncf_alerts(AppState *app, int attempts, char *err, size_t err_sz);
 int nvt_data_load_sncf_passages(AppState *app, int attempts, char *err, size_t err_sz);
 int nvt_data_load_sncf_vehicles(AppState *app, int attempts, char *err, size_t err_sz);
+int nvt_data_refresh_star_overview(AppState *app, int attempts, char *err, size_t err_sz);
+int nvt_data_load_star_stops(AppState *app, int attempts, char *err, size_t err_sz);
+int nvt_data_refresh_star_alerts(AppState *app, int attempts, char *err, size_t err_sz);
+int nvt_data_load_star_passages(AppState *app, int attempts, char *err, size_t err_sz);
+int nvt_data_load_star_vehicles(AppState *app, int attempts, char *err, size_t err_sz);
 
 #endif
