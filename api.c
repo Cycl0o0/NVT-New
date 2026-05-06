@@ -2965,6 +2965,383 @@ int fetch_star_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
     return n;
 }
 
+/* ──────────────────────────────────────────────────────────────────
+ * TCL Lyon (Sytral) — Grand Lyon Open Data
+ *
+ * - Lines: WFS GeoJSON (no auth) — `tcl_sytral.tcllignebus_2_0_0`,
+ *   `tcllignetram_2_0_0`, `tcllignemf_2_0_0`, `tcllignefluv`.
+ * - Stops: datapusher REST `tcl_sytral.tclarret` (no auth, ~6700 stops
+ *   with coords + `desserte` listing line codes).
+ * - Real-time passages: datapusher `tcl_sytral.tclpassagearret` —
+ *   requires HTTP Basic Auth with a free moncompte.grandlyon.com
+ *   account. Set TCL_USER + TCL_PASS in .nvt-backend.env.
+ * - Vehicles: synthesized from passages via the generic
+ *   `interpolated_positions` module (one vehicle per stop with an
+ *   imminent passage), mirroring the Tisséo strategy.
+ * ────────────────────────────────────────────────────────────────── */
+
+static const char *tcl_user(void)
+{
+    const char *u = getenv("TCL_USER");
+    return u && u[0] ? u : NULL;
+}
+static const char *tcl_pass(void)
+{
+    const char *p = getenv("TCL_PASS");
+    return p && p[0] ? p : NULL;
+}
+
+static char *http_get_tcl_auth(const char *url)
+{
+    const char *u = tcl_user();
+    const char *p = tcl_pass();
+    if (!u || !p) return NULL;
+    return http_get_basic_auth_timeout(url, u, p, 20L);
+}
+
+/* WFS GeoJSON helper. typeNames is e.g. "tcl_sytral.tcllignebus_2_0_0" */
+static char *http_get_tcl_wfs(const char *type_name, int max_features)
+{
+    char url[768];
+    snprintf(url, sizeof(url),
+             TCL_WFS_BASE "?SERVICE=WFS&VERSION=2.0.0&request=GetFeature"
+             "&typeNames=%s&outputFormat=application/json&maxFeatures=%d",
+             type_name, max_features);
+    return http_get(url);
+}
+
+/* Map TCL famille_transport to a friendly mode label and a deterministic
+ * line gid offset so codes don't collide between families (BUS=0, TRA=10000,
+ * MET=20000, FUN=30000, FLU=40000). */
+static int tcl_family_offset(const char *fam)
+{
+    if (!fam) return 0;
+    if (strcmp(fam, "TRA") == 0) return 10000;
+    if (strcmp(fam, "MET") == 0) return 20000;
+    if (strcmp(fam, "FUN") == 0) return 30000;
+    if (strcmp(fam, "FLU") == 0) return 40000;
+    return 0;
+}
+static const char *tcl_family_mode(const char *fam)
+{
+    if (!fam) return "Bus";
+    if (strcmp(fam, "TRA") == 0) return "Tramway";
+    if (strcmp(fam, "MET") == 0) return "Métro";
+    if (strcmp(fam, "FUN") == 0) return "Funiculaire";
+    if (strcmp(fam, "FLU") == 0) return "Navette fluviale";
+    return "Bus";
+}
+
+/* Convert "#5B93F2" → "5B93F2". */
+static void tcl_color_strip_hash(const char *hex_with_hash, char *out, size_t out_sz)
+{
+    if (!hex_with_hash || !out || out_sz == 0) { if (out && out_sz) out[0] = 0; return; }
+    if (hex_with_hash[0] == '#') hex_with_hash++;
+    snprintf(out, out_sz, "%s", hex_with_hash);
+}
+
+/* Returns 1 if the TCL stop's `desserte` field references the given
+ * line code (formats: "10E:A,T1:R,JD73:R,..."). */
+static int tcl_desserte_has_line(const char *desserte, const char *line_code)
+{
+    if (!desserte || !line_code || !line_code[0]) return 0;
+    const char *p = desserte;
+    size_t code_len = strlen(line_code);
+    while (*p) {
+        const char *colon = strchr(p, ':');
+        size_t seg_len = colon ? (size_t)(colon - p) : strlen(p);
+        if (seg_len == code_len && strncmp(p, line_code, code_len) == 0) return 1;
+        const char *comma = strchr(p, ',');
+        if (!comma) break;
+        p = comma + 1;
+    }
+    return 0;
+}
+
+static int tcl_load_lines(ToulouseLine *out, int max)
+{
+    static const char *families[] = {
+        "tcl_sytral.tcllignebus_2_0_0",
+        "tcl_sytral.tcllignetram_2_0_0",
+        "tcl_sytral.tcllignemf_2_0_0",
+        "tcl_sytral.tcllignefluv",
+        NULL
+    };
+    int n = 0;
+    char seen_codes[2048][16] = {{0}};
+    int n_seen = 0;
+
+    for (int fi = 0; families[fi] && n < max; fi++) {
+        char *raw = http_get_tcl_wfs(families[fi], 5000);
+        if (!raw) continue;
+        cJSON *root = cJSON_Parse(raw); free(raw);
+        if (!root) continue;
+
+        cJSON *features = cJSON_GetObjectItemCaseSensitive(root, "features");
+        cJSON *feature;
+        cJSON_ArrayForEach(feature, features) {
+            cJSON *props = cJSON_GetObjectItemCaseSensitive(feature, "properties");
+            if (!props || n >= max) continue;
+
+            const char *code   = jstr(props, "ligne");
+            const char *family = jstr(props, "famille_transport");
+            const char *origine_n = jstr(props, "nom_origine");
+            const char *destin_n  = jstr(props, "nom_destination");
+            const char *color    = jstr(props, "couleur_hex");
+
+            if (!code[0]) continue;
+
+            /* WFS publishes one feature per (line × direction). De-dup on code. */
+            int dup = 0;
+            for (int i = 0; i < n_seen; i++) {
+                if (strcmp(seen_codes[i], code) == 0) { dup = 1; break; }
+            }
+            if (dup) continue;
+            if (n_seen < (int)(sizeof(seen_codes)/sizeof(seen_codes[0]))) {
+                snprintf(seen_codes[n_seen++], sizeof(seen_codes[0]), "%s", code);
+            }
+
+            ToulouseLine *line = &out[n];
+            memset(line, 0, sizeof(*line));
+            snprintf(line->ref, sizeof(line->ref), "%s", code);  /* code = stable ref for /passages */
+            line->id = tcl_family_offset(family) + atoi(code);  /* approximate but stable */
+            if (line->id == 0) line->id = 50000 + n;  /* fallback for non-numeric codes */
+            snprintf(line->code, sizeof(line->code), "%s", code);
+            snprintf(line->libelle, sizeof(line->libelle), "%s ⇄ %s", origine_n, destin_n);
+            snprintf(line->mode, sizeof(line->mode), "%s", tcl_family_mode(family));
+            tcl_color_strip_hash(color, line->couleur, sizeof(line->couleur));
+            parse_hex_triplet(line->couleur, &line->r, &line->g, &line->b);
+            /* Black text on most TCL line backgrounds; bright colors → white text. */
+            int luma = (line->r * 30 + line->g * 59 + line->b * 11) / 100;
+            snprintf(line->texte_couleur, sizeof(line->texte_couleur),
+                     luma > 128 ? "000000" : "FFFFFF");
+            n++;
+        }
+        cJSON_Delete(root);
+    }
+    return n;
+}
+
+static int tcl_load_stops(ToulouseStop *out, int max)
+{
+    int n = 0;
+    int page = 1;
+    int per_page = 1000;
+
+    while (n < max) {
+        char url[512];
+        snprintf(url, sizeof(url),
+                 TCL_DATAPUSHER_BASE "/tcl_sytral.tclarret/all.json?maxfeatures=%d&start=%d",
+                 per_page, page);
+        char *raw = http_get(url);
+        if (!raw) break;
+        cJSON *root = cJSON_Parse(raw); free(raw);
+        if (!root) break;
+
+        cJSON *values = cJSON_GetObjectItemCaseSensitive(root, "values");
+        int got = 0;
+        cJSON *item;
+        cJSON_ArrayForEach(item, values) {
+            if (n >= max) break;
+            cJSON *id_n = cJSON_GetObjectItemCaseSensitive(item, "id");
+            cJSON *lon_n = cJSON_GetObjectItemCaseSensitive(item, "lon");
+            cJSON *lat_n = cJSON_GetObjectItemCaseSensitive(item, "lat");
+            const char *nom = jstr(item, "nom");
+            const char *commune = jstr(item, "commune");
+            const char *desserte = jstr(item, "desserte");
+
+            if (!cJSON_IsNumber(id_n)) continue;
+            ToulouseStop *stop = &out[n];
+            memset(stop, 0, sizeof(*stop));
+            snprintf(stop->ref, sizeof(stop->ref), "%d", (int)id_n->valueint);
+            stop->id = (int)id_n->valueint;
+            snprintf(stop->libelle, sizeof(stop->libelle), "%s", nom);
+            snprintf(stop->commune, sizeof(stop->commune), "%s", commune);
+            snprintf(stop->lignes, sizeof(stop->lignes), "%s", desserte);
+            snprintf(stop->mode, sizeof(stop->mode), "Bus");
+            if (cJSON_IsNumber(lon_n)) stop->lon = lon_n->valuedouble;
+            if (cJSON_IsNumber(lat_n)) stop->lat = lat_n->valuedouble;
+            n++;
+            got++;
+        }
+        cJSON_Delete(root);
+        if (got < per_page) break;
+        page += per_page;
+    }
+    return n;
+}
+
+int fetch_tcl_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines,
+                       ToulouseStop *stops, int max_stops)
+{
+    int nlines, nstops;
+
+    if (!snap) return -1;
+    memset(snap, 0, sizeof(*snap));
+    snprintf(snap->doc_ref, sizeof(snap->doc_ref), "https://data.grandlyon.com/");
+    snprintf(snap->doc_version, sizeof(snap->doc_version), "wfs2");
+    snprintf(snap->doc_date, sizeof(snap->doc_date), "2026-05-06");
+    snprintf(snap->lines_url, sizeof(snap->lines_url), TCL_WFS_BASE);
+    snprintf(snap->stops_url, sizeof(snap->stops_url), TCL_DATAPUSHER_BASE "/tcl_sytral.tclarret");
+    snap->live = 1;
+
+    nlines = tcl_load_lines(lines, max_lines);
+    if (nlines < 0) return -1;
+    nstops = tcl_load_stops(stops, max_stops);
+    if (nstops < 0) nstops = 0;
+
+    snap->total_lines = nlines;
+    snap->sample_lines = nlines;
+    snap->total_stops = nstops;
+    snap->sample_stops = nstops;
+    return nlines;
+}
+
+int fetch_tcl_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
+{
+    /* Caller (backend/TUI) provides the stops cache via nvt_set_tcl_vehicle_stops.
+     * We filter the cached set by `desserte` column matching this line's code. */
+    extern const ToulouseStop *g_tcl_vehicle_stops_ptr;
+    extern int                 g_tcl_vehicle_stops_count;
+    int n = 0;
+
+    if (!line || !out || max <= 0 || !g_tcl_vehicle_stops_ptr) return -1;
+    for (int i = 0; i < g_tcl_vehicle_stops_count && n < max; i++) {
+        if (tcl_desserte_has_line(g_tcl_vehicle_stops_ptr[i].lignes, line->code)) {
+            out[n++] = g_tcl_vehicle_stops_ptr[i];
+        }
+    }
+    return n;
+}
+
+int fetch_tcl_alerts(ToulouseAlert *out, int max)
+{
+    /* TCL has no public alerts dataset on Grand Lyon datapusher. */
+    (void)out; (void)max;
+    return 0;
+}
+
+/* Compute ETA seconds from "DD min" or "Proche" or HH:MM:SS strings. */
+static int tcl_delaipassage_seconds(const char *s)
+{
+    int n;
+    if (!s || !s[0]) return -1;
+    if (strcmp(s, "Proche") == 0) return 0;
+    if (sscanf(s, "%d min", &n) == 1) return n * 60;
+    if (sscanf(s, "%d s", &n) == 1) return n;
+    return -1;
+}
+
+int fetch_tcl_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max)
+{
+    char url[768];
+    char *raw;
+    cJSON *root, *values, *item;
+    int n = 0;
+
+    if (!line || !stop || !stop->ref[0] || !out || max <= 0) return -1;
+    if (!tcl_user() || !tcl_pass()) return 0;
+
+    /* Filter by stop id and line code (server-side filtering not supported
+     * by datapusher — we fetch by stop and then narrow client-side). */
+    snprintf(url, sizeof(url),
+             TCL_DATAPUSHER_BASE "/tcl_sytral.tclpassagearret/all.json"
+             "?maxfeatures=20&filter[idtarretdestination]=%s",
+             stop->ref);
+    raw = http_get_tcl_auth(url);
+    if (!raw) return -1;
+    root = cJSON_Parse(raw); free(raw);
+    if (!root) return -1;
+
+    values = cJSON_GetObjectItemCaseSensitive(root, "values");
+    cJSON_ArrayForEach(item, values) {
+        if (n >= max) break;
+        const char *line_code = jstr(item, "ligne");
+        if (line->code[0] && strcmp(line_code, line->code) != 0) continue;
+
+        const char *direction = jstr(item, "direction");
+        const char *delaipassage = jstr(item, "delaipassage");
+        const char *heurepassage = jstr(item, "heurepassage");
+        int wait_s = tcl_delaipassage_seconds(delaipassage);
+
+        ToulousePassage *p = &out[n];
+        memset(p, 0, sizeof(*p));
+        snprintf(p->line_code, sizeof(p->line_code), "%s", line_code);
+        snprintf(p->line_name, sizeof(p->line_name), "%s", line->libelle);
+        snprintf(p->destination, sizeof(p->destination), "%s", direction);
+        snprintf(p->stop_name, sizeof(p->stop_name), "%s", stop->libelle);
+        snprintf(p->datetime, sizeof(p->datetime), "%s", heurepassage);
+        if (wait_s >= 0) {
+            seconds_to_waiting_time(wait_s, p->waiting_time, sizeof(p->waiting_time));
+        } else {
+            snprintf(p->waiting_time, sizeof(p->waiting_time), "%s", delaipassage);
+        }
+        p->realtime = 1;
+        p->delayed = 0;
+        n++;
+    }
+    cJSON_Delete(root);
+    return n;
+}
+
+/* TCL stops cache pointer (set by backend/TUI after snapshot). */
+const ToulouseStop *g_tcl_vehicle_stops_ptr = NULL;
+int                 g_tcl_vehicle_stops_count = 0;
+
+void nvt_set_tcl_vehicle_stops(const ToulouseStop *stops, int count)
+{
+    g_tcl_vehicle_stops_ptr   = stops;
+    g_tcl_vehicle_stops_count = count;
+}
+
+int fetch_tcl_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
+{
+    if (!line || !out || max <= 0 || !line->code[0]) return -1;
+    if (!g_tcl_vehicle_stops_ptr || g_tcl_vehicle_stops_count <= 0) return 0;
+    if (!tcl_user() || !tcl_pass()) return 0;
+
+    /* Static buffers shared across all calls — same pattern as Tisséo. */
+    static ToulouseStop      sl_stops[256];
+    static ToulousePassage   sl_passages[1024];
+    static StopPassages      sl_per_stop[256];
+
+    /* Step 1: filter cached stops to those serving this line. */
+    int n_line_stops = 0;
+    for (int i = 0; i < g_tcl_vehicle_stops_count && n_line_stops < 256; i++) {
+        if (tcl_desserte_has_line(g_tcl_vehicle_stops_ptr[i].lignes, line->code)) {
+            sl_stops[n_line_stops++] = g_tcl_vehicle_stops_ptr[i];
+        }
+    }
+    if (n_line_stops == 0) return 0;
+
+    /* Step 2: fetch passages for each stop (chunked one-by-one — datapusher
+     * doesn't support stop-list filtering). Cap to ~30 stops to limit API
+     * calls; we only need a few vehicles per line for the map. */
+    int passage_pool_used = 0;
+    int n_collected = 0;
+    int CAP = n_line_stops < 30 ? n_line_stops : 30;
+
+    for (int i = 0; i < CAP && passage_pool_used < 1024 && n_collected < 256; i++) {
+        ToulousePassage local[20];
+        int got = fetch_tcl_passages(line, &sl_stops[i], local,
+                                     20 < (1024 - passage_pool_used) ? 20 : (1024 - passage_pool_used));
+        if (got <= 0) continue;
+
+        int start = passage_pool_used;
+        for (int k = 0; k < got && passage_pool_used < 1024; k++) {
+            sl_passages[passage_pool_used++] = local[k];
+        }
+        sl_per_stop[n_collected].passages = &sl_passages[start];
+        sl_per_stop[n_collected].count = passage_pool_used - start;
+        sl_per_stop[n_collected].stop_index = i;
+        n_collected++;
+    }
+    if (n_collected == 0) return 0;
+
+    return nvt_synthesize_vehicles_from_passages(line, sl_stops, n_collected,
+                                                 sl_per_stop, 180, out, max);
+}
+
 /* ── external basemap (French commune contours) ──────────────────── */
 
 static void metro_map_init(MetroMap *m)

@@ -10,7 +10,7 @@ The project currently provides:
 - a local backend API for transit data
 - a Nuxt 3 / Vue 3 web frontend with MapKit JS in `web/`
 - a local MCP server for lines, stops, next passages, alerts, and line monitoring
-- support for Bordeaux (TBM), Toulouse (Tisséo), Paris (IDFM), SNCF, and Rennes (STAR)
+- support for Bordeaux (TBM), Toulouse (Tisséo), Paris (IDFM), SNCF, Rennes (STAR), and Lyon (TCL Sytral)
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
 
@@ -29,13 +29,25 @@ Every supported network reports lines, stops, next passages, alerts, and **live 
 | **Paris IDFM** | PRIM Navitia + PRIM SIRI Lite | Synthesized from SIRI Estimated Timetable (`/marketplace/estimated-timetable`) using a 38 k-stop crosswalk fetched once from `data.iledefrance-mobilites.fr/datasets/arrets` |
 | **SNCF** | api.sncf.com Navitia | Synthesized from `/lines/{id}/departures` using `stop_point.coord` returned in each departure |
 | **Rennes STAR** | data.explore.star.fr Opendatasoft | Native `tco-bus-vehicules-position-tr` dataset |
+| **Lyon TCL** | data.grandlyon.com WFS + datapusher | Static lines/stops via WFS GeoJSON (no auth); real-time passages via `tcl_sytral.tclpassagearret` (HTTP Basic auth, set `TCL_USER`/`TCL_PASS` in `.nvt-backend.env`); vehicles synthesized from passages |
 
 GTFS-RT is intentionally not used. All sources are public JSON APIs.
+
+### TCL credentials
+
+The Lyon dataset requires a free account on [moncompte.grandlyon.com](https://moncompte.grandlyon.com). Once registered, add the credentials to `.nvt-backend.env`:
+
+```bash
+TCL_USER=your_login
+TCL_PASS=your_password
+```
+
+Without credentials, TCL lines and stops still load but real-time passages and synthesized vehicles return empty.
 
 ## Features
 
 - Ncurses-based TUI app written in C
-- Multi-network live support across 5 networks
+- Multi-network live support across 6 networks
 - Local backend endpoints for lines, alerts, stop groups, passages, vehicles, and map boundaries
 - Real-time vehicle positions on every network (synthesized when no native GPS feed exists — see table above)
 - Generic `interpolated_positions` module for synthesizing vehicle markers from passage timetables
@@ -53,7 +65,7 @@ GTFS-RT is intentionally not used. All sources are public JSON APIs.
 .
 |-- backend.c                      HTTP backend
 |-- nvt.c                          TUI entry point
-|-- api.[ch]                       Network fetchers (TBM, Tisséo, IDFM, SNCF, STAR)
+|-- api.[ch]                       Network fetchers (TBM, Tisséo, IDFM, SNCF, STAR, TCL)
 |-- interpolated_positions.[ch]    Generic synthesis: passages → vehicle markers
 |-- idfm_crosswalk.[ch]            SIRI StopPointRef → coords lookup for IDFM
 |-- data.c, network.c, ui.c, ...   TUI modules
@@ -156,7 +168,7 @@ Connection examples and environment details live in `docs/mcp-server.md`.
 - Press `i` or `6` on a selected line to open the itinerary calculator, then use `o`, `d`, and `x`
 - Technical notes for the modularized TUI live in `docs/technical-readme.md`
 - MCP usage notes live in `docs/mcp-server.md`
-- IDFM, SNCF, and STAR support is configured directly in the C sources
+- IDFM, SNCF, STAR, and TCL support is configured directly in the C sources
 - The IDFM crosswalk downloads ~3 MB gzipped on first vehicle request (lazy load), then is kept in memory
 - Local Home Assistant test data can be stored in `.ha-test/`
 - Python cache files and compiled binaries should not be committed

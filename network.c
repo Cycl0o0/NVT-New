@@ -190,6 +190,26 @@ static void star_reset_transient(AppState *app)
     app->star.sel_stop = -1;
 }
 
+static int tcl_refresh_overview(AppState *app, char *err, size_t err_sz)
+    { return nvt_data_refresh_tcl_overview(app, 2, err, err_sz); }
+static int tcl_refresh_alerts(AppState *app, char *err, size_t err_sz)
+    { return nvt_data_refresh_tcl_alerts(app, 2, err, err_sz); }
+static int tcl_load_stops(AppState *app, char *err, size_t err_sz)
+    { return nvt_data_load_tcl_stops(app, 2, err, err_sz); }
+static int tcl_load_passages(AppState *app, char *err, size_t err_sz)
+    { return nvt_data_load_tcl_passages(app, 2, err, err_sz); }
+static int tcl_load_vehicles(AppState *app, char *err, size_t err_sz)
+    { return nvt_data_load_tcl_vehicles(app, 2, err, err_sz); }
+static void tcl_reset_transient(AppState *app)
+{
+    app->tcl.nstops = 0;
+    app->tcl.nstop_filtered = 0;
+    app->tcl.npassages = 0;
+    app->tcl.nvehicles = 0;
+    app->tcl.sel_line = -1;
+    app->tcl.sel_stop = -1;
+}
+
 static const NvtNetworkAdapter NETWORKS[] = {
     {
         .kind = NET_BDX,
@@ -241,6 +261,16 @@ static const NvtNetworkAdapter NETWORKS[] = {
         .load_vehicles = star_load_vehicles,
         .reset_transient = star_reset_transient,
     },
+    {
+        .kind = NET_TCL,
+        .name = "Lyon TCL",
+        .refresh_overview = tcl_refresh_overview,
+        .refresh_alerts = tcl_refresh_alerts,
+        .load_stops = tcl_load_stops,
+        .load_passages = tcl_load_passages,
+        .load_vehicles = tcl_load_vehicles,
+        .reset_transient = tcl_reset_transient,
+    },
 };
 
 const char *nvt_network_name(NvtNetwork network)
@@ -254,6 +284,8 @@ const char *nvt_network_name(NvtNetwork network)
         return "SNCF";
     case NET_STAR:
         return "Rennes STAR";
+    case NET_TCL:
+        return "Lyon TCL";
     case NET_BDX:
     default:
         return "Bordeaux";
@@ -302,6 +334,12 @@ void nvt_switch_network(AppState *app, NvtNetwork network)
     app->star.stop_scroll = 0;
     app->star.sel_line = -1;
     app->star.sel_stop = -1;
+    app->tcl.cursor = 0;
+    app->tcl.scroll = 0;
+    app->tcl.stop_cursor = 0;
+    app->tcl.stop_scroll = 0;
+    app->tcl.sel_line = -1;
+    app->tcl.sel_stop = -1;
     app->ui.alert_scroll = 0;
 
     adapter = nvt_network_adapter(network);

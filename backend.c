@@ -36,6 +36,7 @@ typedef enum {
     NETWORK_IDFM = 2,
     NETWORK_SNCF = 3,
     NETWORK_STAR = 4,
+    NETWORK_TCL  = 5,
 } NetworkKind;
 
 static volatile sig_atomic_t g_running = 1;
@@ -64,6 +65,11 @@ static int g_sncf_nlines = -1;
 static IdfmSnapshot g_star_snapshot;
 static ToulouseLine g_star_lines[MAX_LINES];
 static int g_star_nlines = -1;
+static IdfmSnapshot g_tcl_snapshot;
+static ToulouseLine g_tcl_lines[MAX_LINES];
+static int g_tcl_nlines = -1;
+static ToulouseStop g_tcl_stops[MAX_STOPS];
+static int g_tcl_nstops = -1;
 
 static void on_signal(int signum)
 {
@@ -115,6 +121,8 @@ static const char *network_slug(NetworkKind network)
         return "sncf";
     case NETWORK_STAR:
         return "star";
+    case NETWORK_TCL:
+        return "tcl";
     case NETWORK_BDX:
     default:
         return "bordeaux";
@@ -125,7 +133,8 @@ static int network_is_live(NetworkKind network)
 {
     return network == NETWORK_IDFM
         || network == NETWORK_SNCF
-        || network == NETWORK_STAR;
+        || network == NETWORK_STAR
+        || network == NETWORK_TCL;
 }
 
 static int network_supports_boundaries(NetworkKind network)
@@ -199,6 +208,11 @@ static int request_network(const HttpRequest *req, NetworkKind *out)
     }
     if (strcasecmp(value, "star") == 0 || strcasecmp(value, "rennes") == 0) {
         *out = NETWORK_STAR;
+        return 0;
+    }
+    if (strcasecmp(value, "tcl") == 0 || strcasecmp(value, "lyon") == 0 ||
+        strcasecmp(value, "sytral") == 0) {
+        *out = NETWORK_TCL;
         return 0;
     }
 
@@ -699,6 +713,21 @@ static int ensure_star_snapshot(void)
     return 0;
 }
 
+static int ensure_tcl_snapshot(void)
+{
+    if (g_tcl_nlines >= 0 && g_tcl_nstops >= 0) return 0;
+    if (fetch_tcl_snapshot(&g_tcl_snapshot, g_tcl_lines, MAX_LINES,
+                           g_tcl_stops, MAX_STOPS) < 0) return -1;
+    g_tcl_nlines = g_tcl_snapshot.sample_lines;
+    g_tcl_nstops = g_tcl_snapshot.sample_stops;
+    if (g_tcl_nlines > 1) {
+        qsort(g_tcl_lines, (size_t)g_tcl_nlines, sizeof(ToulouseLine), cmp_toulouse_lines);
+    }
+    /* Wire the cached stops into the vehicle synthesis path. */
+    nvt_set_tcl_vehicle_stops(g_tcl_stops, g_tcl_nstops);
+    return 0;
+}
+
 static const ToulouseLine *network_live_lines(NetworkKind network, int *out_count)
 {
     if (out_count) *out_count = 0;
@@ -720,6 +749,10 @@ static const ToulouseLine *network_live_lines(NetworkKind network, int *out_coun
         if (ensure_star_snapshot() < 0) return NULL;
         if (out_count) *out_count = g_star_nlines;
         return g_star_lines;
+    case NETWORK_TCL:
+        if (ensure_tcl_snapshot() < 0) return NULL;
+        if (out_count) *out_count = g_tcl_nlines;
+        return g_tcl_lines;
     case NETWORK_BDX:
     default:
         return NULL;
@@ -748,6 +781,7 @@ static int fetch_network_live_stops(NetworkKind network, const ToulouseLine *lin
     if (network == NETWORK_IDFM) return fetch_idfm_line_stops(line, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_line_stops(line, out, max);
     if (network == NETWORK_STAR) return fetch_star_line_stops(line, out, max);
+    if (network == NETWORK_TCL)  return fetch_tcl_line_stops(line, out, max);
     return -1;
 }
 
@@ -757,6 +791,7 @@ static int fetch_network_live_alerts(NetworkKind network, ToulouseAlert *out, in
     if (network == NETWORK_IDFM) return fetch_idfm_alerts(out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_alerts(out, max);
     if (network == NETWORK_STAR) return fetch_star_alerts(out, max);
+    if (network == NETWORK_TCL)  return fetch_tcl_alerts(out, max);
     return -1;
 }
 
@@ -767,6 +802,7 @@ static int fetch_network_live_passages(NetworkKind network, const ToulouseLine *
     if (network == NETWORK_IDFM) return fetch_idfm_passages(line, stop, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_passages(line, stop, out, max);
     if (network == NETWORK_STAR) return fetch_star_passages(line, stop, out, max);
+    if (network == NETWORK_TCL)  return fetch_tcl_passages(line, stop, out, max);
     return -1;
 }
 
@@ -777,6 +813,7 @@ static int fetch_network_live_vehicles(NetworkKind network, const ToulouseLine *
     if (network == NETWORK_IDFM) return fetch_idfm_vehicles(line, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_vehicles(line, out, max);
     if (network == NETWORK_STAR) return fetch_star_vehicles(line, out, max);
+    if (network == NETWORK_TCL)  return fetch_tcl_vehicles(line, out, max);
     return -1;
 }
 
@@ -1278,6 +1315,7 @@ static int handle_health(int fd)
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_STAR)));
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_TCL)));
     int rc = send_json(fd, 200, "OK", root, "no-store");
     cJSON_Delete(root);
     return rc;
@@ -1942,9 +1980,10 @@ static int handle_api_root(int fd)
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_STAR)));
+    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_TCL)));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/health"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls|idfm|sncf|star"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls|idfm|sncf|star"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls|idfm|sncf|star|tcl"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls|idfm|sncf|star|tcl"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/vehicles?network=bdx|tls|idfm|sncf"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/route?network=bdx|tls"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups?network=bdx|tls"));

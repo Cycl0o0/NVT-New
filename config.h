@@ -14,6 +14,12 @@
 #define SNCF_COVERAGE "sncf"
 /* STAR — Rennes / Métropole. Public Opendatasoft API, no auth required. */
 #define STAR_API_BASE "https://data.explore.star.fr/api/explore/v2.1/catalog/datasets"
+/* TCL — Lyon / Sytral. WFS GeoJSON for static lines/stops (no auth);
+   datapusher REST API for real-time passages requires HTTP Basic auth
+   with a free moncompte.grandlyon.com account. Set TCL_USER + TCL_PASS
+   in .nvt-backend.env. */
+#define TCL_WFS_BASE        "https://download.data.grandlyon.com/wfs/rdata"
+#define TCL_DATAPUSHER_BASE "https://data.grandlyon.com/fr/datapusher/ws/rdata"
 #define MAP_API_BASE  "https://geo.api.gouv.fr"
 #define OVERPASS_API_BASE "https://overpass-api.de/api/interpreter"
 #define MAP_BDX_EPCI  "243300316"

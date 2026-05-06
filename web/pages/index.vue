@@ -90,7 +90,7 @@ const wallclock = computed(() => {
 
 const networkCity = computed(() => {
   const map: Record<Network, string> = {
-    bdx: 'Bordeaux', tls: 'Toulouse', idfm: 'Paris', sncf: 'France', star: 'Rennes'
+    bdx: 'Bordeaux', tls: 'Toulouse', idfm: 'Paris', sncf: 'France', star: 'Rennes', tcl: 'Lyon'
   }
   return map[network.value]
 })

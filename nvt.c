@@ -704,6 +704,7 @@ static NvtIdfmState *current_live_state(void)
 {
     if (g_network == NET_SNCF) return (NvtIdfmState *)&g_app.sncf;
     if (g_network == NET_STAR) return (NvtIdfmState *)&g_app.star;
+    if (g_network == NET_TCL)  return (NvtIdfmState *)&g_app.tcl;
     return &g_app.idf;
 }
 
@@ -711,6 +712,7 @@ static const char *current_live_network_short(void)
 {
     if (g_network == NET_SNCF) return "SNCF";
     if (g_network == NET_STAR) return "STAR";
+    if (g_network == NET_TCL)  return "TCL";
     return "IDFM";
 }
 
@@ -1219,6 +1221,7 @@ static int select_line_for_itinerary(void)
     case NET_IDFM:
     case NET_SNCF:
     case NET_STAR:
+    case NET_TCL:
         if (g_screen == SCR_LINES && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         else if (g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         return (g_live_sel_line >= 0 && g_live_sel_line < g_nlive_lines) ? 0 : -1;
@@ -1242,7 +1245,8 @@ static int itinerary_matches_current_line(void)
     }
     case NET_IDFM:
     case NET_SNCF:
-    case NET_STAR: {
+    case NET_STAR:
+    case NET_TCL: {
         ToulouseLine *line = selected_idfm_line();
         return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
     }
@@ -1394,6 +1398,7 @@ static int load_current_network_itinerary(int force_reload)
     case NET_IDFM:
     case NET_SNCF:
     case NET_STAR:
+    case NET_TCL:
         count = load_live_itinerary();
         break;
     case NET_BDX:
@@ -6570,6 +6575,9 @@ static const char *network_summary(NvtNetwork network)
     case NET_STAR:
         return T("Bus, metro, vehicules et passages Rennes STAR",
                  "Bus, metro, vehicles and passages Rennes STAR");
+    case NET_TCL:
+        return T("Bus, tram, metro et funiculaire Lyon Sytral",
+                 "Bus, tram, metro and funicular Lyon Sytral");
     case NET_BDX:
     default:
         return T("Tram, bus, passages et vehicules Bordeaux",
@@ -6682,6 +6690,21 @@ static int ensure_network_loaded(NvtNetwork network)
         if (nvt_data_refresh_star_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
             g_app.star.nalerts = 0;
+        }
+        break;
+    case NET_TCL:
+        animate_load_step(0, 2, T("Reseau TCL (Lyon)","TCL Network (Lyon)"), 0);
+        if (nvt_data_refresh_tcl_overview(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            memset(&g_app.tcl.snapshot, 0, sizeof(g_app.tcl.snapshot));
+            g_app.tcl.nlines = 0;
+            g_app.tcl.nfiltered = 0;
+            return -1;
+        }
+        animate_load_step(1, 2, T("Alertes TCL","TCL Alerts"), 4);
+        if (nvt_data_refresh_tcl_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+            toast("%s", err);
+            g_app.tcl.nalerts = 0;
         }
         break;
     case NET_COUNT:
