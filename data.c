@@ -694,118 +694,118 @@ int nvt_data_load_star_vehicles(AppState *app, int attempts, char *err, size_t e
     return nvt_retry_operation("STAR vehicles", attempts, fetch_star_vehicles_once, app, err, err_sz);
 }
 
-/* ── TCL (Lyon Sytral) ─────────────────────────────────────────── */
+/* ── Ilévia (MEL — Lille) ──────────────────────────────────────── */
 
-static int fetch_tcl_overview_once(void *ctx)
+static int fetch_ilv_overview_once(void *ctx)
 {
     AppState *app = ctx;
 
-    if (fetch_tcl_snapshot(&app->tcl.snapshot, app->tcl.lines, MAX_LINES,
-                           app->tcl.stops, MAX_STOPS) < 0) return -1;
+    if (fetch_ilv_snapshot(&app->ilv.snapshot, app->ilv.lines, MAX_LINES) < 0) return -1;
 
-    app->tcl.nlines = app->tcl.snapshot.sample_lines;
-    app->tcl.nstops = app->tcl.snapshot.sample_stops;
-    nvt_set_tcl_vehicle_stops(app->tcl.stops, app->tcl.nstops);
-    if (app->tcl.nlines > 1) {
-        qsort(app->tcl.lines, app->tcl.nlines, sizeof(ToulouseLine), nvt_cmp_idfm_lines);
+    app->ilv.nlines = app->ilv.snapshot.sample_lines;
+    if (app->ilv.nlines > 1) {
+        qsort(app->ilv.lines, app->ilv.nlines, sizeof(ToulouseLine), nvt_cmp_idfm_lines);
     }
-    app->tcl.nfiltered = nvt_rebuild_toulouse_line_filter(
-        app->tcl.lines, app->tcl.nlines, app->tcl.search,
-        app->tcl.filtered, MAX_LINES
+    app->ilv.nfiltered = nvt_rebuild_toulouse_line_filter(
+        app->ilv.lines, app->ilv.nlines, app->ilv.search,
+        app->ilv.filtered, MAX_LINES
     );
-    app->tcl.nstop_filtered = 0;
-    app->tcl.npassages = 0;
-    app->tcl.nvehicles = 0;
-    app->tcl.sel_stop = -1;
-    return app->tcl.nlines;
+    app->ilv.nstops = 0;
+    app->ilv.nstop_filtered = 0;
+    app->ilv.npassages = 0;
+    app->ilv.nvehicles = 0;
+    app->ilv.sel_stop = -1;
+    return app->ilv.nlines;
 }
 
-static int fetch_tcl_stops_once(void *ctx)
+static int fetch_ilv_stops_once(void *ctx)
 {
     AppState *app = ctx;
     ToulouseLine *line;
-    static ToulouseStop tmp[MAX_STOPS];
 
-    app->tcl.nstop_filtered = 0;
-    app->tcl.npassages = 0;
-    app->tcl.sel_stop = -1;
-    if (app->tcl.sel_line < 0 || app->tcl.sel_line >= app->tcl.nlines) return 0;
+    app->ilv.nstop_filtered = 0;
+    app->ilv.npassages = 0;
+    app->ilv.sel_stop = -1;
+    if (app->ilv.sel_line < 0 || app->ilv.sel_line >= app->ilv.nlines) return 0;
 
-    line = &app->tcl.lines[app->tcl.sel_line];
-    int n = fetch_tcl_line_stops(line, tmp, MAX_STOPS);
-    if (n < 0) return -1;
-    if (n > MAX_STOPS) n = MAX_STOPS;
-    memcpy(app->tcl.stops, tmp, (size_t)n * sizeof(ToulouseStop));
-    app->tcl.nstops = n;
-    if (n > 1) qsort(app->tcl.stops, n, sizeof(ToulouseStop), cmp_live_stops_by_name);
-    if (app->tcl.stop_search[0]) {
-        app->tcl.nstop_filtered = nvt_rebuild_toulouse_stop_filter(
-            app->tcl.stops, n, app->tcl.stop_search,
-            app->tcl.stop_filtered, MAX_STOPS
+    line = &app->ilv.lines[app->ilv.sel_line];
+    app->ilv.nstops = fetch_ilv_line_stops(line, app->ilv.stops, MAX_STOPS);
+    if (app->ilv.nstops < 0) return -1;
+    if (app->ilv.nstops > 1) {
+        qsort(app->ilv.stops, app->ilv.nstops, sizeof(ToulouseStop), cmp_live_stops_by_name);
+    }
+    if (app->ilv.stop_search[0]) {
+        app->ilv.nstop_filtered = nvt_rebuild_toulouse_stop_filter(
+            app->ilv.stops, app->ilv.nstops, app->ilv.stop_search,
+            app->ilv.stop_filtered, MAX_STOPS
         );
     }
-    return n;
+    return app->ilv.nstops;
 }
 
-static int fetch_tcl_alerts_once(void *ctx)
+static int fetch_ilv_alerts_once(void *ctx)
 {
     AppState *app = ctx;
-    app->tcl.nalerts = fetch_tcl_alerts(app->tcl.alerts, MAX_ALERTS);
-    if (app->tcl.nalerts < 0) return -1;
-    app->tcl.snapshot.sample_alerts = app->tcl.nalerts;
-    return app->tcl.nalerts;
+    app->ilv.nalerts = fetch_ilv_alerts(app->ilv.alerts, MAX_ALERTS);
+    if (app->ilv.nalerts < 0) return -1;
+    app->ilv.snapshot.sample_alerts = app->ilv.nalerts;
+    return app->ilv.nalerts;
 }
 
-static int fetch_tcl_passages_once(void *ctx)
+static int fetch_ilv_passages_once(void *ctx)
 {
     AppState *app = ctx;
     ToulouseLine *line;
     ToulouseStop *stop;
 
-    app->tcl.npassages = 0;
-    if (app->tcl.sel_line < 0 || app->tcl.sel_line >= app->tcl.nlines) return 0;
-    if (app->tcl.sel_stop < 0 || app->tcl.sel_stop >= app->tcl.nstops) return 0;
-    line = &app->tcl.lines[app->tcl.sel_line];
-    stop = &app->tcl.stops[app->tcl.sel_stop];
-    app->tcl.npassages = fetch_tcl_passages(line, stop, app->tcl.passages, MAX_PASSAGES);
-    if (app->tcl.npassages < 0) return -1;
-    if (app->tcl.npassages > 1) {
-        qsort(app->tcl.passages, app->tcl.npassages, sizeof(ToulousePassage),
+    app->ilv.npassages = 0;
+    if (app->ilv.sel_line < 0 || app->ilv.sel_line >= app->ilv.nlines) return 0;
+    if (app->ilv.sel_stop < 0 || app->ilv.sel_stop >= app->ilv.nstops) return 0;
+    line = &app->ilv.lines[app->ilv.sel_line];
+    stop = &app->ilv.stops[app->ilv.sel_stop];
+    app->ilv.npassages = fetch_ilv_passages(line, stop, app->ilv.passages, MAX_PASSAGES);
+    if (app->ilv.npassages < 0) return -1;
+    if (app->ilv.npassages > 1) {
+        qsort(app->ilv.passages, app->ilv.npassages, sizeof(ToulousePassage),
               cmp_live_passages_by_waiting_time);
     }
-    return app->tcl.npassages;
+    return app->ilv.npassages;
 }
 
-static int fetch_tcl_vehicles_once(void *ctx)
+static int fetch_ilv_vehicles_once(void *ctx)
 {
     AppState *app = ctx;
     ToulouseLine *line;
 
-    app->tcl.nvehicles = 0;
-    if (app->tcl.sel_line < 0 || app->tcl.sel_line >= app->tcl.nlines) return 0;
-    line = &app->tcl.lines[app->tcl.sel_line];
-    app->tcl.nvehicles = fetch_tcl_vehicles(line, app->tcl.vehicles, MAX_VEHICLES);
-    if (app->tcl.nvehicles < 0) return -1;
-    return app->tcl.nvehicles;
+    app->ilv.nvehicles = 0;
+    if (app->ilv.sel_line < 0 || app->ilv.sel_line >= app->ilv.nlines) return 0;
+    line = &app->ilv.lines[app->ilv.sel_line];
+    app->ilv.nvehicles = fetch_ilv_vehicles(line, app->ilv.vehicles, MAX_VEHICLES);
+    if (app->ilv.nvehicles < 0) return -1;
+    if (app->ilv.nvehicles > 1) {
+        qsort(app->ilv.vehicles, app->ilv.nvehicles, sizeof(ToulouseVehicle),
+              cmp_live_vehicles_by_waiting_time);
+    }
+    return app->ilv.nvehicles;
 }
 
-int nvt_data_refresh_tcl_overview(AppState *app, int attempts, char *err, size_t err_sz)
+int nvt_data_refresh_ilv_overview(AppState *app, int attempts, char *err, size_t err_sz)
 {
-    return nvt_retry_operation("TCL lines", attempts, fetch_tcl_overview_once, app, err, err_sz);
+    return nvt_retry_operation("Ilevia lines", attempts, fetch_ilv_overview_once, app, err, err_sz);
 }
-int nvt_data_load_tcl_stops(AppState *app, int attempts, char *err, size_t err_sz)
+int nvt_data_load_ilv_stops(AppState *app, int attempts, char *err, size_t err_sz)
 {
-    return nvt_retry_operation("TCL line stops", attempts, fetch_tcl_stops_once, app, err, err_sz);
+    return nvt_retry_operation("Ilevia line stops", attempts, fetch_ilv_stops_once, app, err, err_sz);
 }
-int nvt_data_refresh_tcl_alerts(AppState *app, int attempts, char *err, size_t err_sz)
+int nvt_data_refresh_ilv_alerts(AppState *app, int attempts, char *err, size_t err_sz)
 {
-    return nvt_retry_operation("TCL alerts", attempts, fetch_tcl_alerts_once, app, err, err_sz);
+    return nvt_retry_operation("Ilevia alerts", attempts, fetch_ilv_alerts_once, app, err, err_sz);
 }
-int nvt_data_load_tcl_passages(AppState *app, int attempts, char *err, size_t err_sz)
+int nvt_data_load_ilv_passages(AppState *app, int attempts, char *err, size_t err_sz)
 {
-    return nvt_retry_operation("TCL departures", attempts, fetch_tcl_passages_once, app, err, err_sz);
+    return nvt_retry_operation("Ilevia departures", attempts, fetch_ilv_passages_once, app, err, err_sz);
 }
-int nvt_data_load_tcl_vehicles(AppState *app, int attempts, char *err, size_t err_sz)
+int nvt_data_load_ilv_vehicles(AppState *app, int attempts, char *err, size_t err_sz)
 {
-    return nvt_retry_operation("TCL vehicles", attempts, fetch_tcl_vehicles_once, app, err, err_sz);
+    return nvt_retry_operation("Ilevia vehicles", attempts, fetch_ilv_vehicles_once, app, err, err_sz);
 }

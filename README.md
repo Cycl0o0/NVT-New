@@ -10,7 +10,7 @@ The project currently provides:
 - a local backend API for transit data
 - a Nuxt 3 / Vue 3 web frontend with MapKit JS in `web/`
 - a local MCP server for lines, stops, next passages, alerts, and line monitoring
-- support for Bordeaux (TBM), Toulouse (Tisséo), Paris (IDFM), SNCF, Rennes (STAR), and Lyon (TCL Sytral)
+- support for Bordeaux (TBM), Toulouse (Tisséo), Paris (IDFM), SNCF, Rennes (STAR), and Lille (Ilévia)
 - a Home Assistant integration available in `custom_components/nvt`
 - line monitoring, next passages, alert details, thresholds, and automation-friendly entities
 
@@ -29,20 +29,13 @@ Every supported network reports lines, stops, next passages, alerts, and **live 
 | **Paris IDFM** | PRIM Navitia + PRIM SIRI Lite | Synthesized from SIRI Estimated Timetable (`/marketplace/estimated-timetable`) using a 38 k-stop crosswalk fetched once from `data.iledefrance-mobilites.fr/datasets/arrets` |
 | **SNCF** | api.sncf.com Navitia | Synthesized from `/lines/{id}/departures` using `stop_point.coord` returned in each departure |
 | **Rennes STAR** | data.explore.star.fr Opendatasoft | Native `tco-bus-vehicules-position-tr` dataset |
-| **Lyon TCL** | data.grandlyon.com WFS + datapusher | Static lines/stops via WFS GeoJSON (no auth); real-time passages via `tcl_sytral.tclpassagearret` (HTTP Basic auth, set `TCL_USER`/`TCL_PASS` in `.nvt-backend.env`); vehicles synthesized from passages |
+| **Lille Ilévia** | proxy.transport.data.gouv.fr SIRI-Lite (PAN) | Lines via `lines-discovery`, stops via `stop-points-discovery`, RT passages via `stop-monitoring`; vehicles synthesized from `estimated-timetable` |
 
 GTFS-RT is intentionally not used. All sources are public JSON APIs.
 
-### TCL credentials
+### Ilévia (SIRI-Lite producer slug)
 
-The Lyon dataset requires a free account on [moncompte.grandlyon.com](https://moncompte.grandlyon.com). Once registered, add the credentials to `.nvt-backend.env`:
-
-```bash
-TCL_USER=your_login
-TCL_PASS=your_password
-```
-
-Without credentials, TCL lines and stops still load but real-time passages and synthesized vehicles return empty.
+Ilévia data comes from the transport.data.gouv.fr SIRI-Lite proxy (no auth required). If the default producer slug in `config.h` (`ILV_SIRI_BASE`) stops working, search [transport.data.gouv.fr](https://transport.data.gouv.fr) for "ilevia siri" to find the correct resource identifier and update `ILV_SIRI_BASE`.
 
 ## Features
 

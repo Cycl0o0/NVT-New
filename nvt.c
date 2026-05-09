@@ -704,7 +704,7 @@ static NvtIdfmState *current_live_state(void)
 {
     if (g_network == NET_SNCF) return (NvtIdfmState *)&g_app.sncf;
     if (g_network == NET_STAR) return (NvtIdfmState *)&g_app.star;
-    if (g_network == NET_TCL)  return (NvtIdfmState *)&g_app.tcl;
+    if (g_network == NET_ILV)  return (NvtIdfmState *)&g_app.ilv;
     return &g_app.idf;
 }
 
@@ -712,7 +712,7 @@ static const char *current_live_network_short(void)
 {
     if (g_network == NET_SNCF) return "SNCF";
     if (g_network == NET_STAR) return "STAR";
-    if (g_network == NET_TCL)  return "TCL";
+    if (g_network == NET_ILV)  return "Ilevia";
     return "IDFM";
 }
 
@@ -946,7 +946,8 @@ static int refresh_current_network_alerts(const char *success_fmt)
         return -1;
     }
     if (g_network == NET_TLS) count = g_ntls_alerts;
-    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nalerts;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+             g_network == NET_STAR || g_network == NET_ILV) count = current_live_state()->nalerts;
     else count = g_nalerts;
     if (success_fmt && success_fmt[0]) toast(success_fmt, count);
     return count;
@@ -964,7 +965,8 @@ static int load_current_network_stops(const char *success_fmt)
         return -1;
     }
     if (g_network == NET_TLS) count = g_ntls_stops;
-    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nstops;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+             g_network == NET_STAR || g_network == NET_ILV) count = current_live_state()->nstops;
     else count = g_nstop_groups;
     if (success_fmt && success_fmt[0]) toast(success_fmt, count);
     return count;
@@ -982,7 +984,8 @@ static int load_current_network_passages(const char *success_fmt)
     }
     if (g_network == NET_BDX && g_npassages > 1) qsort(g_passages, g_npassages, sizeof(Passage), cmpp);
     if (g_network == NET_TLS) count = g_ntls_passages;
-    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->npassages;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+             g_network == NET_STAR || g_network == NET_ILV) count = current_live_state()->npassages;
     else count = g_npassages;
     if (success_fmt && success_fmt[0]) toast(success_fmt, count);
     return count;
@@ -999,7 +1002,8 @@ static int load_current_network_vehicles(const char *success_fmt)
         return -1;
     }
     if (g_network == NET_TLS) count = g_ntls_vehicles;
-    else if (g_network == NET_IDFM || g_network == NET_SNCF) count = current_live_state()->nvehicles;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+             g_network == NET_STAR || g_network == NET_ILV) count = current_live_state()->nvehicles;
     else count = g_nvehicles;
     if (success_fmt && success_fmt[0]) toast(success_fmt, count);
     return count;
@@ -1221,7 +1225,7 @@ static int select_line_for_itinerary(void)
     case NET_IDFM:
     case NET_SNCF:
     case NET_STAR:
-    case NET_TCL:
+    case NET_ILV:
         if (g_screen == SCR_LINES && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         else if (g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
         return (g_live_sel_line >= 0 && g_live_sel_line < g_nlive_lines) ? 0 : -1;
@@ -1246,7 +1250,7 @@ static int itinerary_matches_current_line(void)
     case NET_IDFM:
     case NET_SNCF:
     case NET_STAR:
-    case NET_TCL: {
+    case NET_ILV: {
         ToulouseLine *line = selected_idfm_line();
         return line && strcmp(g_itinerary.line_ref, line->ref) == 0;
     }
@@ -1398,7 +1402,7 @@ static int load_current_network_itinerary(int force_reload)
     case NET_IDFM:
     case NET_SNCF:
     case NET_STAR:
-    case NET_TCL:
+    case NET_ILV:
         count = load_live_itinerary();
         break;
     case NET_BDX:
@@ -1958,7 +1962,8 @@ static void draw_tabs(void)
     int alert_count;
 
     if (g_network == NET_TLS) alert_count = g_ntls_alerts;
-    else if (g_network == NET_IDFM || g_network == NET_SNCF) alert_count = g_nlive_alerts;
+    else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+             g_network == NET_STAR || g_network == NET_ILV) alert_count = g_nlive_alerts;
     else alert_count = g_nalerts;
 
     /* fill tab bar background */
@@ -4182,7 +4187,8 @@ static void draw_itinerary_line_badge(int y, int x)
     if (g_network == NET_TLS) {
         ToulouseLine *line = selected_toulouse_line();
         if (line) draw_toulouse_badge(y, x, line);
-    } else if (g_network == NET_IDFM || g_network == NET_SNCF) {
+    } else if (g_network == NET_IDFM || g_network == NET_SNCF ||
+               g_network == NET_STAR || g_network == NET_ILV) {
         ToulouseLine *line = selected_idfm_line();
         if (line) draw_idfm_badge(y, x, line);
     } else if (g_sel_line >= 0 && g_sel_line < g_nlines) {
@@ -6575,9 +6581,9 @@ static const char *network_summary(NvtNetwork network)
     case NET_STAR:
         return T("Bus, metro, vehicules et passages Rennes STAR",
                  "Bus, metro, vehicles and passages Rennes STAR");
-    case NET_TCL:
-        return T("Bus, tram, metro et funiculaire Lyon Sytral",
-                 "Bus, tram, metro and funicular Lyon Sytral");
+    case NET_ILV:
+        return T("Ilevia : metro, tram, bus et passages MEL Lille",
+                 "Ilevia: metro, tram, bus and passages MEL Lille");
     case NET_BDX:
     default:
         return T("Tram, bus, passages et vehicules Bordeaux",
@@ -6692,19 +6698,19 @@ static int ensure_network_loaded(NvtNetwork network)
             g_app.star.nalerts = 0;
         }
         break;
-    case NET_TCL:
-        animate_load_step(0, 2, T("Reseau TCL (Lyon)","TCL Network (Lyon)"), 0);
-        if (nvt_data_refresh_tcl_overview(&g_app, 2, err, sizeof(err)) < 0) {
+    case NET_ILV:
+        animate_load_step(0, 2, T("Reseau Ilevia (Lille)","Ilevia Network (Lille)"), 0);
+        if (nvt_data_refresh_ilv_overview(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
-            memset(&g_app.tcl.snapshot, 0, sizeof(g_app.tcl.snapshot));
-            g_app.tcl.nlines = 0;
-            g_app.tcl.nfiltered = 0;
+            memset(&g_app.ilv.snapshot, 0, sizeof(g_app.ilv.snapshot));
+            g_app.ilv.nlines = 0;
+            g_app.ilv.nfiltered = 0;
             return -1;
         }
-        animate_load_step(1, 2, T("Alertes TCL","TCL Alerts"), 4);
-        if (nvt_data_refresh_tcl_alerts(&g_app, 2, err, sizeof(err)) < 0) {
+        animate_load_step(1, 2, T("Alertes Ilevia","Ilevia Alerts"), 4);
+        if (nvt_data_refresh_ilv_alerts(&g_app, 2, err, sizeof(err)) < 0) {
             toast("%s", err);
-            g_app.tcl.nalerts = 0;
+            g_app.ilv.nalerts = 0;
         }
         break;
     case NET_COUNT:
@@ -6800,6 +6806,12 @@ static int prompt_network_menu(const char *title, const char *subtitle, NvtNetwo
         case '4':
             timeout(1000);
             return NET_SNCF;
+        case '5':
+            timeout(1000);
+            return NET_STAR;
+        case '6':
+            timeout(1000);
+            return NET_ILV;
         case '\n':
         case KEY_ENTER:
             timeout(1000);
@@ -6862,12 +6874,14 @@ int main(void)
         switch(g_screen){
         case SCR_LINES:
             if(g_network==NET_TLS) draw_toulouse();
-            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                    g_network==NET_STAR || g_network==NET_ILV) draw_idfm();
             else draw_lines();
             break;
         case SCR_VEHICLES:
             if(g_network==NET_TLS) draw_toulouse_vehicles();
-            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_vehicles();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                    g_network==NET_STAR || g_network==NET_ILV) draw_idfm_vehicles();
             else{
                 if(now-lvr>=VEHICLE_REFRESH_SEC){
                     char fetch_err[128];
@@ -6888,17 +6902,20 @@ int main(void)
             break;
         case SCR_ALERTS:
             if(g_network==NET_TLS) draw_toulouse_alerts();
-            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_alerts();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                    g_network==NET_STAR || g_network==NET_ILV) draw_idfm_alerts();
             else draw_alerts();
             break;
         case SCR_STOP_SEARCH:
             if(g_network==NET_TLS) draw_toulouse_stops();
-            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_stops();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                    g_network==NET_STAR || g_network==NET_ILV) draw_idfm_stops();
             else draw_stops();
             break;
         case SCR_PASSAGES:
             if(g_network==NET_TLS) draw_toulouse_passages();
-            else if(g_network==NET_IDFM || g_network==NET_SNCF) draw_idfm_passages();
+            else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                    g_network==NET_STAR || g_network==NET_ILV) draw_idfm_passages();
             else draw_passages();
             break;
         case SCR_ITINERARY:
@@ -6947,7 +6964,8 @@ int main(void)
                 case 'p': case '4': g_screen=SCR_STOP_SEARCH; g_tls_stop_cursor=0; g_tls_stop_scroll=0; break;
                 case 'r': case KEY_F(5): refresh_current_network_overview(T("Flux Toulouse recharge","Toulouse feed reloaded")); break;
                 }
-            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                      g_network==NET_STAR || g_network==NET_ILV){
                 switch(ch){
                 case 'q': goto quit;
                 case 'j': case KEY_DOWN: if(g_live_cursor<g_nlive_filtered-1) g_live_cursor++; break;
@@ -7018,7 +7036,8 @@ int main(void)
                 case '-': case '_': if(g_vehicle_zoom>0) g_vehicle_zoom--; break;
                 case '0': g_vehicle_zoom=0; break;
                 }
-            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                      g_network==NET_STAR || g_network==NET_ILV){
                 switch(ch){
                 case 'q': case 27: case '1': g_screen=SCR_LINES; break;
                 case 'a': case '3': g_screen=SCR_ALERTS; g_alert_scroll=0; break;
@@ -7068,7 +7087,8 @@ int main(void)
                 break;
             case 'p': case '4':
                 if(g_network==NET_TLS){g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;}
-                else if(g_network==NET_IDFM || g_network==NET_SNCF){
+                else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                        g_network==NET_STAR || g_network==NET_ILV){
                     if(g_live_sel_line < 0 && g_nlive_filtered > 0) g_live_sel_line = g_live_filtered[g_live_cursor];
                     open_idfm_stop_search(g_live_sel_line, 1);
                 }
@@ -7092,7 +7112,8 @@ int main(void)
                 case '1': g_screen=SCR_LINES;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
                 }
-            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                      g_network==NET_STAR || g_network==NET_ILV){
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_LINES; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
                 case 'j': case KEY_DOWN: if(g_live_stop_cursor<g_nlive_stop_filtered-1) g_live_stop_cursor++; break;
@@ -7142,7 +7163,8 @@ int main(void)
                 case '3': case 'a': g_screen=SCR_ALERTS;g_alert_scroll=0;break;
                 case '4': case 'p': g_screen=SCR_STOP_SEARCH;g_tls_stop_cursor=0;g_tls_stop_scroll=0;break;
                 }
-            } else if(g_network==NET_IDFM || g_network==NET_SNCF){
+            } else if(g_network==NET_IDFM || g_network==NET_SNCF ||
+                      g_network==NET_STAR || g_network==NET_ILV){
                 switch(ch){
                 case 'q': case 27: g_screen=SCR_STOP_SEARCH; g_live_stop_cursor=0; g_live_stop_scroll=0; break;
                 case 'r': case KEY_F(5): load_current_network_passages(T("%d departs","%d departures")); break;
