@@ -2641,6 +2641,30 @@ int fetch_sncf_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
 
 static char *http_get_star(const char *url) { return http_get(url); }
 
+/* Parse Opendatasoft geo_point_2d in either format:
+ *   {"lon": x, "lat": y}  (classic Opendatasoft)
+ *   {"type":"Point","coordinates":[lon,lat]}  (GeoJSON Point — used by some
+ *     real-time datasets on Opendatasoft v2.1)
+ * Returns 1 if non-zero coords found, 0 otherwise. */
+static int ods_parse_coord(const cJSON *coord, double *out_lon, double *out_lat)
+{
+    cJSON *lon_n, *lat_n;
+
+    if (!coord) { *out_lon = *out_lat = 0.0; return 0; }
+    lon_n = cJSON_GetObjectItemCaseSensitive((cJSON *)coord, "lon");
+    lat_n = cJSON_GetObjectItemCaseSensitive((cJSON *)coord, "lat");
+    if (!cJSON_IsNumber(lon_n)) {
+        cJSON *arr = cJSON_GetObjectItemCaseSensitive((cJSON *)coord, "coordinates");
+        if (cJSON_IsArray(arr)) {
+            lon_n = cJSON_GetArrayItem(arr, 0);
+            lat_n = cJSON_GetArrayItem(arr, 1);
+        }
+    }
+    *out_lon = cJSON_IsNumber(lon_n) ? lon_n->valuedouble : 0.0;
+    *out_lat = cJSON_IsNumber(lat_n) ? lat_n->valuedouble : 0.0;
+    return (*out_lon != 0.0 || *out_lat != 0.0) ? 1 : 0;
+}
+
 static int star_parse_color_hash(const char *hash_color, char *out, size_t out_sz)
 {
     /* STAR sends "#61c3d9" — strip leading '#' so it matches our other
@@ -2780,12 +2804,7 @@ int fetch_star_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
             SCOPY(out[n].mode, "Bus");
             SCOPY(out[n].lignes, line->code);
             coord = cJSON_GetObjectItemCaseSensitive(item, "coordonnees");
-            if (coord) {
-                cJSON *lon = cJSON_GetObjectItemCaseSensitive(coord, "lon");
-                cJSON *lat = cJSON_GetObjectItemCaseSensitive(coord, "lat");
-                if (cJSON_IsNumber(lon)) out[n].lon = lon->valuedouble;
-                if (cJSON_IsNumber(lat)) out[n].lat = lat->valuedouble;
-            }
+            ods_parse_coord(coord, &out[n].lon, &out[n].lat);
             n++;
         }
         cJSON_Delete(root);
@@ -2939,13 +2958,7 @@ int fetch_star_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
         SCOPY(v->terminus, destination);
         SCOPY(v->sens, destination);
 
-        {
-            cJSON *lon = cJSON_GetObjectItemCaseSensitive(coord, "lon");
-            cJSON *lat = cJSON_GetObjectItemCaseSensitive(coord, "lat");
-            if (cJSON_IsNumber(lon)) v->lon = lon->valuedouble;
-            if (cJSON_IsNumber(lat)) v->lat = lat->valuedouble;
-            if (v->lat || v->lon) v->has_position = 1;
-        }
+        v->has_position = ods_parse_coord(coord, &v->lon, &v->lat);
         v->bearing = -1;
         v->realtime = 1;
         if (cJSON_IsNumber(ecart)) {
@@ -3000,6 +3013,13 @@ static const char *ilv_siri_base(void)
 {
     if (g_ilv_siri_discovery_done) return g_ilv_siri_discovered;
     g_ilv_siri_discovery_done = 1;
+
+    /* Env var takes precedence over auto-discovery. */
+    const char *env = getenv("ILV_SIRI_BASE");
+    if (env && env[0]) {
+        snprintf(g_ilv_siri_discovered, sizeof(g_ilv_siri_discovered), "%s", env);
+        return g_ilv_siri_discovered;
+    }
 
     /* Query transport.data.gouv.fr to find the SIRI-Lite resource for Ilévia. */
     char *raw = http_get("https://transport.data.gouv.fr/api/datasets?q=ilevia&type=public-transit");

@@ -5484,8 +5484,10 @@ static void draw_idfm(void)
     int alert_lines = count_idfm_impacted_lines();
     int top = 3;
 
-    draw_header(live_network_is_sncf() ? "NVT // SNCF" : "NVT // Paris IDFM",
-                g_live_search[0] ? T("reseau filtre","filtered network") : "navitia live");
+    draw_header(g_network==NET_SNCF ? "NVT // SNCF" :
+                g_network==NET_STAR ? "NVT // STAR" :
+                g_network==NET_ILV  ? "NVT // Ilevia" : "NVT // IDFM",
+                g_live_search[0] ? T("reseau filtre","filtered network") : "live");
     draw_tabs();
 
     if (COLS >= 94 && LINES >= 24) {
@@ -5723,8 +5725,10 @@ static void draw_idfm_alerts(void)
         else low++;
     }
 
-    draw_header(live_network_is_sncf() ? "Operations // SNCF Alerts" : "Operations // IDFM Alerts",
-                total ? T("messages navitia","navitia messages") : "quiet network");
+    draw_header(g_network==NET_SNCF ? "Operations // SNCF Alerts" :
+                g_network==NET_STAR ? "Operations // STAR Alerts" :
+                g_network==NET_ILV  ? "Operations // Ilevia Alerts" : "Operations // IDFM Alerts",
+                total ? T("messages","messages") : "quiet network");
     draw_tabs();
 
     if (COLS >= 94 && LINES >= 24) {
@@ -5822,7 +5826,9 @@ static void draw_idfm_stops(void)
     int cached = (sel && g_live_sel_stop == g_live_stop_filtered[g_live_stop_cursor]) ? g_nlive_passages : 0;
     int top = 3;
 
-    draw_header(live_network_is_sncf() ? "Stop Areas // SNCF" : "Stop Areas // IDFM",
+    draw_header(g_network==NET_SNCF ? "Stop Areas // SNCF" :
+                g_network==NET_STAR ? "Stop Areas // STAR" :
+                g_network==NET_ILV  ? "Stop Areas // Ilevia" : "Stop Areas // IDFM",
                 g_live_stop_search[0] ? T("recherche active","search active")
                                       : T("recherche requise","search required"));
     draw_tabs();
@@ -5928,7 +5934,9 @@ static void draw_idfm_stops(void)
             print_fit(y, px, pw, sel->libelle);
             attroff(A_BOLD);
             attron(A_DIM);
-            mvprintw(y + 1, px, "%s", sel->commune[0] ? sel->commune : (live_network_is_sncf() ? "France" : "Ile-de-France"));
+            mvprintw(y + 1, px, "%s", sel->commune[0] ? sel->commune :
+                     (g_network==NET_SNCF ? "France" : g_network==NET_STAR ? "Rennes" :
+                      g_network==NET_ILV ? "Lille" : "Ile-de-France"));
             attroff(A_DIM);
 
             snprintf(buf, sizeof(buf), "%s", line ? line->code : "--");
@@ -6175,7 +6183,9 @@ static void draw_idfm_vehicles(void)
     int top = 3;
 
     if (!line) {
-        draw_header(live_network_is_sncf() ? "Journeys // SNCF" : "Vehicles // Paris IDFM", "no line selected");
+        draw_header(g_network==NET_SNCF ? "Journeys // SNCF" :
+                    g_network==NET_STAR ? "Vehicles // STAR" :
+                    g_network==NET_ILV  ? "Vehicles // Ilevia" : "Vehicles // IDFM", "no line selected");
         draw_tabs();
         panel_box(3, 1, LINES - 3, COLS - 2, "Active Journeys", "idle");
         attron(A_DIM);
@@ -6199,7 +6209,9 @@ static void draw_idfm_vehicles(void)
         if (!dup && g_live_vehicles[i].terminus[0]) unique_destinations++;
     }
 
-    draw_header(live_network_is_sncf() ? "Journeys // SNCF" : "Vehicles // Paris IDFM", line->libelle);
+    draw_header(g_network==NET_SNCF ? "Journeys // SNCF" :
+                g_network==NET_STAR ? "Vehicles // STAR" :
+                g_network==NET_ILV  ? "Vehicles // Ilevia" : "Vehicles // IDFM", line->libelle);
     draw_tabs();
 
     if (COLS >= 92 && LINES >= 24) {
@@ -7114,7 +7126,11 @@ int main(void)
                         open_idfm_stop_search(g_live_filtered[g_live_cursor], 1);
                     }
                     break;
-                case 'r': case KEY_F(5): refresh_current_network_overview(live_network_is_sncf() ? T("Flux SNCF recharge","SNCF feed reloaded") : T("Flux IDFM recharge","IDFM feed reloaded")); break;
+                case 'r': case KEY_F(5): refresh_current_network_overview(
+                    g_network==NET_SNCF ? T("Flux SNCF recharge","SNCF feed reloaded") :
+                    g_network==NET_STAR ? T("Flux STAR recharge","STAR feed reloaded") :
+                    g_network==NET_ILV  ? T("Flux Ilevia recharge","Ilevia feed reloaded") :
+                    T("Flux IDFM recharge","IDFM feed reloaded")); break;
                 }
             } else {
                 switch(ch){
