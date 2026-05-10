@@ -6113,6 +6113,58 @@ static void draw_idfm_passages(void)
     }
 }
 
+static void draw_live_vehicle_map_panel(int y1, int x1, int y2, int x2)
+{
+    int nv = g_nlive_vehicles;
+    int py = y1 + 2, px = x1 + 2;
+    int w = x2 - x1 - 3, h = y2 - py - 1;
+    double bminlon = 1e9, bmaxlon = -1e9, bminlat = 1e9, bmaxlat = -1e9;
+    double minlon, maxlon, minlat, maxlat;
+    int has_pos = 0;
+    char meta[48];
+
+    for (int i = 0; i < nv; i++) {
+        if (!g_live_vehicles[i].has_position) continue;
+        if (g_live_vehicles[i].lon < bminlon) bminlon = g_live_vehicles[i].lon;
+        if (g_live_vehicles[i].lon > bmaxlon) bmaxlon = g_live_vehicles[i].lon;
+        if (g_live_vehicles[i].lat < bminlat) bminlat = g_live_vehicles[i].lat;
+        if (g_live_vehicles[i].lat > bmaxlat) bmaxlat = g_live_vehicles[i].lat;
+        has_pos++;
+    }
+
+    if (!has_pos || w < 10 || h < 4) {
+        panel_box(y1, x1, y2, x2, "Map", "no GPS data");
+        return;
+    }
+
+    double pad_lon = (bmaxlon > bminlon) ? (bmaxlon - bminlon) * 0.18 : 0.015;
+    double pad_lat = (bmaxlat > bminlat) ? (bmaxlat - bminlat) * 0.18 : 0.008;
+    if (pad_lon < 0.003) pad_lon = 0.003;
+    if (pad_lat < 0.0015) pad_lat = 0.0015;
+    bminlon -= pad_lon; bmaxlon += pad_lon;
+    bminlat -= pad_lat; bmaxlat += pad_lat;
+
+    apply_vehicle_zoom(bminlon, bmaxlon, bminlat, bmaxlat,
+                       g_vehicle_zoom, &minlon, &maxlon, &minlat, &maxlat);
+
+    snprintf(meta, sizeof(meta), "%d GPS  zoom x%d", has_pos, 1 << g_vehicle_zoom);
+    panel_box(y1, x1, y2, x2, "Vehicle Map", meta);
+
+    for (int i = 0; i < nv; i++) {
+        int mx, my;
+        if (!g_live_vehicles[i].has_position) continue;
+        map_project(g_live_vehicles[i].lon, g_live_vehicles[i].lat,
+                    minlon, maxlon, minlat, maxlat, w, h, &mx, &my);
+        if (mx < 0 || mx >= w || my < 0 || my >= h) continue;
+        attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+        mvaddstr(py + my, px + mx, U_LIVE);
+        attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+    }
+    attron(A_DIM);
+    mvprintw(y2 - 1, x1 + 2, "%s", T("+/-:zoom 0:reset","+/-:zoom 0:reset"));
+    attroff(A_DIM);
+}
+
 static void draw_idfm_vehicles(void)
 {
     ToulouseLine *line = selected_idfm_line();
@@ -6170,39 +6222,94 @@ static void draw_idfm_vehicles(void)
         int y1 = top;
         int y2 = LINES - 3;
         int journeys_y2 = y2;
+        int has_pos = 0;
+        for (int i = 0; i < g_nlive_vehicles; i++) {
+            if (g_live_vehicles[i].has_position) { has_pos = 1; break; }
+        }
 
         if (cached_passages > 0 && y2 - y1 >= 12) journeys_y2 = y2 - 7;
 
-        {
+        if (has_pos && COLS >= 100 && journeys_y2 - y1 >= 14) {
+            /* Wide layout: map left, journey list right */
+            int map_x2 = COLS * 42 / 100;
+            if (map_x2 < 40) map_x2 = 40;
+            if (map_x2 > COLS - 44) map_x2 = COLS - 44;
+            int lx1 = map_x2 + 1;
+            draw_live_vehicle_map_panel(y1, 1, journeys_y2, map_x2);
+            {
+                int head_y = y1 + 1;
+                int row_y = head_y + 2;
+                panel_box(y1, lx1, journeys_y2, COLS - 2, "Journeys", "GPS");
+                attron(A_DIM);
+                mvprintw(head_y, lx1 + 2, "CURR STOP");
+                mvprintw(head_y, lx1 + 15, "HEADSIGN");
+                attroff(A_DIM);
+                for (int i = 0; i < g_nlive_vehicles && row_y + i < journeys_y2; i++) {
+                    if (i % 2) attron(A_DIM);
+                    mvhline(row_y + i, lx1 + 1, ' ', COLS - lx1 - 3);
+                    if (i % 2) attroff(A_DIM);
+                    attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    mvprintw(row_y + i, lx1 + 2, "%-10.10s",
+                             g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
+                    attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    print_fit(row_y + i, lx1 + 15, COLS - lx1 - 18,
+                              g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus
+                                                             : T("?","?"));
+                }
+            }
+        } else if (has_pos && journeys_y2 - y1 >= 16) {
+            /* Narrow layout: map top, list below */
+            int map_h = (journeys_y2 - y1) / 2;
+            if (map_h < 8) map_h = 8;
+            int map_y2 = y1 + map_h;
+            int lx_y1 = map_y2 + 1;
+            draw_live_vehicle_map_panel(y1, 1, map_y2, COLS - 2);
+            {
+                int head_y = lx_y1 + 1;
+                int row_y = head_y + 2;
+                panel_box(lx_y1, 1, journeys_y2, COLS - 2, "Journeys", "GPS");
+                attron(A_DIM);
+                mvprintw(head_y, 3, "CURR STOP");
+                mvprintw(head_y, 16, "HEADSIGN");
+                attroff(A_DIM);
+                for (int i = 0; i < g_nlive_vehicles && row_y + i < journeys_y2; i++) {
+                    if (i % 2) attron(A_DIM);
+                    mvhline(row_y + i, 2, ' ', COLS - 4);
+                    if (i % 2) attroff(A_DIM);
+                    attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    mvprintw(row_y + i, 3, "%-10.10s",
+                             g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
+                    attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
+                    print_fit(row_y + i, 16, COLS - 20,
+                              g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus : T("?","?"));
+                }
+            }
+        } else {
+            /* No GPS or too small: list only */
             int head_y = y1 + 1;
             int row_y = head_y + 2;
-
             panel_box(y1, 1, journeys_y2, COLS - 2, "Active Journeys",
-                      T("positions non exposees par l'endpoint",
-                        "positions not exposed by the endpoint"));
+                      has_pos ? "GPS" : T("sans coordonnees","no map coords"));
             attron(A_DIM);
             mvprintw(head_y, 3, "TRIP");
             mvprintw(head_y, 16, "HEADSIGN");
             attroff(A_DIM);
-
             for (int i = 0; i < g_nlive_vehicles && row_y + i < journeys_y2; i++) {
                 if (i % 2) attron(A_DIM);
                 mvhline(row_y + i, 2, ' ', COLS - 4);
                 if (i % 2) attroff(A_DIM);
                 attron(COLOR_PAIR(CP_ACCENT) | A_BOLD);
-                mvprintw(row_y + i, 3, "%-10.10s", g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
+                mvprintw(row_y + i, 3, "%-10.10s",
+                         g_live_vehicles[i].current_stop[0] ? g_live_vehicles[i].current_stop : "--");
                 attroff(COLOR_PAIR(CP_ACCENT) | A_BOLD);
                 print_fit(row_y + i, 16, COLS - 20,
                           g_live_vehicles[i].terminus[0] ? g_live_vehicles[i].terminus
                                                          : T("destination indisponible","destination unavailable"));
             }
-
             if (!g_nlive_vehicles) {
                 attron(A_DIM);
                 mvprintw(y1 + 4, 3, "%s", T(U_INFO" aucune course active retournee",
                                             U_INFO" no active journey returned"));
-                mvprintw(y1 + 6, 3, "%s", T("L'API Navitia expose ici des courses actives sans coordonnees cartographiques.",
-                                            "The Navitia API exposes active journeys here without map coordinates."));
                 attroff(A_DIM);
             }
         }
@@ -6245,10 +6352,18 @@ static void draw_idfm_vehicles(void)
 
     draw_toast_msg();
     {
-        char ri[32];
+        char ri[48];
+        int has_pos_any = 0;
+        for (int i = 0; i < g_nlive_vehicles; i++) {
+            if (g_live_vehicles[i].has_position) { has_pos_any = 1; break; }
+        }
         snprintf(ri, sizeof(ri), "%d act.", g_nlive_vehicles);
-        draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
-                      " q:back"U_MDOT"r:refresh"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"), ri);
+        if (has_pos_any)
+            draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"+/-:zoom"U_MDOT"0:reset"U_MDOT"a:alertes"U_MDOT"p:arrets",
+                          " q:back"U_MDOT"r:refresh"U_MDOT"+/-:zoom"U_MDOT"0:reset"U_MDOT"a:alerts"U_MDOT"p:stops"), ri);
+        else
+            draw_status(T(" q:back"U_MDOT"r:refresh"U_MDOT"a:alertes"U_MDOT"p:arrets"U_MDOT"t:theme"U_MDOT"L:lang",
+                          " q:back"U_MDOT"r:refresh"U_MDOT"a:alerts"U_MDOT"p:stops"U_MDOT"t:theme"U_MDOT"L:lang"), ri);
     }
 }
 
@@ -7048,6 +7163,9 @@ int main(void)
                     load_current_network_vehicles(live_network_is_sncf() ? T("%d trajets","%d journeys") : T("%d courses","%d journeys"));
                     refresh_current_network_alerts(NULL);
                     break;
+                case '+': case '=': if(g_vehicle_zoom<MAX_VEHICLE_ZOOM) g_vehicle_zoom++; break;
+                case '-': case '_': if(g_vehicle_zoom>0) g_vehicle_zoom--; break;
+                case '0': g_vehicle_zoom=0; break;
                 }
             } else {
                 switch(ch){

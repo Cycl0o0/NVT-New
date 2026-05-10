@@ -2992,8 +2992,61 @@ static const char *ilv_arr_val(const cJSON *node, const char *key)
     return first ? jstr(first, "value") : "";
 }
 
+/* Cached SIRI-Lite base URL for Ilévia, discovered via transport.data.gouv.fr. */
+static char g_ilv_siri_discovered[512] = "";
+static int  g_ilv_siri_discovery_done  = 0;
+
+static const char *ilv_siri_base(void)
+{
+    if (g_ilv_siri_discovery_done) return g_ilv_siri_discovered;
+    g_ilv_siri_discovery_done = 1;
+
+    /* Query transport.data.gouv.fr to find the SIRI-Lite resource for Ilévia. */
+    char *raw = http_get("https://transport.data.gouv.fr/api/datasets?q=ilevia&type=public-transit");
+    if (raw) {
+        cJSON *root = cJSON_Parse(raw); free(raw);
+        if (root) {
+            /* API may return array at top level or {"data": [...]} */
+            cJSON *arr = cJSON_IsArray(root) ? root
+                       : cJSON_GetObjectItemCaseSensitive(root, "data");
+            cJSON *ds;
+            cJSON_ArrayForEach(ds, arr) {
+                cJSON *resources = cJSON_GetObjectItemCaseSensitive(ds, "resources");
+                cJSON *res;
+                cJSON_ArrayForEach(res, resources) {
+                    const char *fmt = jstr(res, "format");
+                    if (!fmt || (strcasecmp(fmt, "SIRI-Lite") != 0 &&
+                                 strcasecmp(fmt, "SIRI") != 0)) continue;
+                    /* Prefer proxy_url field; fall back to building from id. */
+                    const char *proxy = jstr(res, "proxy_url");
+                    if (proxy && proxy[0]) {
+                        snprintf(g_ilv_siri_discovered, sizeof(g_ilv_siri_discovered),
+                                 "%s/siri-lite", proxy);
+                        break;
+                    }
+                    const char *rid = jstr(res, "id");
+                    if (rid && rid[0]) {
+                        snprintf(g_ilv_siri_discovered, sizeof(g_ilv_siri_discovered),
+                                 "https://proxy.transport.data.gouv.fr/resource/%s/siri-lite", rid);
+                        break;
+                    }
+                }
+                if (g_ilv_siri_discovered[0]) break;
+            }
+            cJSON_Delete(root);
+        }
+    }
+
+    if (!g_ilv_siri_discovered[0]) {
+        /* Fall back to the configured slug (may need updating in config.h). */
+        snprintf(g_ilv_siri_discovered, sizeof(g_ilv_siri_discovered), "%s", ILV_SIRI_BASE);
+    }
+    return g_ilv_siri_discovered;
+}
+
 int fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
 {
+    const char *base = ilv_siri_base();
     char url[512];
     char *raw;
     cJSON *root;
@@ -3003,11 +3056,11 @@ int fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
     memset(snap, 0, sizeof(*snap));
     SCOPY(snap->doc_ref, "https://transport.data.gouv.fr/");
     SCOPY(snap->doc_version, "siri-lite");
-    SCOPY(snap->lines_url, ILV_SIRI_BASE "/lines-discovery");
-    SCOPY(snap->stops_url, ILV_SIRI_BASE "/stop-points-discovery");
+    snprintf(snap->lines_url, sizeof(snap->lines_url), "%s/lines-discovery", base);
+    snprintf(snap->stops_url, sizeof(snap->stops_url), "%s/stop-points-discovery", base);
     snap->live = 1;
 
-    snprintf(url, sizeof(url), "%s/lines-discovery", ILV_SIRI_BASE);
+    snprintf(url, sizeof(url), "%s/lines-discovery", base);
     raw = http_get_ilv(url);
     if (!raw) return -1;
     root = cJSON_Parse(raw); free(raw);
@@ -3021,7 +3074,7 @@ int fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
     cJSON *ref;
     cJSON_ArrayForEach(ref, refs) {
         if (n >= max_lines) break;
-        const char *line_ref  = ilv_arr_val(ref, "LineRef");
+        const char *line_ref = ilv_arr_val(ref, "LineRef");
         if (!line_ref[0]) {
             cJSON *lr = cJSON_GetObjectItemCaseSensitive(ref, "LineRef");
             if (lr) line_ref = jstr(lr, "value");
@@ -3032,7 +3085,6 @@ int fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
         memset(line, 0, sizeof(*line));
         SCOPY(line->ref, line_ref);
         line->id = n + 1;
-        /* Extract short code: last segment after ':' */
         const char *code = strrchr(line_ref, ':');
         SCOPY(line->code, (code && *(code+1)) ? code + 1 : line_ref);
         SCOPY(line->libelle, line_name[0] ? line_name : line->code);
@@ -3055,7 +3107,7 @@ int fetch_ilv_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
     if (!line || !line->ref[0] || !out || max <= 0) return -1;
 
     snprintf(url, sizeof(url), "%s/stop-points-discovery?LineRef=%s",
-             ILV_SIRI_BASE, line->ref);
+             ilv_siri_base(), line->ref);
     raw = http_get_ilv(url);
     if (!raw) return -1;
     root = cJSON_Parse(raw); free(raw);
@@ -3110,7 +3162,7 @@ int fetch_ilv_passages(const ToulouseLine *line, const ToulouseStop *stop, Toulo
     if (!line || !stop || !stop->ref[0] || !out || max <= 0) return -1;
 
     snprintf(url, sizeof(url), "%s/stop-monitoring?MonitoringRef=%s",
-             ILV_SIRI_BASE, stop->ref);
+             ilv_siri_base(), stop->ref);
     raw = http_get_ilv(url);
     if (!raw) return -1;
     root = cJSON_Parse(raw); free(raw);
@@ -3174,7 +3226,7 @@ int fetch_ilv_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max)
     if (!line || !line->ref[0] || !out || max <= 0) return -1;
 
     snprintf(url, sizeof(url), "%s/estimated-timetable?LineRef=%s",
-             ILV_SIRI_BASE, line->ref);
+             ilv_siri_base(), line->ref);
     raw = http_get_ilv(url);
     if (!raw) return -1;
     root = cJSON_Parse(raw); free(raw);
