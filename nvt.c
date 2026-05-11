@@ -623,11 +623,39 @@ static void toulouse_waiting_eta(const char *waiting_time, char *buf, size_t sz)
 
 static void toulouse_passage_clock(const ToulousePassage *p, char *buf, size_t sz)
 {
+    const char *dt;
+    size_t len;
+
     if (!p || !p->datetime[0] || strlen(p->datetime) < 16) {
         snprintf(buf, sz, "--:--");
         return;
     }
-    snprintf(buf, sz, "%.*s", 5, p->datetime + 11);
+    dt  = p->datetime;
+    len = strlen(dt);
+    /* STAR/Ilevia store UTC datetimes with explicit offset (Z / +HH:MM / -HH:MM).
+       Convert to local wall-clock time for display.  Tisséo/IDFM/SNCF datetimes
+       are already in local time (no timezone suffix), so they take the fast path. */
+    if (len >= 20 && (dt[19] == 'Z' || dt[19] == '+' || dt[19] == '-')) {
+        struct tm tmv;
+        memset(&tmv, 0, sizeof(tmv));
+        if (sscanf(dt, "%4d-%2d-%2dT%2d:%2d:%2d",
+                   &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
+                   &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec) == 6) {
+            tmv.tm_year -= 1900;
+            tmv.tm_mon  -= 1;
+            time_t t = timegm(&tmv);
+            if (dt[19] != 'Z') {
+                int oh = 0, om = 0;
+                if (sscanf(dt + 20, "%2d:%2d", &oh, &om) == 2) {
+                    int off = oh * 3600 + om * 60;
+                    t -= (dt[19] == '+') ? off : -off;
+                }
+            }
+            struct tm *lt = localtime(&t);
+            if (lt) { snprintf(buf, sz, "%02d:%02d", lt->tm_hour, lt->tm_min); return; }
+        }
+    }
+    snprintf(buf, sz, "%.*s", 5, dt + 11);
 }
 
 static int count_toulouse_delayed_passages(void)
@@ -5424,6 +5452,7 @@ static void draw_toulouse_vehicles(void)
         int body_bottom=area_bottom-alert_h;
 
         if(g_has_tls_line_route&&COLS>=146&&body_bottom-area_top>=12){
+            /* Wide: map left, ALLER/RETOUR lanes right (side by side). */
             int map_x2=COLS*44/100;
             int rx1, split;
             if(map_x2<54) map_x2=54;
@@ -5433,6 +5462,24 @@ static void draw_toulouse_vehicles(void)
             draw_toulouse_vehicle_map_panel(area_top,1,body_bottom,map_x2);
             draw_toulouse_vehicle_lane_panel(area_top,rx1,split,COLS-2,"ALLER");
             draw_toulouse_vehicle_lane_panel(split+1,rx1,body_bottom,COLS-2,"RETOUR");
+        } else if(g_has_tls_line_route&&body_bottom-area_top>=18){
+            /* Narrow: map stacked above ALLER/RETOUR lanes. */
+            int map_h=(body_bottom-area_top)/3;
+            int map_bottom, lanes_top;
+            if(map_h<6) map_h=6;
+            if(map_h>12) map_h=12;
+            map_bottom=area_top+map_h;
+            lanes_top=map_bottom+1;
+            draw_toulouse_vehicle_map_panel(area_top,1,map_bottom,COLS-2);
+            if(COLS>=122&&body_bottom-lanes_top>=10){
+                int mid=COLS/2;
+                draw_toulouse_vehicle_lane_panel(lanes_top,1,body_bottom,mid-1,"ALLER");
+                draw_toulouse_vehicle_lane_panel(lanes_top,mid,body_bottom,COLS-2,"RETOUR");
+            } else {
+                int split=lanes_top+(body_bottom-lanes_top)/2;
+                draw_toulouse_vehicle_lane_panel(lanes_top,1,split,COLS-2,"ALLER");
+                draw_toulouse_vehicle_lane_panel(split+1,1,body_bottom,COLS-2,"RETOUR");
+            }
         } else if(COLS>=122&&body_bottom-area_top>=10){
             int mid=COLS/2;
             draw_toulouse_vehicle_lane_panel(area_top,1,body_bottom,mid-1,"ALLER");

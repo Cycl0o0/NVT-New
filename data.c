@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "filter.h"
+#include "idfm_crosswalk.h"
 
 typedef int (*NvtRetryFn)(void *ctx);
 
@@ -256,6 +257,8 @@ static int fetch_idfm_overview_once(void *ctx)
     AppState *app = ctx;
 
     if (fetch_idfm_snapshot(&app->idf.snapshot, app->idf.lines, MAX_LINES) < 0) return -1;
+    /* Pre-warm the stop crosswalk so vehicle GPS positions are available on first vehicle fetch. */
+    idfm_crosswalk_load();
 
     app->idf.nlines = app->idf.snapshot.sample_lines;
     if (app->idf.nlines > 1) {

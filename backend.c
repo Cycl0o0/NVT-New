@@ -1,6 +1,7 @@
 #include "api.h"
 #include "config.h"
 #include "cJSON.h"
+#include "idfm_crosswalk.h"
 #include "line_colors.h"
 
 #include <arpa/inet.h>
@@ -686,6 +687,8 @@ static int ensure_idfm_snapshot(void)
     if (g_idfm_nlines > 1) {
         qsort(g_idfm_lines, (size_t)g_idfm_nlines, sizeof(ToulouseLine), cmp_toulouse_lines);
     }
+    /* Pre-warm so vehicle GPS positions are available immediately. */
+    idfm_crosswalk_load();
     return 0;
 }
 

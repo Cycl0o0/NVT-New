@@ -2855,7 +2855,7 @@ static int star_seconds_until(const char *iso_dt)
 
     if (!iso_dt || !iso_dt[0]) return -1;
     memset(&tmv, 0, sizeof(tmv));
-    /* Format: "2026-05-06T16:22:00+00:00" */
+    /* Format: "2026-05-06T16:22:00+02:00" (local CEST) or "+00:00" (UTC) */
     if (sscanf(iso_dt, "%4d-%2d-%2dT%2d:%2d:%2d",
                &tmv.tm_year, &tmv.tm_mon, &tmv.tm_mday,
                &tmv.tm_hour, &tmv.tm_min, &tmv.tm_sec) != 6) return -1;
@@ -2863,6 +2863,17 @@ static int star_seconds_until(const char *iso_dt)
     tmv.tm_mon  -= 1;
     t = timegm(&tmv);
     if (t == (time_t)-1) return -1;
+    /* Apply explicit UTC offset so local-time strings (e.g. +02:00) are correct. */
+    {
+        const char *tz = iso_dt + 19;
+        if (*tz == '+' || *tz == '-') {
+            int oh = 0, om = 0;
+            if (sscanf(tz + 1, "%2d:%2d", &oh, &om) == 2) {
+                int off = oh * 3600 + om * 60;
+                t -= (*tz == '+') ? off : -off;
+            }
+        }
+    }
     now = time(NULL);
     return (int)difftime(t, now);
 }
@@ -3088,7 +3099,9 @@ int fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines)
 
     cJSON *siri = cJSON_GetObjectItemCaseSensitive(root, "Siri");
     cJSON *sd   = siri ? cJSON_GetObjectItemCaseSensitive(siri, "ServiceDelivery") : NULL;
-    cJSON *ldd  = sd   ? cJSON_GetObjectItemCaseSensitive(sd, "LinesDiscoveryDelivery") : NULL;
+    /* transport.data.gouv.fr SIRI-Lite proxy wraps the delivery in an array. */
+    cJSON *ldda = sd   ? cJSON_GetObjectItemCaseSensitive(sd, "LinesDiscoveryDelivery") : NULL;
+    cJSON *ldd  = cJSON_IsArray(ldda) ? cJSON_GetArrayItem(ldda, 0) : ldda;
     cJSON *refs = ldd  ? cJSON_GetObjectItemCaseSensitive(ldd, "AnnotatedLineRef") : NULL;
 
     cJSON *ref;
@@ -3133,10 +3146,12 @@ int fetch_ilv_line_stops(const ToulouseLine *line, ToulouseStop *out, int max)
     root = cJSON_Parse(raw); free(raw);
     if (!root) return -1;
 
-    cJSON *siri = cJSON_GetObjectItemCaseSensitive(root, "Siri");
-    cJSON *sd   = siri ? cJSON_GetObjectItemCaseSensitive(siri, "ServiceDelivery") : NULL;
-    cJSON *spdd = sd   ? cJSON_GetObjectItemCaseSensitive(sd, "StopPointsDiscoveryDelivery") : NULL;
-    cJSON *pts  = spdd ? cJSON_GetObjectItemCaseSensitive(spdd, "AnnotatedStopPointRef") : NULL;
+    cJSON *siri  = cJSON_GetObjectItemCaseSensitive(root, "Siri");
+    cJSON *sd    = siri  ? cJSON_GetObjectItemCaseSensitive(siri, "ServiceDelivery") : NULL;
+    /* transport.data.gouv.fr SIRI-Lite proxy wraps the delivery in an array. */
+    cJSON *spdda = sd    ? cJSON_GetObjectItemCaseSensitive(sd, "StopPointsDiscoveryDelivery") : NULL;
+    cJSON *spdd  = cJSON_IsArray(spdda) ? cJSON_GetArrayItem(spdda, 0) : spdda;
+    cJSON *pts   = spdd  ? cJSON_GetObjectItemCaseSensitive(spdd, "AnnotatedStopPointRef") : NULL;
 
     cJSON *pt;
     cJSON_ArrayForEach(pt, pts) {
