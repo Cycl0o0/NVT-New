@@ -1951,7 +1951,7 @@ int fetch_idfm_vehicles_via_ett(const ToulouseLine *line,
 
     /* Convert Navitia line ref → SIRI LineRef.
      * Navitia: "line:IDFM:C01371"  →  SIRI: "STIF:Line::C01371:" */
-    char siri_line_ref[96];
+    char siri_line_ref[128];
     {
         const char *p = line->ref;
         const char *code = strrchr(p, ':');
