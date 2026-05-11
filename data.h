@@ -29,10 +29,5 @@ int nvt_data_load_star_stops(AppState *app, int attempts, char *err, size_t err_
 int nvt_data_refresh_star_alerts(AppState *app, int attempts, char *err, size_t err_sz);
 int nvt_data_load_star_passages(AppState *app, int attempts, char *err, size_t err_sz);
 int nvt_data_load_star_vehicles(AppState *app, int attempts, char *err, size_t err_sz);
-int nvt_data_refresh_ilv_overview(AppState *app, int attempts, char *err, size_t err_sz);
-int nvt_data_load_ilv_stops(AppState *app, int attempts, char *err, size_t err_sz);
-int nvt_data_refresh_ilv_alerts(AppState *app, int attempts, char *err, size_t err_sz);
-int nvt_data_load_ilv_passages(AppState *app, int attempts, char *err, size_t err_sz);
-int nvt_data_load_ilv_vehicles(AppState *app, int attempts, char *err, size_t err_sz);
 
 #endif

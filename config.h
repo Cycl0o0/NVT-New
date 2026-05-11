@@ -14,10 +14,6 @@
 #define SNCF_COVERAGE "sncf"
 /* STAR — Rennes / Métropole. Public Opendatasoft API, no auth required. */
 #define STAR_API_BASE "https://data.explore.star.fr/api/explore/v2.1/catalog/datasets"
-/* Ilévia — MEL (Lille). transport.data.gouv.fr SIRI-Lite proxy, no auth.
-   To find the exact producer slug, search transport.data.gouv.fr for "ilevia siri".
-   Update ILV_SIRI_BASE if the slug below is wrong. */
-#define ILV_SIRI_BASE "https://proxy.transport.data.gouv.fr/resource/mel-metropole-europeenne-de-lille-mel-ilevia/siri-lite"
 #define MAP_API_BASE  "https://geo.api.gouv.fr"
 #define OVERPASS_API_BASE "https://overpass-api.de/api/interpreter"
 #define MAP_BDX_EPCI  "243300316"

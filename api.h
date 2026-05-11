@@ -288,11 +288,6 @@ int       fetch_star_line_stops(const ToulouseLine *line, ToulouseStop *out, int
 int       fetch_star_alerts(ToulouseAlert *out, int max);
 int       fetch_star_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
 int       fetch_star_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
-int       fetch_ilv_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
-int       fetch_ilv_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
-int       fetch_ilv_alerts(ToulouseAlert *out, int max);
-int       fetch_ilv_passages(const ToulouseLine *line, const ToulouseStop *stop, ToulousePassage *out, int max);
-int       fetch_ilv_vehicles(const ToulouseLine *line, ToulouseVehicle *out, int max);
 int       fetch_sncf_snapshot(IdfmSnapshot *snap, ToulouseLine *lines, int max_lines);
 int       fetch_sncf_line_stops(const ToulouseLine *line, ToulouseStop *out, int max);
 int       fetch_sncf_alerts(ToulouseAlert *out, int max);

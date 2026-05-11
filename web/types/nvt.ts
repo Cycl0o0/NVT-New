@@ -1,4 +1,4 @@
-export type Network = 'bdx' | 'tls' | 'idfm' | 'sncf' | 'star' | 'ilv'
+export type Network = 'bdx' | 'tls' | 'idfm' | 'sncf' | 'star'
 
 export interface NvtLine {
   gid: number
@@ -121,9 +121,7 @@ export const NETWORKS: NetworkMeta[] = [
   { slug: 'sncf', label: 'SNCF',    city: 'France',       accent: '#5db8ff',
     view: [46.6034,  1.8883, 8.50, 12.0], hasBoundary: false },
   { slug: 'star', label: 'STAR',    city: 'Rennes',       accent: '#61c3d9',
-    view: [48.1147, -1.6794, 0.18, 0.30], hasBoundary: false },
-  { slug: 'ilv',  label: 'Ilévia', city: 'Lille',        accent: '#e2001a',
-    view: [50.6292,  3.0573, 0.22, 0.35], hasBoundary: false }
+    view: [48.1147, -1.6794, 0.18, 0.30], hasBoundary: false }
 ]
 
 export function networkMeta(slug: Network): NetworkMeta {

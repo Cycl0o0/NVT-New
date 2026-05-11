@@ -37,7 +37,6 @@ typedef enum {
     NETWORK_IDFM = 2,
     NETWORK_SNCF = 3,
     NETWORK_STAR = 4,
-    NETWORK_ILV  = 5,
 } NetworkKind;
 
 static volatile sig_atomic_t g_running = 1;
@@ -66,9 +65,6 @@ static int g_sncf_nlines = -1;
 static IdfmSnapshot g_star_snapshot;
 static ToulouseLine g_star_lines[MAX_LINES];
 static int g_star_nlines = -1;
-static IdfmSnapshot g_ilv_snapshot;
-static ToulouseLine g_ilv_lines[MAX_LINES];
-static int g_ilv_nlines = -1;
 
 static void on_signal(int signum)
 {
@@ -120,8 +116,6 @@ static const char *network_slug(NetworkKind network)
         return "sncf";
     case NETWORK_STAR:
         return "star";
-    case NETWORK_ILV:
-        return "ilv";
     case NETWORK_BDX:
     default:
         return "bordeaux";
@@ -132,8 +126,7 @@ static int network_is_live(NetworkKind network)
 {
     return network == NETWORK_IDFM
         || network == NETWORK_SNCF
-        || network == NETWORK_STAR
-        || network == NETWORK_ILV;
+        || network == NETWORK_STAR;
 }
 
 static int network_supports_boundaries(NetworkKind network)
@@ -209,12 +202,6 @@ static int request_network(const HttpRequest *req, NetworkKind *out)
         *out = NETWORK_STAR;
         return 0;
     }
-    if (strcasecmp(value, "ilv") == 0 || strcasecmp(value, "ilevia") == 0 ||
-        strcasecmp(value, "lille") == 0 || strcasecmp(value, "mel") == 0) {
-        *out = NETWORK_ILV;
-        return 0;
-    }
-
     return -1;
 }
 
@@ -714,16 +701,6 @@ static int ensure_star_snapshot(void)
     return 0;
 }
 
-static int ensure_ilv_snapshot(void)
-{
-    if (g_ilv_nlines >= 0) return 0;
-    if (fetch_ilv_snapshot(&g_ilv_snapshot, g_ilv_lines, MAX_LINES) < 0) return -1;
-    g_ilv_nlines = g_ilv_snapshot.sample_lines;
-    if (g_ilv_nlines > 1) {
-        qsort(g_ilv_lines, (size_t)g_ilv_nlines, sizeof(ToulouseLine), cmp_toulouse_lines);
-    }
-    return 0;
-}
 
 static const ToulouseLine *network_live_lines(NetworkKind network, int *out_count)
 {
@@ -746,10 +723,6 @@ static const ToulouseLine *network_live_lines(NetworkKind network, int *out_coun
         if (ensure_star_snapshot() < 0) return NULL;
         if (out_count) *out_count = g_star_nlines;
         return g_star_lines;
-    case NETWORK_ILV:
-        if (ensure_ilv_snapshot() < 0) return NULL;
-        if (out_count) *out_count = g_ilv_nlines;
-        return g_ilv_lines;
     case NETWORK_BDX:
     default:
         return NULL;
@@ -778,7 +751,6 @@ static int fetch_network_live_stops(NetworkKind network, const ToulouseLine *lin
     if (network == NETWORK_IDFM) return fetch_idfm_line_stops(line, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_line_stops(line, out, max);
     if (network == NETWORK_STAR) return fetch_star_line_stops(line, out, max);
-    if (network == NETWORK_ILV)  return fetch_ilv_line_stops(line, out, max);
     return -1;
 }
 
@@ -788,7 +760,6 @@ static int fetch_network_live_alerts(NetworkKind network, ToulouseAlert *out, in
     if (network == NETWORK_IDFM) return fetch_idfm_alerts(out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_alerts(out, max);
     if (network == NETWORK_STAR) return fetch_star_alerts(out, max);
-    if (network == NETWORK_ILV)  return fetch_ilv_alerts(out, max);
     return -1;
 }
 
@@ -799,7 +770,6 @@ static int fetch_network_live_passages(NetworkKind network, const ToulouseLine *
     if (network == NETWORK_IDFM) return fetch_idfm_passages(line, stop, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_passages(line, stop, out, max);
     if (network == NETWORK_STAR) return fetch_star_passages(line, stop, out, max);
-    if (network == NETWORK_ILV)  return fetch_ilv_passages(line, stop, out, max);
     return -1;
 }
 
@@ -810,7 +780,6 @@ static int fetch_network_live_vehicles(NetworkKind network, const ToulouseLine *
     if (network == NETWORK_IDFM) return fetch_idfm_vehicles(line, out, max);
     if (network == NETWORK_SNCF) return fetch_sncf_vehicles(line, out, max);
     if (network == NETWORK_STAR) return fetch_star_vehicles(line, out, max);
-    if (network == NETWORK_ILV)  return fetch_ilv_vehicles(line, out, max);
     return -1;
 }
 
@@ -1312,7 +1281,6 @@ static int handle_health(int fd)
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_STAR)));
-    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_ILV)));
     int rc = send_json(fd, 200, "OK", root, "no-store");
     cJSON_Delete(root);
     return rc;
@@ -1977,10 +1945,9 @@ static int handle_api_root(int fd)
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_IDFM)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_SNCF)));
     cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_STAR)));
-    cJSON_AddItemToArray(networks, cJSON_CreateString(network_slug(NETWORK_ILV)));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/health"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls|idfm|sncf|star|ilv"));
-    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls|idfm|sncf|star|ilv"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines?network=bdx|tls|idfm|sncf|star"));
+    cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/alerts?network=bdx|tls|idfm|sncf|star"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/vehicles?network=bdx|tls|idfm|sncf"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/lines/:gid/route?network=bdx|tls"));
     cJSON_AddItemToArray(endpoints, cJSON_CreateString("/api/stop-groups?network=bdx|tls"));

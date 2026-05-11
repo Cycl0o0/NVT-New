@@ -190,25 +190,6 @@ static void star_reset_transient(AppState *app)
     app->star.sel_stop = -1;
 }
 
-static int ilv_refresh_overview(AppState *app, char *err, size_t err_sz)
-    { return nvt_data_refresh_ilv_overview(app, 2, err, err_sz); }
-static int ilv_refresh_alerts(AppState *app, char *err, size_t err_sz)
-    { return nvt_data_refresh_ilv_alerts(app, 2, err, err_sz); }
-static int ilv_load_stops(AppState *app, char *err, size_t err_sz)
-    { return nvt_data_load_ilv_stops(app, 2, err, err_sz); }
-static int ilv_load_passages(AppState *app, char *err, size_t err_sz)
-    { return nvt_data_load_ilv_passages(app, 2, err, err_sz); }
-static int ilv_load_vehicles(AppState *app, char *err, size_t err_sz)
-    { return nvt_data_load_ilv_vehicles(app, 2, err, err_sz); }
-static void ilv_reset_transient(AppState *app)
-{
-    app->ilv.nstops = 0;
-    app->ilv.nstop_filtered = 0;
-    app->ilv.npassages = 0;
-    app->ilv.nvehicles = 0;
-    app->ilv.sel_line = -1;
-    app->ilv.sel_stop = -1;
-}
 
 static const NvtNetworkAdapter NETWORKS[] = {
     {
@@ -261,16 +242,6 @@ static const NvtNetworkAdapter NETWORKS[] = {
         .load_vehicles = star_load_vehicles,
         .reset_transient = star_reset_transient,
     },
-    {
-        .kind = NET_ILV,
-        .name = "Ilevia",
-        .refresh_overview = ilv_refresh_overview,
-        .refresh_alerts = ilv_refresh_alerts,
-        .load_stops = ilv_load_stops,
-        .load_passages = ilv_load_passages,
-        .load_vehicles = ilv_load_vehicles,
-        .reset_transient = ilv_reset_transient,
-    },
 };
 
 const char *nvt_network_name(NvtNetwork network)
@@ -284,8 +255,6 @@ const char *nvt_network_name(NvtNetwork network)
         return "SNCF";
     case NET_STAR:
         return "Rennes STAR";
-    case NET_ILV:
-        return "Ilevia";
     case NET_BDX:
     default:
         return "Bordeaux";
@@ -334,12 +303,6 @@ void nvt_switch_network(AppState *app, NvtNetwork network)
     app->star.stop_scroll = 0;
     app->star.sel_line = -1;
     app->star.sel_stop = -1;
-    app->ilv.cursor = 0;
-    app->ilv.scroll = 0;
-    app->ilv.stop_cursor = 0;
-    app->ilv.stop_scroll = 0;
-    app->ilv.sel_line = -1;
-    app->ilv.sel_stop = -1;
     app->ui.alert_scroll = 0;
 
     adapter = nvt_network_adapter(network);
