@@ -341,7 +341,7 @@ function vehicleSubtitle(v: NvtVehicle) {
       <div class="ovl-text">
         <span class="ovl-title">Map unavailable</span>
         <span class="muted">{{ errorMsg }}</span>
-        <span class="ghost">Set MAPKIT_JS_TOKEN in .env.</span>
+        <span class="ghost">Configure MapKit credentials in web/.env.</span>
       </div>
     </div>
 

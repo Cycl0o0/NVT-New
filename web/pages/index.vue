@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Network, NvtLine, NvtStopGroup } from '~/types/nvt'
+import { networkMeta } from '~/types/nvt'
 import { useNvtLines, useNvtAlerts, useNvtStopGroups } from '~/composables/useNvt'
 
 const { public: cfg } = useRuntimeConfig()
@@ -88,12 +89,7 @@ const wallclock = computed(() => {
   return `${hh}:${mm}`
 })
 
-const networkCity = computed(() => {
-  const map: Record<Network, string> = {
-    bdx: 'Bordeaux', tls: 'Toulouse', idfm: 'Paris', sncf: 'France', star: 'Rennes', ilv: 'Lille'
-  }
-  return map[network.value]
-})
+const networkCity = computed(() => networkMeta(network.value).city)
 
 function cycleSheetSize() {
   const order: SheetSize[] = ['peek', 'medium', 'full']

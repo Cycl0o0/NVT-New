@@ -42,7 +42,14 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     backendUrl: process.env.NVT_BACKEND_URL || 'http://127.0.0.1:8080',
+    // Server-only MapKit signing material. When all three are present the
+    // /api/mapkit-token endpoint mints fresh, self-refreshing ES256 tokens.
+    mapkitPrivateKey: process.env.MAPKIT_PRIVATE_KEY || '',
+    mapkitKeyId: process.env.MAPKIT_KEY_ID || '',
+    mapkitTeamId: process.env.MAPKIT_TEAM_ID || '',
+    mapkitTokenTtl: Number(process.env.MAPKIT_TOKEN_TTL || 1800),
     public: {
+      // Legacy static token — only used as a fallback when no signing key is set.
       mapkitToken: process.env.MAPKIT_JS_TOKEN || '',
       defaultNetwork: process.env.NVT_DEFAULT_NETWORK || 'bdx',
       refreshIntervalMs: Number(process.env.NVT_REFRESH_MS || 15000)

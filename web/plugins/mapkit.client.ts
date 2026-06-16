@@ -1,9 +1,15 @@
 /**
  * Lazy MapKit JS loader.
  *
- * MapKit JS is loaded by the deferred <script> in nuxt.config.ts head.
- * Components await `$mapkit.ready()` to access the global namespace
- * after the async-init handshake has completed.
+ * MapKit JS itself is pulled in by the deferred <script> in nuxt.config.ts head.
+ * Components await `$mapkit.ready()` to get the global namespace once the
+ * async-init handshake has completed.
+ *
+ * Tokens are fetched from `/api/mapkit-token` rather than baked in at build
+ * time. MapKit invokes `authorizationCallback` again whenever its token nears
+ * expiry, and because we re-fetch on every call, a short-lived (server-minted)
+ * token rolls over transparently — fixing the "map dies after the token
+ * expires" problem.
  */
 declare global {
   interface Window {
@@ -13,9 +19,38 @@ declare global {
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
-  const token = config.public.mapkitToken as string
+  // Optional build-time token kept only as a last-resort fallback if the
+  // token endpoint is unreachable mid-session.
+  const fallbackToken = (config.public.mapkitToken as string) || ''
 
   let initPromise: Promise<any> | null = null
+
+  async function fetchToken(): Promise<string> {
+    try {
+      const res = await $fetch<{ token?: string }>('/api/mapkit-token', { retry: 1 })
+      if (res?.token) return res.token
+    } catch {
+      // Fall through to the build-time token, if any.
+    }
+    if (fallbackToken) return fallbackToken
+    throw new Error('Unable to obtain a MapKit token — set MAPKIT_PRIVATE_KEY (+ KEY_ID/TEAM_ID) or MAPKIT_JS_TOKEN.')
+  }
+
+  function waitForMapkit(timeoutMs = 15000): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (window.mapkit) return resolve(window.mapkit)
+      const start = Date.now()
+      const interval = setInterval(() => {
+        if (window.mapkit) {
+          clearInterval(interval)
+          resolve(window.mapkit)
+        } else if (Date.now() - start > timeoutMs) {
+          clearInterval(interval)
+          reject(new Error('MapKit JS failed to load (timeout)'))
+        }
+      }, 100)
+    })
+  }
 
   function load(): Promise<any> {
     if (typeof window === 'undefined') {
@@ -26,35 +61,32 @@ export default defineNuxtPlugin(() => {
     }
     if (initPromise) return initPromise
 
-    initPromise = new Promise((resolve, reject) => {
-      const tryInit = () => {
-        const mk = window.mapkit
-        if (!mk) return false
-        if (!token) {
-          reject(new Error('MAPKIT_JS_TOKEN is not configured'))
-          return true
-        }
-        mk.init({
-          authorizationCallback: (done: (token: string) => void) => done(token),
-          language: navigator.language || 'en'
-        })
-        ;(mk as any)._nvtReady = true
-        resolve(mk)
-        return true
-      }
+    initPromise = (async () => {
+      const mk = await waitForMapkit()
 
-      if (tryInit()) return
+      // Validate up front so configuration errors surface in the UI before we
+      // try to build a map. Throws → callers show the "Map unavailable" overlay.
+      await fetchToken()
 
-      const start = Date.now()
-      const interval = setInterval(() => {
-        if (tryInit()) {
-          clearInterval(interval)
-        } else if (Date.now() - start > 15000) {
-          clearInterval(interval)
-          reject(new Error('MapKit JS failed to load (timeout)'))
-        }
-      }, 100)
-    })
+      mk.init({
+        // Re-fetched on every call → expiring tokens refresh themselves.
+        authorizationCallback: (done: (token: string) => void) => {
+          fetchToken()
+            .then(done)
+            .catch((err) => {
+              // First init is guarded by the await above; later refresh
+              // failures are non-fatal (MapKit keeps the previous token).
+              console.error('[mapkit] token refresh failed:', err?.message || err)
+            })
+        },
+        language: navigator.language || 'en'
+      })
+      ;(mk as any)._nvtReady = true
+      return mk
+    })()
+
+    // Reset on failure so a later retry can re-attempt init.
+    initPromise.catch(() => { initPromise = null })
 
     return initPromise
   }

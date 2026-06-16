@@ -11,6 +11,14 @@ function buildPath(endpoint: string, network: Network, extra: Record<string, str
   return `/api/nvt/${endpoint}?${params.toString()}`
 }
 
+// Live networks whose stop-groups / passages endpoints require a `line` param;
+// the backend returns 400 (missing_line) otherwise.
+const LINE_SCOPED_NETWORKS: Network[] = ['idfm', 'sncf', 'star']
+
+export function networkNeedsLine(network: Network): boolean {
+  return LINE_SCOPED_NETWORKS.includes(network)
+}
+
 export function useNvtLines(network: Ref<Network>) {
   return useFetch<NvtListResponse<NvtLine>>(() => buildPath('lines', network.value), {
     key: () => `lines-${network.value}`,
@@ -30,8 +38,7 @@ export function useNvtAlerts(network: Ref<Network>) {
 export function useNvtStopGroups(network: Ref<Network>, lineGid: Ref<number | null>) {
   return useFetch<NvtListResponse<NvtStopGroup>>(
     () => {
-      const needsLine = network.value === 'idfm' || network.value === 'sncf'
-      if (needsLine && !lineGid.value) return null as any
+      if (networkNeedsLine(network.value) && !lineGid.value) return null as any
       return buildPath('stop-groups', network.value, { line: lineGid.value ?? undefined })
     },
     {
